@@ -12,9 +12,17 @@ $(APPNAME): Dockerfile Makefile
 %: %.template
 	envsubst < $< > $@
 run: $(APPNAME)
-	docker run --detach --publish $(HOST):$(PORT):$(PORT) $< > $<
+	docker run \
+	 --detach \
+	 --interactive \
+	 --tty \
+	 --publish $(HOST):$(PORT):$(PORT) $< > $<
 bind-run: $(APPNAME)
-	docker run --detach --publish $(HOST):$(PORT):$(PORT) \
+	docker run \
+	 --detach \
+	 --interactive \
+	 --tty \
+	 --publish $(HOST):$(PORT):$(PORT) \
 	 --workdir /app \
 	 --mount type=bind,src="$(PWD)",target=/app \
 	 node:18-alpine \
@@ -25,6 +33,12 @@ bind-run: $(APPNAME)
 	 if [ "$$line" = "Listening on port $(PORT)" ]; then break; fi \
 	done \
 	 < <(docker logs --follow $$(<$<))
+attach:
+	if [ -s "$(APPNAME)" ]; then \
+	 docker attach $$(<$(APPNAME)); \
+	else \
+	 echo No active container >&2; \
+	fi
 view:
 	$(BROWSER) $(HOST):$(PORT)/
 stop:
