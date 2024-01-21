@@ -5,13 +5,18 @@ PORT ?= 3000
 export HOST PORT
 all: run
 getting-started: Dockerfile Makefile
-	$(MAKE) clean
 	docker build -t $@ $(<D)
 	touch $@
 %: %.template
 	envsubst < $< > $@
 run: getting-started
-	docker run -dp $(HOST):$(PORT):$(PORT) $<
+	docker run --detach --publish $(HOST):$(PORT):$(PORT) $< > $<
+stop:
+	-docker stop $$(<getting-started)
 clean:
-	-docker rmi $$(docker images | awk '$$1 ~ /^getting-started$$/ {print $$3}')
+	$(MAKE) stop
+	-docker rm $$(<getting-started)
+	-docker rmi getting-started
 	rm -f getting-started
+distclean: clean
+	rm -f Dockerfile
