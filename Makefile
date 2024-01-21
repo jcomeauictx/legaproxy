@@ -20,12 +20,18 @@ bind-run: $(APPNAME)
 	 node:18-alpine \
 	 sh -c "yarn install && yarn run dev" \
 	 > $<
-	@echo ^C when you see '"Listening on port $(PORT)"'
-	docker logs $$(<$<)
+	while read line; do \
+	 echo $$line; \
+	 if [ "$$line" = "Listening on port $(PORT)" ]; then break; fi \
+	done \
+	 < <(docker logs --follow $$(<$<))
 view:
 	$(BROWSER) $(HOST):$(PORT)/
 stop:
-	if [ -s "$(APPNAME)" ]; then docker stop $$(<$(APPNAME)); fi
+	if [ -s "$(APPNAME)" ]; then \
+	 docker stop $$(<$(APPNAME)); \
+	 docker wait $$(<$(APPNAME)); \
+	fi
 purge:  # stop with no opportunity to restart
 	-$(MAKE) stop
 	# truncate file containing the stopped container ID
