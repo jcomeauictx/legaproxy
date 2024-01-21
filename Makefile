@@ -14,16 +14,23 @@ $(APPNAME): Dockerfile Makefile
 run: $(APPNAME)
 	docker run --detach --publish $(HOST):$(PORT):$(PORT) $< > $<
 bind-run: $(APPNAME)
-	docker run --detach --publish $(HOST):$(PORT):$(PORT) $< \
+	docker run --detach --publish $(HOST):$(PORT):$(PORT) \
 	 --workdir /app \
 	 --mount type=bind,src="$(PWD)",target=/app \
 	 node:18-alpine \
 	 sh -c "yarn install && yarn run dev" \
 	 > $<
+	@echo ^C when you see '"Listening on port $(PORT)"'
+	docker logs $$(<$<)
 view:
 	$(BROWSER) $(HOST):$(PORT)/
 stop:
 	if [ -s "$(APPNAME)" ]; then docker stop $$(<$(APPNAME)); fi
+purge:  # stop with no opportunity to restart
+	-$(MAKE) stop
+	# truncate file containing the stopped container ID
+	# same as :>$(APPNAME)
+	>$(APPNAME)
 clean:
 	$(MAKE) stop
 	if [ -s "$(APPNAME)" ]; then docker rm $$(<$(APPNAME)); fi
