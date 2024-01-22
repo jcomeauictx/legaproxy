@@ -9,6 +9,7 @@ BROWSER ?= firefox
 APPNAME := getting-started
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
+USERPUB := $(shell cat /home/$(USER)/.ssh/id_rsa.pub)
 export HOST PORT SSHPORT
 all: bind-run view
 $(APPNAME): Dockerfile Makefile
@@ -34,6 +35,10 @@ bind-run: $(APPNAME)
 	  cat $(SSHDCONF) && \
 	  ssh-keygen -A && \
 	  /usr/sbin/sshd && \
+	  mkdir -p /root/.ssh && \
+	  echo $(USERPUB) >> /root/.ssh/authorized_keys && \
+	  chmod 0700 /root/.ssh && \
+	  chmod 0600 /root/.ssh/authorized_keys && \
 	  yarn install && \
 	  yarn run dev" \
 	 > $<
