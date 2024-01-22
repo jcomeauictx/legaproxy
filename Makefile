@@ -1,15 +1,15 @@
 # allow Bashisms
 SHELL := /bin/bash
 HOST ?= 127.0.0.1
-# wanted to change HTTPPORT to 3080, but found out it's hardcoded throughout
+# wanted to change PORT to 3080, but found out it's hardcoded throughout
 # the directory structure. Ain't worth it.
-HTTPPORT ?= 3000
+PORT ?= 3000
 SSHPORT ?= 3022
 BROWSER ?= firefox
 APPNAME := getting-started
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
-export HOST HTTPPORT SSHPORT
+export HOST PORT SSHPORT
 all: bind-run view
 $(APPNAME): Dockerfile Makefile
 	docker build -t $@ $(<D)
@@ -19,11 +19,11 @@ $(APPNAME): Dockerfile Makefile
 run: $(APPNAME)
 	docker run \
 	 --detach \
-	 --publish $(HOST):$(HTTPPORT):$(HTTPPORT) $< > $<
+	 --publish $(HOST):$(PORT):$(PORT) $< > $<
 bind-run: $(APPNAME)
 	docker run \
 	 --detach \
-	 --publish $(HOST):$(HTTPPORT):$(HTTPPORT) \
+	 --publish $(HOST):$(PORT):$(PORT) \
 	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
 	 --workdir /app \
 	 --mount type=bind,src="$(PWD)",target=/app \
@@ -39,11 +39,11 @@ bind-run: $(APPNAME)
 	 > $<
 	while read line; do \
 	 echo $$line; \
-	 if [ "$$line" = "Listening on port $(HTTPPORT)" ]; then break; fi \
+	 if [ "$$line" = "Listening on port $(PORT)" ]; then break; fi \
 	done \
 	 < <(docker logs --follow $$(<$<))
 view:
-	$(BROWSER) $(HOST):$(HTTPPORT)/
+	$(BROWSER) $(HOST):$(PORT)/
 stop:
 	if [ -s "$(APPNAME)" ]; then \
 	 docker stop $$(<$(APPNAME)); \
