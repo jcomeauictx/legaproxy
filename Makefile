@@ -49,6 +49,8 @@ bind-run: $(APPNAME)
 	 < <(docker logs --follow $$(<$<))
 view:
 	$(BROWSER) $(HOST):$(PORT)/
+connect attach ssh login:
+	ssh -p $(SSHPORT) root@localhost
 stop:
 	if [ -s "$(APPNAME)" ]; then \
 	 docker stop $$(<$(APPNAME)); \
