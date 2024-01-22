@@ -28,12 +28,12 @@ bind-run: $(APPNAME)
 	 --workdir /app \
 	 --mount type=bind,src="$(PWD)",target=/app \
 	 node:18-alpine \
-	 sh -c "apk add openrc openssh && \
-	  rc-update add sshd && \
+	 sh -c "apk add openssh && \
 	  mv $(SSHDCONF) $(SSHDORIG) && \
 	  sed 's/.*Port 22$$/Port $(SSHPORT)/' $(SSHDORIG) > $(SSHDCONF) && \
 	  cat $(SSHDCONF) && \
-	  echo service sshd start && \
+	  ssh-keygen -A && \
+	  /usr/sbin/sshd && \
 	  yarn install && \
 	  yarn run dev" \
 	 > $<
