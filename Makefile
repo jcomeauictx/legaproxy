@@ -1,11 +1,14 @@
 # allow Bashisms
 SHELL := /bin/bash
 HOST ?= 127.0.0.1
-PORT ?= 3000
+HTTPPORT ?= 3080
+SSHPORT ?= 3022
 BROWSER ?= firefox
 APPNAME := getting-started
-export HOST PORT
-all: run view
+SSHDCONF := /etc/ssh/sshd_config
+SSHDORIG := $(SSHDCONF).orig
+export HOST HTTPPORT SSHPORT
+all: bind-run view
 $(APPNAME): Dockerfile Makefile
 	docker build -t $@ $(<D)
 	touch $@
@@ -14,23 +17,30 @@ $(APPNAME): Dockerfile Makefile
 run: $(APPNAME)
 	docker run \
 	 --detach \
-	 --publish $(HOST):$(PORT):$(PORT) $< > $<
+	 --publish $(HOST):$(HTTPPORT):$(HTTPPORT) $< > $<
 bind-run: $(APPNAME)
 	docker run \
 	 --detach \
-	 --publish $(HOST):$(PORT):$(PORT) \
+	 --publish $(HOST):$(HTTPPORT):$(HTTPPORT) \
+	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
 	 --workdir /app \
 	 --mount type=bind,src="$(PWD)",target=/app \
 	 node:18-alpine \
-	 sh -c "yarn install && yarn run dev" \
+	 sh -c "apk add openrc openssh && \
+	  rc-update add sshd && \
+	  mv $(SSHDCONF) $(SSHDORIG) && \
+	  sed 's/.*Port 22$$/Port $(SSHPORT)/' $(SSHDORIG) > $(SSHDCONF) && \
+	  service sshd start && \
+	  yarn install && \
+	  yarn run dev" \
 	 > $<
 	while read line; do \
 	 echo $$line; \
-	 if [ "$$line" = "Listening on port $(PORT)" ]; then break; fi \
+	 if [ "$$line" = "Listening on port $(HTTPPORT)" ]; then break; fi \
 	done \
 	 < <(docker logs --follow $$(<$<))
 view:
-	$(BROWSER) $(HOST):$(PORT)/
+	$(BROWSER) $(HOST):$(HTTPPORT)/
 stop:
 	if [ -s "$(APPNAME)" ]; then \
 	 docker stop $$(<$(APPNAME)); \
