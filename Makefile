@@ -1,7 +1,9 @@
 # allow Bashisms
 SHELL := /bin/bash
 HOST ?= 127.0.0.1
-HTTPPORT ?= 3080
+# wanted to change HTTPPORT to 3080, but found out it's hardcoded throughout
+# the directory structure. Ain't worth it.
+HTTPPORT ?= 3000
 SSHPORT ?= 3022
 BROWSER ?= firefox
 APPNAME := getting-started
@@ -30,7 +32,8 @@ bind-run: $(APPNAME)
 	  rc-update add sshd && \
 	  mv $(SSHDCONF) $(SSHDORIG) && \
 	  sed 's/.*Port 22$$/Port $(SSHPORT)/' $(SSHDORIG) > $(SSHDCONF) && \
-	  service sshd start && \
+	  cat $(SSHDCONF) && \
+	  echo service sshd start && \
 	  yarn install && \
 	  yarn run dev" \
 	 > $<
