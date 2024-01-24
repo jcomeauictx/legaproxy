@@ -9,6 +9,10 @@ from mitmproxy import http
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.WARNING)
 HOSTNAME = 'digital.redwoodcu.org'
 FILES = os.path.join('storage', 'files')
+USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '
+             'AppleWebKit/605.1.15 (KHTML, like Gecko) '
+             'Version/12.1.2 Mobile/15E148'
+)
 
 def request(flow: http.HTTPFlow):
     '''
@@ -20,6 +24,8 @@ def request(flow: http.HTTPFlow):
     logging.debug('request: %s', vars(flow.request))
     logging.info('flow.live: %s', flow.live)
     logging.info('request.method: %s', flow.request.method)
+    for header, value in flow.request.headers.items():
+        logging.info('header "%s": "%s"', header, value)
 
 def response(flow: http.HTTPFlow) -> None:
     '''

@@ -105,3 +105,5 @@ clean:
 	rm -f $(APPNAME)
 distclean: clean
 	rm -f Dockerfile
+useragent:
+	@echo '$(IPHONE6)'
