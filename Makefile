@@ -10,6 +10,10 @@ APPNAME := getting-started
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
 USERPUB := $(shell cat /home/$(USER)/.ssh/id_rsa.pub)
+# add UserAgent strings of some legacy devices we want to support
+IPHONE6 := Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X)
+IPHONE6 += AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2
+IPHONE6 += Mobile/15E148
 export HOST PORT SSHPORT
 all: bind-run view
 $(APPNAME): Dockerfile Makefile
