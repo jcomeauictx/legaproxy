@@ -10,10 +10,27 @@ APPNAME := getting-started
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
 USERPUB := $(shell cat /home/$(USER)/.ssh/id_rsa.pub)
+PIDFILE := /var/run/legaproxy.pid
 # add UserAgent strings of some legacy devices we want to support
 IPHONE6 := Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X)
 IPHONE6 += AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2
 IPHONE6 += Mobile/15E148
+CHROME := $(shell which chromium chromium-browser 2>/dev/null | head -n 1)
+# make sure browser isn't blank in case of no chromium
+ifeq ($(CHROME)$(MITMBROWSER),)
+ MITMBROWSER := w3m
+else
+ MITMBROWSER ?= $(CHROME)
+endif
+BROWSE := $(MITMBROWSER)
+# don't use `localhost`, many Debian installs have both 127.0.0.1 and ::1
+PROXY := 127.0.0.1:8080
+ifeq ($(BROWSER),$(CHROME))
+ BROWSE += --proxy-server=$(PROXY)  # add proxy to browser commandline
+endif
+# proxy envvars lowercase, for testing with wget
+https_proxy=http://$(PROXY)
+http_proxy=http://$(PROXY)
 export HOST PORT SSHPORT
 all: bind-run view
 $(APPNAME): Dockerfile Makefile
@@ -59,6 +76,22 @@ stop:
 	if [ -s "$(APPNAME)" ]; then \
 	 docker stop $$(<$(APPNAME)); \
 	 docker wait $$(<$(APPNAME)); \
+	fi
+$(PIDFILE):
+	@sudo echo sudo now enabled for '`sudo tee`' below >&2
+	mitmdump --anticache \
+	 --anticomp \
+	 --allow-hosts redwoodcu.org,digital.redwoodcu.org \
+	 --scripts filter.py \
+	 --flow-detail 3 \
+	 --save-stream-file mitmproxy.log &>mitmdump.log & \
+	 echo $$! | sudo tee $@
+mitmstop:
+	if [ -f "$(PIDFILE)" ]; then \
+	 sudo $(KILL) -s KILL $$(<$(PIDFILE)); \
+	  sudo rm -f $(PIDFILE); \
+	else \
+	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
 purge:  # stop with no opportunity to restart
 	-$(MAKE) stop
