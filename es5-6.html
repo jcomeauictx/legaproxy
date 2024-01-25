@@ -3,16 +3,23 @@
 <head>
 <title>ES5 and ES6 support page</title>
 <meta charset="utf-8">
+<script type="text/javascript">
+var check = function() {
+    var rows = document.getElementById("test-suite").children;
+    for (var i = 0; i < rows.length; i++) {
+        console.log(rows[i]);
+    }
+}
+window.onload = check;
+</script>
 </head>
 <body>
 <table>
 <thead>
 <tr><th>Example</th><th>Supported</th></tr>
 </thead>
-<tbody>
-<tr>
-<td>var x = 10;</td><td>No</td>
-</tr>
+<tbody id="test-suite">
+<tr><td>var x = 10; x == 10</td><td>false</td></tr>
 </tbody>
 </table>
 </html>
