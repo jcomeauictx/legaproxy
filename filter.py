@@ -7,7 +7,7 @@ import os, logging  # pylint: disable=multiple-imports
 from mitmproxy import http
 
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.WARNING)
-HOSTNAME = 'digital.redwoodcu.org'
+HOSTSUFFIX = 'redwoodcu.org'
 FILES = os.path.join('storage', 'files')
 USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '
              'AppleWebKit/605.1.15 (KHTML, like Gecko) '
@@ -32,9 +32,10 @@ def response(flow: http.HTTPFlow) -> None:
     filter responses
     '''
     # pylint: disable=undefined-variable, too-many-branches
-    if flow.request.host == HOSTNAME:
+    hostname = flow.request.host
+    if hostname.endswith(HOSTSUFFIX):
         savefile(
-            os.path.join(FILES, *flow.request.path_components),
+            os.path.join(FILES, hostname, *flow.request.path_components),
             flow.response.content
         )
         logging.info('flow.request.path: %s', flow.request.path)
