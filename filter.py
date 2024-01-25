@@ -24,6 +24,7 @@ def request(flow: http.HTTPFlow):
     logging.debug('request: %s', vars(flow.request))
     logging.info('flow.live: %s', flow.live)
     logging.info('request.method: %s', flow.request.method)
+    flow.request.headers['user-agent'] = USERAGENT
     for header, value in flow.request.headers.items():
         logging.info('header "%s": "%s"', header, value)
 
