@@ -13,3 +13,4 @@ This application is based on the getting started guide at
 * <https://dev.to/kazemmdev/building-cross-browser-compatible-web-apps-with-babel-a-step-by-step-guide-5c5h>
 * <https://symfonycasts.com/screencast/webpack-encore/postcss-browsers>
 * <https://sgom.es/posts/2019-03-06-supporting-old-browsers-without-hurting-everyone/>
+* [Use babel from command line](https://babeljs.io/docs/babel-cli)
