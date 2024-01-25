@@ -3,7 +3,7 @@
 Using example internet-in-mirror.py from
 https://docs.mitmproxy.org/stable/addons-examples/
 '''
-import os, re, json, socket, logging  # pylint: disable=multiple-imports
+import os, logging  # pylint: disable=multiple-imports
 from mitmproxy import http
 
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.WARNING)
@@ -38,8 +38,8 @@ def response(flow: http.HTTPFlow) -> None:
             flow.response.content
         )
         logging.info('flow.request.path: %s', flow.request.path)
-        else:
-            logging.info('Not filtering request for %s', flow.request.path)
+    else:
+        logging.info('Not filtering request for %s', flow.request.path)
 
 def savefile(path, contents, binary=False, overwrite=False, retry_ok=True):
     '''
