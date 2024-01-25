@@ -85,7 +85,7 @@ $(PIDFILE):
 	@sudo echo sudo now enabled for '`sudo tee`' below >&2
 	mitmdump --anticache \
 	 --anticomp \
-	 --allow-hosts redwoodcu.org,digital.redwoodcu.org \
+	 --allow-hosts 'redwoodcu\.org$$' \
 	 --scripts filter.py \
 	 --flow-detail 3 \
 	 --save-stream-file mitmproxy.log &>mitmdump.log & \
