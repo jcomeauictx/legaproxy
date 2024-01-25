@@ -14,3 +14,4 @@ This application is based on the getting started guide at
 * <https://symfonycasts.com/screencast/webpack-encore/postcss-browsers>
 * <https://sgom.es/posts/2019-03-06-supporting-old-browsers-without-hurting-everyone/>
 * [Use babel from command line](https://babeljs.io/docs/babel-cli)
+* [Differences between ES5 and ES6](https://medium.com/sliit-foss/es5-vs-es6-in-javascript-cb10f5fd600c)
