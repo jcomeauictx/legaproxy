@@ -15,6 +15,7 @@ var check = function() {
             result = eval(script);
         } catch (error) {
             result = false;
+            console.log("Error during eval of '" + script + "': " + error);
         }
         columns[1].innerText = result;
     }
@@ -28,7 +29,11 @@ window.onload = check;
 <tr><th>Example</th><th>Supported</th></tr>
 </thead>
 <tbody id="test-suite">
-<tr><td>var x = 10; x == 10;</td><td>false</td></tr>
+<tr><td>(function() {var x = 10; return x == 10})();</td><td>false</td></tr>
+<tr><td>function() {var x = 10; return x === 10;}</td><td>false</td></tr>
+<tr><td>function() {let x = 10; return x == 10;}</td><td>false</td></tr>
+<tr><td>function() {const x = 10; return x == 10;}</td><td>false</td></tr>
+<tr><td>(() =&gt; {let x = 10; return x == 10})();</td><td>false</td></tr>
 </tbody>
 </table>
 </html>
