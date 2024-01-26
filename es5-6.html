@@ -30,9 +30,9 @@ window.onload = check;
 </thead>
 <tbody id="test-suite">
 <tr><td>(function() {var x = 10; return x == 10})();</td><td>false</td></tr>
-<tr><td>function() {var x = 10; return x === 10;}</td><td>false</td></tr>
-<tr><td>function() {let x = 10; return x == 10;}</td><td>false</td></tr>
-<tr><td>function() {const x = 10; return x == 10;}</td><td>false</td></tr>
+<tr><td>(function() {var x = 10; return x === 10})();</td><td>false</td></tr>
+<tr><td>(function() {let x = 10; return x == 10})();</td><td>false</td></tr>
+<tr><td>(function() {const x = 10; return x == 10})();</td><td>false</td></tr>
 <tr><td>(() =&gt; {let x = 10; return x == 10})();</td><td>false</td></tr>
 </tbody>
 </table>
