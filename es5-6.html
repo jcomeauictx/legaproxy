@@ -5,9 +5,18 @@
 <meta charset="utf-8">
 <script type="text/javascript">
 var check = function() {
-    var rows = document.getElementById("test-suite").children;
-    for (var i = 0; i < rows.length; i++) {
+    var rows, columns, i, script, result;
+    rows = document.getElementById("test-suite").children;
+    for (i = 0; i < rows.length; i++) {
         console.log(rows[i]);
+        columns = rows[i].children;
+        script = columns[0].innerText;
+        try {
+            result = eval(script);
+        } catch (error) {
+            result = false;
+        }
+        columns[1].innerText = result;
     }
 }
 window.onload = check;
@@ -19,7 +28,7 @@ window.onload = check;
 <tr><th>Example</th><th>Supported</th></tr>
 </thead>
 <tbody id="test-suite">
-<tr><td>var x = 10; x == 10</td><td>false</td></tr>
+<tr><td>var x = 10; x == 10;</td><td>false</td></tr>
 </tbody>
 </table>
 </html>
