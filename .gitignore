@@ -4,3 +4,4 @@ node_modules
 __pycache__
 mitmdump.log
 mitmproxy.log
+storage
