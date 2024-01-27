@@ -8,16 +8,21 @@ var check = function() {
     var rows, columns, i, script, result;
     rows = document.getElementById("test-suite").children;
     for (i = 0; i < rows.length; i++) {
-        console.log(rows[i]);
+        console.log("row " + i + ": " + rows[i]);
         columns = rows[i].children;
-        script = columns[0].innerText;
+        script = columns[0].innerText || columns[0].textContent;
+        console.log("trying to eval script: " + script);
         try {
             result = eval(script);
         } catch (error) {
             result = false;
             console.log("Error during eval of '" + script + "': " + error);
         }
-        columns[1].innerText = result;
+	if (typeof columns[1].innerText == "undefined") {
+            columns[1].textContent = result;
+        } else {
+            columns[1].innerText = result;
+        }
     }
 }
 window.onload = check;
