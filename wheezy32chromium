@@ -1,0 +1,4 @@
+LC_ALL=C \
+LD_LIBRARY_PATH=/opt/wheezy32/usr/lib/chromium:/opt/wheezy32/usr/lib/i386-linux-gnu:/opt/wheezy32/usr/lib/gcc/i486-linux-gnu:/opt/wheezy32/usr/lib:/opt/wheezy32/lib/i386-linux-gnu \
+/opt/wheezy32/lib/ld-linux.so.2 \
+ /opt/wheezy32/usr/lib/chromium/chromium
