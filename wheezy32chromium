@@ -1,3 +1,5 @@
+# THIS WILL NOT WORK AS INTENDED, the script will use the current filesystem's
+# chromium binary.
 LC_ALL=C \
 LD_LIBRARY_PATH=/opt/wheezy32/usr/lib/chromium:/opt/wheezy32/usr/lib/i386-linux-gnu:/opt/wheezy32/usr/lib/gcc/i486-linux-gnu:/opt/wheezy32/usr/lib:/opt/wheezy32/lib/i386-linux-gnu \
 /opt/wheezy32/usr/bin/chromium
