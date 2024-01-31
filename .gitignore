@@ -5,3 +5,4 @@ __pycache__
 mitmdump.log
 mitmproxy.log
 storage
+fontconfig
