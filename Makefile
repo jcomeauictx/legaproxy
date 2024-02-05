@@ -27,7 +27,9 @@ endif
 LOGGING := &>$(HOME)/$(notdir $(word 1, $(MITMBROWSER))).log &
 BROWSE := $(MITMBROWSER)
 # don't use `localhost`, many Debian installs have both 127.0.0.1 and ::1
-PROXY := 127.0.0.1:8080
+PROXYHOST := 127.0.0.1
+PROXYPORT := 8080
+PROXY := $(PROXYHOST):$(PROXYPORT)
 ifeq ($(MITMBROWSER),$(CHROME))
  BROWSE += --proxy-server=$(PROXY)  # add proxy to browser commandline
 endif
@@ -85,6 +87,8 @@ $(PIDFILE):
 	@sudo echo sudo now enabled for '`sudo tee`' below >&2
 	mitmdump --anticache \
 	 --anticomp \
+	 --listen-host $(PROXYHOST) \
+	 --listen-port $(PROXYPORT) \
 	 --allow-hosts 'redwoodcu\.org$$' \
 	 --scripts filter.py \
 	 --flow-detail 3 \
