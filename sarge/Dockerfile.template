@@ -1,0 +1,3 @@
+FROM wyaeld/sarge
+RUN apt-get -y install $PACKAGE
+RUN $BROWSER
