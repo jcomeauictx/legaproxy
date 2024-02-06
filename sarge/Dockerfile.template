@@ -1,3 +1,4 @@
 FROM wyaeld/sarge
 RUN apt-get -y install $PACKAGE
+ENV DISPLAY=$X11
 RUN $BROWSER
