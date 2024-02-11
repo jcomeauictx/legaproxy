@@ -1,4 +1,4 @@
 FROM wyaeld/sarge
-RUN apt-get -y install $PACKAGE
+RUN apt-get -y install $PACKAGE strace
 ENV DISPLAY=$X11
-RUN $BROWSER
+RUN /usr/bin/strace -v -f $BROWSER

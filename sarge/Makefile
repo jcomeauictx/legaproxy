@@ -10,7 +10,7 @@ X11 := $(shell echo $(GATEWAY):0)
 export BROWSER PACKAGE GATEWAY X11
 all: $(TASKNAME)
 $(TASKNAME): Dockerfile Makefile
-	docker build -t $@ $(<D)
+	docker build --tag $@ $(<D)
 	touch $@
 %: %.template Makefile
 	envsubst < $< > $@
