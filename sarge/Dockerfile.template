@@ -1,4 +1,6 @@
 FROM wyaeld/sarge
-RUN apt-get -y install $PACKAGE strace
+ENV GATEWAY=$GATEWAY
 ENV DISPLAY=$X11
+RUN apt-get -y install $PACKAGE strace
+RUN ping -c1 $GATEWAY
 RUN /usr/bin/strace -v -f $BROWSER
