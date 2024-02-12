@@ -2,19 +2,20 @@ SHELL := /bin/bash
 BROWSER ?= /usr/bin/mozilla-firefox
 PACKAGE := $(notdir $(BROWSER))
 TASKNAME := browse
-# Xorg on Debian (Bookworm at least) doesn't listen on tcp
-GATEWAY ?=
-# get rid of quotes (if any) on GATEWAY
-X11 := $(shell echo $(GATEWAY):0)
 # export what's needed for envsubst
-export BROWSER PACKAGE GATEWAY X11
+export BROWSER PACKAGE
 all: $(TASKNAME)
 $(TASKNAME): Dockerfile Makefile
-	docker build --tag $@ \
-	 --network host \
-	 $(<D)
-	touch $@
+	cp ../es5-6.html tmp/
+	cp -a /tmp/.X11-unix tmp/
+	-docker build --tag $@ \
+	 $(<D) && touch $@
+	$(MAKE) clean
 %: %.template Makefile
 	envsubst < $< > $@
 env:
 	$@
+clean:
+	find tmp/ -not -type d -and -not -name README.md -delete
+distclean:
+	rm -f $(TASKNAME)

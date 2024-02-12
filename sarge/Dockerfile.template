@@ -1,11 +1,11 @@
 FROM wyaeld/sarge
 WORKDIR /application
-ENV GATEWAY=$GATEWAY
-ENV DISPLAY=$X11
-ADD es5-6.html /application
+ENV DISPLAY=:0
+ADD tmp/.X11-unix /tmp/
+ADD tmp/es5-6.html /application
 RUN apt-get -y install $PACKAGE
 # xeyes for testing
-RUN apt-get -y install xbase-clients
+RUN apt-get -y install xbase-clients timeout
 RUN ifconfig
-RUN xeyes
-RUN $BROWSER /application/es5-6.html
+RUN timeout 10 xeyes
+RUN timeout 10 $BROWSER /application/es5-6.html
