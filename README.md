@@ -16,3 +16,4 @@ This application is based on the getting started guide at
 * [Use babel from command line](https://babeljs.io/docs/babel-cli)
 * [Differences between ES5 and ES6](https://medium.com/sliit-foss/es5-vs-es6-in-javascript-cb10f5fd600c)
 * [Some older Debian docker images](https://github.com/madworx/docker-debian-archive)
+* [Needs X socket bind-mounted](https://unix.stackexchange.com/a/317533/2769)

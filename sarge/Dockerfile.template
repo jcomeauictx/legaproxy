@@ -1,6 +1,11 @@
 FROM wyaeld/sarge
+WORKDIR /application
 ENV GATEWAY=$GATEWAY
 ENV DISPLAY=$X11
-RUN apt-get -y install $PACKAGE strace
-RUN ping -c1 $GATEWAY
-RUN /usr/bin/strace -v -f $BROWSER
+ADD es5-6.html /application
+RUN apt-get -y install $PACKAGE
+# xeyes for testing
+RUN apt-get -y install xbase-clients
+RUN ifconfig
+RUN xeyes
+RUN $BROWSER /application/es5-6.html
