@@ -7,5 +7,5 @@ RUN apt-get -y install $PACKAGE
 # xeyes for testing
 RUN apt-get -y install xbase-clients timeout
 RUN ifconfig
-RUN timeout 10 xeyes
-RUN timeout 10 $BROWSER /application/es5-6.html
+RUN timeout 10 /usr/bin/X11/xeyes
+RUN timeout 60 $BROWSER /application/es5-6.html
