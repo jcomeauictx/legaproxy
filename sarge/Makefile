@@ -19,6 +19,6 @@ env:
 	$@
 clean:
 	find tmp/ -not -type d -and -not -name README.md -delete
-	find tmp/ -mindepth 1 -type d | xargs rmdir
+	-find tmp/ -mindepth 1 -type d | xargs rmdir
 distclean:
 	rm -f $(TASKNAME)
