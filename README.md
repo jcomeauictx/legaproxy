@@ -18,3 +18,4 @@ This application is based on the getting started guide at
 * [Some older Debian docker images](https://github.com/madworx/docker-debian-archive)
 * [Needs X socket bind-mounted](https://unix.stackexchange.com/a/317533/2769)
 * [Building with files outside the context](https://www.baeldung.com/ops/docker-include-files-outside-build-context)
+* [Socat to share socket-bound X over TCP](https://askubuntu.com/a/41788/135108)
