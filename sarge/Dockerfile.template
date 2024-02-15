@@ -1,7 +1,6 @@
 FROM wyaeld/sarge
 WORKDIR /application
-ENV DISPLAY=:0
-COPY tmp/.X11-unix /tmp/
+ENV DISPLAY=$GATEWAY:0
 ADD tmp/es5-6.html /application
 RUN apt-get -y install $PACKAGE
 # xeyes for testing
