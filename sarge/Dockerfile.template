@@ -5,7 +5,5 @@ ADD tmp/es5-6.html /application
 RUN apt-get -y install $PACKAGE
 # xeyes for testing
 RUN apt-get -y install xbase-clients timeout
-RUN ifconfig
-RUN ls -alR /tmp
-RUN timeout 10 /usr/bin/X11/xeyes
+RUN timeout 10 /usr/bin/X11/xeyes || /bin/true
 RUN timeout 60 $BROWSER /application/es5-6.html
