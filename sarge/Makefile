@@ -11,7 +11,7 @@ GATEWAY ?= $(subst ",,$(shell docker network inspect bridge | \
 export BROWSER PACKAGE GATEWAY
 all: $(TASKNAME)
 $(TASKNAME): Dockerfile Makefile tcpopen
-	$(MAKE) distclean
+	$(MAKE) tmpclean
 	cp ../es5-6.html tmp/
 	-docker build --tag $@ \
 	 $(<D) && touch $@
@@ -21,15 +21,16 @@ tcpopen:
 	socat TCP-LISTEN:6000,fork,bind=$(GATEWAY) UNIX-CONNECT:$(X11SOCKET) & \
 	 echo $$! | sudo tee $(TCPPID)
 tcpclose:
-	-kill $$(<$(TCPPID))
+	-[ -f "$(TCPPID)" ] && kill $$(<$(TCPPID))
 	sudo rm -f $(TCPPID)
 %: %.template Makefile
 	envsubst < $< > $@
 env:
 	$@
-clean: tcpclose
+tmpclean:
 	find tmp/ -not -type d -and -not -name README.md -delete
-	-find tmp/ -mindepth 1 -type d | xargs rmdir
+	-find tmp/ -mindepth 1 -type d | xargs --no-run-if-empty rmdir
+clean: tcpclose tmpclean
 distclean: clean
 	-docker rmi $(TASKNAME)
 	rm -f $(TASKNAME)
