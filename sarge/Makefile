@@ -17,10 +17,11 @@ $(TASKNAME): Dockerfile Makefile tcpopen
 	 $(<D) && touch $@
 	$(MAKE) clean
 tcpopen:
+	@sudo echo sudo now enabled for '`sudo tee`' below >&2
 	socat TCP-LISTEN:6000,fork,bind=$(GATEWAY) UNIX-CONNECT:$(X11SOCKET) & \
-	 echo $$! | sudo tee -a $(TCPPID)
+	 echo $$! | sudo tee $(TCPPID)
 tcpclose:
-	-kill $(shell $$(<$(TCPPID)))
+	-kill $$(<$(TCPPID))
 	sudo rm -f $(TCPPID)
 %: %.template Makefile
 	envsubst < $< > $@
