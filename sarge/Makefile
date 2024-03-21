@@ -7,7 +7,8 @@ TCPPID := /var/run/socat_x11.pid
 DOCKERPID := /var/run/docker_sarge.pid
 GATEWAY ?= $(subst ",,$(shell docker network inspect bridge | \
 	 awk '$$1 ~ /^"Gateway":$$/ {print $$2}'))
-TIMESTAMP := $(shell date '+%Y%D%M%H%m%s')
+# TIMESTAMP might be useful in image tag? or not.
+TIMESTAMP := $(shell date '+%Y%m%d%H%M%S')
 # export what's needed for envsubst
 export BROWSER PACKAGE GATEWAY
 all: $(TASKNAME)
@@ -16,7 +17,7 @@ $(TASKNAME): Dockerfile Makefile ../es5-6.html
 	$(MAKE) tmpclean
 	cp ../es5-6.html tmp/
 	# only mark with TASKNAME file if build successful
-	-docker build --tag $@:$(TIMESTAMP) $(<D) && touch $@
+	-docker build --tag $@ $(<D) && touch $@
 	$(MAKE) clean
 tcpopen:
 	@sudo echo sudo now enabled for '`sudo tee`' below >&2
