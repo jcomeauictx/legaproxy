@@ -4,6 +4,7 @@ ENV DISPLAY=$GATEWAY:0
 ADD tmp/es5-6.html /application
 RUN apt-get -y install $PACKAGE
 # xeyes for testing
+# each task must return true or build fails
 RUN apt-get -y install xbase-clients timeout
 RUN timeout 10 /usr/bin/X11/xeyes || /bin/true
-RUN timeout 60 $BROWSER /application/es5-6.html
+RUN timeout 60 $BROWSER /application/es5-6.html || /bin/true

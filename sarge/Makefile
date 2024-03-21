@@ -15,8 +15,8 @@ $(TASKNAME): Dockerfile Makefile ../es5-6.html
 	$(MAKE) tcpopen
 	$(MAKE) tmpclean
 	cp ../es5-6.html tmp/
-	-docker build --tag $@:$(TIMESTAMP) $(<D)
-	touch $@
+	# only mark with TASKNAME file if build successful
+	-docker build --tag $@:$(TIMESTAMP) $(<D) && touch $@
 	$(MAKE) clean
 tcpopen:
 	@sudo echo sudo now enabled for '`sudo tee`' below >&2
