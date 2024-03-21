@@ -10,11 +10,12 @@ GATEWAY ?= $(subst ",,$(shell docker network inspect bridge | \
 # export what's needed for envsubst
 export BROWSER PACKAGE GATEWAY
 all: $(TASKNAME)
-$(TASKNAME): Dockerfile Makefile tcpopen
+$(TASKNAME): Dockerfile Makefile ../es5-6.html
+	$(MAKE) tcpopen
 	$(MAKE) tmpclean
 	cp ../es5-6.html tmp/
-	-docker build --tag $@ \
-	 $(<D) && touch $@
+	-docker build --tag $@ $(<D)
+	touch $@
 	$(MAKE) clean
 tcpopen:
 	@sudo echo sudo now enabled for '`sudo tee`' below >&2
@@ -32,5 +33,5 @@ tmpclean:
 	-find tmp/ -mindepth 1 -type d | xargs --no-run-if-empty rmdir
 clean: tcpclose tmpclean
 distclean: clean
-	-docker rmi $(TASKNAME)
+	-docker rmi $(TASKNAME):$(TASKNAME)
 	rm -f $(TASKNAME)

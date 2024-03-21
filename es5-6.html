@@ -4,12 +4,22 @@
 <title>ES5 and ES6 support page</title>
 <meta charset="utf-8">
 <script type="text/javascript">
+try {
+    console.log("testing console.log");
+} catch (error) {
+    console = {};
+    console.log = function(message) {
+        document.getElementById("console-log").appendChild(
+            document.createTextNode(message));
+    };
+    console.log("log messages follow:");
+}
 var check = function() {
     var rows, columns, i, script, result;
-    rows = document.getElementById("test-suite").children;
+    rows = document.getElementById("test-suite").childNodes;
     for (i = 0; i < rows.length; i++) {
         console.log("row " + i + ": " + rows[i]);
-        columns = rows[i].children;
+        columns = rows[i].childNodes;
         script = columns[0].innerText || columns[0].textContent;
         console.log("trying to eval script: " + script);
         try {
@@ -41,4 +51,7 @@ window.onload = check;
 <tr><td>(() =&gt; {let x = 10; return x == 10})();</td><td>false</td></tr>
 </tbody>
 </table>
+<div id="console-log">
+<!-- for ancient browsers without window.console -->
+</div>
 </html>
