@@ -11,11 +11,12 @@ try {
     console.log = function(message) {
         document.getElementById("console-log").appendChild(
             document.createTextNode(message));
+    /* cannot test console.log here because console-log div doesn't yet exist */
     };
-    console.log("log messages follow:");
 }
 var check = function() {
     var rows, columns, i, script, result;
+    /* sarge firefox doesn't recognize element.children */
     rows = document.getElementById("test-suite").childNodes;
     for (i = 0; i < rows.length; i++) {
         console.log("row " + i + ": " + rows[i]);

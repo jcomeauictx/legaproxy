@@ -7,6 +7,7 @@ TCPPID := /var/run/socat_x11.pid
 DOCKERPID := /var/run/docker_sarge.pid
 GATEWAY ?= $(subst ",,$(shell docker network inspect bridge | \
 	 awk '$$1 ~ /^"Gateway":$$/ {print $$2}'))
+TIMESTAMP := $(shell date '+%Y%D%M%H%m%s')
 # export what's needed for envsubst
 export BROWSER PACKAGE GATEWAY
 all: $(TASKNAME)
@@ -14,7 +15,7 @@ $(TASKNAME): Dockerfile Makefile ../es5-6.html
 	$(MAKE) tcpopen
 	$(MAKE) tmpclean
 	cp ../es5-6.html tmp/
-	-docker build --tag $@ $(<D)
+	-docker build --tag $@:$(TIMESTAMP) $(<D)
 	touch $@
 	$(MAKE) clean
 tcpopen:
