@@ -9,8 +9,13 @@ GATEWAY ?= $(subst ",,$(shell docker network inspect bridge | \
 	 awk '$$1 ~ /^"Gateway":$$/ {print $$2}'))
 # TIMESTAMP might be useful in image tag? or not.
 TIMESTAMP := $(shell date '+%Y%m%d%H%M%S')
-# export what's needed for envsubst
-export BROWSER PACKAGE GATEWAY
+ifeq ($(SHOW_ENV),)
+  # export what's needed for envsubst
+  export BROWSER PACKAGE GATEWAY
+else
+  # export everything so `make env` shows values
+  export
+endif
 all: $(TASKNAME)
 $(TASKNAME): Dockerfile Makefile ../es5-6.html
 	$(MAKE) tcpopen
