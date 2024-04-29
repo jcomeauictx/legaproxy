@@ -5,6 +5,9 @@ ADD tmp/es5-6.html /application
 RUN apt-get -y install $PACKAGE
 # xeyes for testing
 # each task must return true or build fails
-RUN apt-get -y install xbase-clients timeout
+RUN apt-get -y install xbase-clients timeout ssh
+RUN mv $SSHDCONF $SSHDORIG
+RUN sed 's/.*Port 22$/Port $SSHPORT/' $SSHDORIG > $SSHDCONF
+RUN /etc/init.d/ssh restart
 RUN timeout 10 /usr/bin/X11/xeyes || /bin/true
-RUN timeout 3600 $BROWSER /application/es5-6.html || /bin/true
+RUN timeout 600 $BROWSER /application/es5-6.html || /bin/true
