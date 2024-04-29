@@ -17,7 +17,8 @@ try {
 var check = function() {
     var rows, columns, i, script, result;
     /* sarge firefox doesn't recognize element.children */
-    rows = document.getElementById("test-suite").childNodes;
+    rows = document.getElementById("test-suite").children;
+    
     for (i = 0; i < rows.length; i++) {
         console.log("row " + i + ": " + rows[i]);
         columns = rows[i].childNodes;
@@ -56,3 +57,6 @@ window.onload = check;
 <!-- for ancient browsers without window.console -->
 </div>
 </html>
+<!--
+  vim: set tabstop=4 expandtab shiftwidth=4 softtabstop=4
+-->
