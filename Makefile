@@ -117,3 +117,8 @@ distclean: clean
 	rm -f Dockerfile
 useragent:
 	@echo '$(IPHONE6)'
+localserver: es5-6.html
+	@echo testing $< on local computer
+	python3 -m http.server --bind 127.0.0.1 8888 &
+	@echo waiting a few seconds to launch the browser
+	sleep 5 && $(BROWSER) http://localhost:8888/$<
