@@ -19,3 +19,4 @@ This application is based on the getting started guide at
 * [Needs X socket bind-mounted](https://unix.stackexchange.com/a/317533/2769)
 * [Building with files outside the context](https://www.baeldung.com/ops/docker-include-files-outside-build-context)
 * [Socat to share socket-bound X over TCP](https://askubuntu.com/a/41788/135108)
+* [Debugging with jsconsole.com (doesn't work on iPhone 6+, iOS 12.5.7)](https://www.codeblocq.com/2016/03/Remote-JavaScript-debugging-with-jsconsole/)
