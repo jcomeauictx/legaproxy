@@ -34,7 +34,7 @@ bind-run: $(TASKNAME)
 	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
 	 --workdir /app \
 	 --mount type=bind,src="$(PWD)",target=/app \
-	 node:$< \
+	 $< \
 	 sh -c "cat $(SSHDCONF) && \
 	  mkdir -p /root/.ssh && \
 	  echo $(USERPUB) >> /root/.ssh/authorized_keys && \
