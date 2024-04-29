@@ -39,8 +39,8 @@ bind-run: $(TASKNAME)
 	  mkdir -p /root/.ssh && \
 	  echo $(USERPUB) >> /root/.ssh/authorized_keys && \
 	  chmod 0700 /root/.ssh && \
-	  chmod 0600 /root/.ssh/authorized_keys"
-	 >> $<
+	  chmod 0600 /root/.ssh/authorized_keys" \
+	 > $<
 	while read line; do \
 	 echo $$line; \
 	 if [ "$$line" = "Listening on port $(SSHPORT)" ]; then break; fi \
