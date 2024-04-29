@@ -5,11 +5,11 @@ HOST ?= 127.0.0.1
 # the directory structure. Ain't worth it.
 PORT ?= 3000
 SSHPORT ?= 3022
-BROWSER ?= firefox
+BROWSER ?= $(shell which firefox open 2>/dev/null | head -n 1)
 APPNAME := getting-started
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
-USERPUB := $(shell cat /home/$(USER)/.ssh/id_rsa.pub)
+USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
 PIDFILE := /var/run/legaproxy.pid
 # add UserAgent strings of some legacy devices we want to support
 IPHONE6 := Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X)
@@ -36,7 +36,11 @@ endif
 # proxy envvars lowercase, for testing with wget
 https_proxy=http://$(PROXY)
 http_proxy=http://$(PROXY)
-export HOST PORT SSHPORT
+ifneq ($(SHOWENV),)
+ export
+else
+ export HOST PORT SSHPORT
+endif
 all: proxy
 test: bind-run view
 $(APPNAME): Dockerfile Makefile
@@ -119,6 +123,13 @@ useragent:
 	@echo '$(IPHONE6)'
 localserver: es5-6.html
 	@echo testing $< on local computer
-	python3 -m http.server --bind 127.0.0.1 8888 &
+	# don't fail launching browser if server launched previously
+	-python3 -m http.server --bind 127.0.0.1 8888 &
 	@echo waiting a few seconds to launch the browser
 	sleep 5 && $(BROWSER) http://localhost:8888/$<
+env:
+	if [ -z "$(SHOWENV)" ]; then \
+	 $(MAKE) SHOWENV=1 $@; \
+	else \
+	 env; \
+	fi
