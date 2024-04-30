@@ -1,11 +1,12 @@
 SHELL := /bin/bash
+HOST ?= 127.0.0.1
 BROWSER ?= /usr/bin/mozilla-firefox
 PACKAGE := $(notdir $(BROWSER))
 TASKNAME := browse
 SSHPORT := 3322
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
-USERPUB := $(HOME)/.ssh/id_rsa.pub
+USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
 X11SOCKET := /tmp/.X11-unix/X0
 TCPPID := /var/run/socat_x11.pid
 DOCKERPID := /var/run/docker_sarge.pid
@@ -28,18 +29,23 @@ $(TASKNAME): Dockerfile Makefile ../es5-6.html
 	# only mark with TASKNAME file if build successful
 	-docker build --tag $@ $(<D) && touch $@
 	$(MAKE) tcpclose tmpclean
+run: $(TASKNAME)
+	docker run \
+	 --interactive \
+	 --tty \
+	 --detach \
+	 $< \
+	 /bin/bash
 bind-run: $(TASKNAME)
 	docker run \
+	 --interactive \
+	 --tty \
 	 --detach \
 	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
 	 --workdir /app \
 	 --mount type=bind,src="$(PWD)",target=/app \
 	 $< \
-	 sh -c "cat $(SSHDCONF) && \
-	  mkdir -p /root/.ssh && \
-	  echo $(USERPUB) >> /root/.ssh/authorized_keys && \
-	  chmod 0700 /root/.ssh && \
-	  chmod 0600 /root/.ssh/authorized_keys" \
+	 /bin/bash \
 	 > $<
 	while read line; do \
 	 echo $$line; \
@@ -71,3 +77,5 @@ stop:
 	 docker stop $$(<$(TASKNAME)); \
 	 docker wait $$(<$(TASKNAME)); \
 	fi
+connect attach ssh login:
+	ssh -p $(SSHPORT) root@localhost
