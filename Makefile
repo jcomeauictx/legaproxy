@@ -1,16 +1,20 @@
 # allow Bashisms
 SHELL := /bin/bash
+# prefer /usr/bin over /usr/local/bin, especially for python3
+PATH := /usr/bin:$(PATH)
 HOST ?= 127.0.0.1
 # wanted to change PORT to 3080, but found out it's hardcoded throughout
 # the directory structure. Ain't worth it.
 PORT ?= 3000
 SSHPORT ?= 3022
 BROWSER ?= $(shell which firefox open 2>/dev/null | head -n 1)
+MITMDUMP = $(shell which mitmdump 2>/dev/null | head -n 1)
+PYTHON ?= $(shell which python3 2>/dev/null | head -n 1)
 APPNAME := getting-started
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
 USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
-PIDFILE := /var/run/legaproxy.pid
+PIDFILE := legaproxy.pid
 # add UserAgent strings of some legacy devices we want to support
 IPHONE6 := Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X)
 IPHONE6 += AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2
@@ -31,6 +35,7 @@ PROXYHOST := 127.0.0.1
 PROXYPORT := 8080
 PROXY := $(PROXYHOST):$(PROXYPORT)
 ifeq ($(MITMBROWSER),$(CHROME))
+ BROWSE += --temp-profile  # forces new chromium instance
  BROWSE += --proxy-server=$(PROXY)  # add proxy to browser commandline
 endif
 # proxy envvars lowercase, for testing with wget
@@ -39,7 +44,7 @@ http_proxy=http://$(PROXY)
 ifneq ($(SHOWENV),)
  export
 else
- export HOST PORT SSHPORT
+ export HOST PORT SSHPORT PATH
 endif
 all: proxy
 test: bind-run view
@@ -87,9 +92,12 @@ stop:
 	 docker stop $$(<$(APPNAME)); \
 	 docker wait $$(<$(APPNAME)); \
 	fi
-$(PIDFILE):
-	@sudo echo sudo now enabled for '`sudo tee`' below >&2
-	mitmdump --anticache \
+$(dir $(MITMDUMP))mitmdump:
+	@echo mitmdump not found, installing it now... >&2
+	pip3 install mitmproxy || \
+	 pip3 install --break-system-packages mitmproxy
+$(PIDFILE): $(dir $(MITMDUMP))mitmdump
+	$< --anticache \
 	 --anticomp \
 	 --listen-host $(PROXYHOST) \
 	 --listen-port $(PROXYPORT) \
@@ -97,16 +105,16 @@ $(PIDFILE):
 	 --scripts filter.py \
 	 --flow-detail 3 \
 	 --save-stream-file mitmproxy.log &>mitmdump.log & \
-	 echo $$! | sudo tee $@
+	 echo $$! | tee $@
 proxy: $(PIDFILE)
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
 	if [ -f "$(PIDFILE)" ]; then \
-	 sudo kill -s KILL $$(<$(PIDFILE)); \
-	  sudo rm -f $(PIDFILE); \
+	 kill -s KILL $$(<$(PIDFILE)); \
 	else \
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
+	-rm -f $(PIDFILE)
 purge:  # stop with no opportunity to restart
 	-$(MAKE) stop
 	# truncate file containing the stopped container ID
