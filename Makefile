@@ -46,7 +46,7 @@ ifneq ($(SHOWENV),)
 else
  export HOST PORT SSHPORT PATH
 endif
-all: proxy
+all: test
 test: bind-run view
 $(APPNAME): Dockerfile Makefile
 	docker build -t $@ $(<D)
