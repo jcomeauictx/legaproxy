@@ -8,7 +8,7 @@ This application is based on the getting started guide at
 ## Developer notes
 
 * You will need to `usermod -a -G docker $USER`.
-* <https://www.cyberciti.biz/faq/how-to-install-openssh-server-on-alpine-linux-including-docker/>
+* [Installing sshd](https://www.cyberciti.biz/faq/how-to-install-openssh-server-on-alpine-linux-including-docker/) and [also](https://wiki.alpinelinux.org/wiki/Setting_up_a_SSH_server)
 * <https://github.com/gliderlabs/docker-alpine/issues/437#issuecomment-494200575>
 * <https://dev.to/kazemmdev/building-cross-browser-compatible-web-apps-with-babel-a-step-by-step-guide-5c5h>
 * <https://symfonycasts.com/screencast/webpack-encore/postcss-browsers>

@@ -44,14 +44,14 @@ http_proxy=http://$(PROXY)
 ifneq ($(SHOWENV),)
  export
 else
- export HOST PORT SSHPORT PATH
+ export HOST PORT SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
 endif
 all: test
 test: bind-run view
 $(APPNAME): Dockerfile Makefile
 	docker build -t $@ $(<D)
 	touch $@
-%: %.template
+%: %.template Makefile
 	envsubst < $< > $@
 run: $(APPNAME)
 	docker run \
@@ -62,22 +62,8 @@ bind-run: $(APPNAME)
 	 --detach \
 	 --publish $(HOST):$(PORT):$(PORT) \
 	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
-	 --workdir /app \
 	 --mount type=bind,src="$(PWD)",target=/app \
-	 node:18-alpine \
-	 sh -c "apk add openssh && \
-	  mv $(SSHDCONF) $(SSHDORIG) && \
-	  sed 's/.*Port 22$$/Port $(SSHPORT)/' $(SSHDORIG) > $(SSHDCONF) && \
-	  cat $(SSHDCONF) && \
-	  ssh-keygen -A && \
-	  /usr/sbin/sshd && \
-	  mkdir -p /root/.ssh && \
-	  echo $(USERPUB) >> /root/.ssh/authorized_keys && \
-	  chmod 0700 /root/.ssh && \
-	  chmod 0600 /root/.ssh/authorized_keys && \
-	  yarn install && \
-	  yarn run dev" \
-	 > $<
+	 $< > $<
 	while read line; do \
 	 echo $$line; \
 	 if [ "$$line" = "Listening on port $(PORT)" ]; then break; fi \
@@ -88,7 +74,7 @@ view:
 connect attach ssh login:
 	ssh -p $(SSHPORT) root@localhost
 stop:
-	if [ -s "$(APPNAME)" ]; then \
+	-if [ -s "$(APPNAME)" ]; then \
 	 docker stop $$(<$(APPNAME)); \
 	 docker wait $$(<$(APPNAME)); \
 	fi
@@ -122,11 +108,12 @@ purge:  # stop with no opportunity to restart
 	>$(APPNAME)
 clean:
 	$(MAKE) stop
-	if [ -s "$(APPNAME)" ]; then docker rm $$(<$(APPNAME)); fi
-	if [ -f "$(APPNAME)" ]; then docker rmi $(APPNAME); fi
+	-if [ -s "$(APPNAME)" ]; then docker rm $$(<$(APPNAME)); fi
+	-if [ -f "$(APPNAME)" ]; then docker rmi $(APPNAME); fi
 	rm -f $(APPNAME)
 distclean: clean
-	rm -f Dockerfile
+	-rm -f Dockerfile
+	-sudo rm -rf node_modules fontconfig
 useragent:
 	@echo '$(IPHONE6)'
 localserver: es5-6.html

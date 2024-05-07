@@ -5,11 +5,17 @@ WORKDIR /app
 COPY . .
 RUN yarn install --production
 # fix babel installation to support `npx babel` commands
-# NOTE: this doesn't work, commenting out 2024-05-07
-# (the commands run, but don't seem to affect the running image;
-#  running `npx babel` still gives error message to uninstall babel
-#  and install babel-cli)
-#RUN npm uninstall babel
-#RUN npm install --save-dev babel-cli
+RUN npm uninstall babel
+RUN npm install --save-dev babel-cli
+# set up sshd to run in background
+RUN apk add openssh openrc
+RUN mv $SSHDCONF $SSHDORIG
+RUN sed 's/.*Port 22$/Port $SSHPORT/' $SSHDORIG > $SSHDCONF
+RUN rc-update add sshd
+RUN rc-service sshd start || true  # it may already be running
+# allow $USER to login to container as root
+RUN mkdir -m 700 -p /root/.ssh
+RUN echo $USERPUB >> /root/.ssh/authorized_keys
+RUN chmod 0600 /root/.ssh/authorized_keys
 CMD ["node", "src/index.js"]
 EXPOSE $PORT
