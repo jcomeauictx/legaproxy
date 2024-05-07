@@ -4,5 +4,12 @@ FROM node:18-alpine
 WORKDIR /app
 COPY . .
 RUN yarn install --production
+# fix babel installation to support `npx babel` commands
+# NOTE: this doesn't work, commenting out 2024-05-07
+# (the commands run, but don't seem to affect the running image;
+#  running `npx babel` still gives error message to uninstall babel
+#  and install babel-cli)
+#RUN npm uninstall babel
+#RUN npm install --save-dev babel-cli
 CMD ["node", "src/index.js"]
 EXPOSE $PORT
