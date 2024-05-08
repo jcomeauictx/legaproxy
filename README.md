@@ -22,3 +22,4 @@ This application is based on the getting started guide at
 * [Debugging with jsconsole.com (doesn't work on iPhone 6+, iOS 12.5.7)](https://www.codeblocq.com/2016/03/Remote-JavaScript-debugging-with-jsconsole/)
 * [Understanding `docker run`, `docker exec`, and how to keep container running in background](https://linuxhandbook.com/run-docker-container/)
 * [`kex_exchange_identification: Connection closed by remote host`](https://github.com/gliderlabs/docker-alpine/issues/437)
+* [CMD vs ENTRYPOINT](https://www.cloudbees.com/blog/understanding-dockers-cmd-and-entrypoint-instructions)
