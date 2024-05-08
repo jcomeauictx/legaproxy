@@ -49,6 +49,11 @@ endif
 all: test
 test: bind-run view
 $(APPNAME): Dockerfile Makefile
+	if [ -f "$@" ]; then \
+	 echo $@ already exists >&2; \
+	 echo 'Maybe you want to `make distclean` first?' >&2; \
+	 false; \
+	fi
 	docker build -t $@ $(<D)
 	touch $@
 %: %.template Makefile
@@ -57,22 +62,29 @@ run: $(APPNAME)
 	docker run \
 	 --detach \
 	 --publish $(HOST):$(PORT):$(PORT) $< > $<
+	docker exec $$(<$<) rc-service sshd restart
 bind-run: $(APPNAME)
 	docker run \
 	 --detach \
 	 --publish $(HOST):$(PORT):$(PORT) \
 	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
-	 --mount type=bind,src="$(PWD)",target=/app \
+	 --mount type=bind,src="$(PWD)",target=/app_src \
 	 $< > $<
 	while read line; do \
 	 echo $$line; \
 	 if [ "$$line" = "Listening on port $(PORT)" ]; then break; fi \
 	done \
 	 < <(docker logs --follow $$(<$<))
+	docker exec $$(<$<) rc-service sshd restart
 view:
 	$(BROWSER) $(HOST):$(PORT)/
-connect attach ssh login:
-	ssh -p $(SSHPORT) root@localhost
+connect attach: $(APPNAME)
+	docker exec --interactive --tty $$(<$<) sh
+ssh login: $(APPNAME)
+	ssh -p $(SSHPORT) \
+	 -oStrictHostKeyChecking=no \
+	 -oUserKnownHostsFile=/dev/null \
+	 root@localhost
 stop:
 	-if [ -s "$(APPNAME)" ]; then \
 	 docker stop $$(<$(APPNAME)); \
@@ -113,7 +125,9 @@ clean:
 	rm -f $(APPNAME)
 distclean: clean
 	-rm -f Dockerfile
-	-sudo rm -rf node_modules fontconfig
+	if [ -d node_modules ]; then sudo rm -rf node_modules; fi
+	if [ -d fontconfig ]; then sudo rm -rf fontconfig; fi
+	if [ -d storage ]; then rm -rf storage; fi
 useragent:
 	@echo '$(IPHONE6)'
 localserver: es5-6.html
