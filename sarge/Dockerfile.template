@@ -7,10 +7,13 @@ RUN apt-get -y install $PACKAGE
 # each task must return true or build fails
 RUN apt-get -y install xbase-clients timeout ssh
 RUN mv $SSHDCONF $SSHDORIG
-RUN sed 's/.*Port 22$/Port $SSHPORT/' $SSHDORIG > $SSHDCONF
-RUN /etc/init.d/ssh restart
+RUN sed \
+ -e 's/.*Port 22$/Port $SSHPORT/' \
+ -e 's/.*X11Forwarding no$/X11Forwarding yes/' \
+ $SSHDORIG > $SSHDCONF
 RUN mkdir -m 0700 -p /root/.ssh
 RUN echo $USERPUB >> /root/.ssh/authorized_keys
 RUN chmod 0600 /root/.ssh/authorized_keys
 RUN timeout 10 /usr/bin/X11/xeyes || /bin/true
 RUN timeout 600 $BROWSER /application/es5-6.html || /bin/true
+CMD ["/usr/sbin/sshd", "-D"]

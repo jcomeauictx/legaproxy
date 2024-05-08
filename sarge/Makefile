@@ -10,6 +10,7 @@ USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
 X11SOCKET := /tmp/.X11-unix/X0
 TCPPID := /var/run/socat_x11.pid
 DOCKERPID := /var/run/docker_sarge.pid
+SSHOPTS ?=  # set to -vvv to debug
 GATEWAY ?= $(subst ",,$(shell docker network inspect bridge | \
 	 awk '$$1 ~ /^"Gateway":$$/ {print $$2}'))
 # TIMESTAMP might be useful in image tag? or not.
@@ -31,27 +32,15 @@ $(TASKNAME): Dockerfile Makefile ../es5-6.html
 	$(MAKE) tcpclose tmpclean
 run: $(TASKNAME)
 	docker run \
-	 --interactive \
-	 --tty \
 	 --detach \
-	 $< \
-	 /bin/bash
+	 $< > $<
 bind-run: $(TASKNAME)
 	docker run \
-	 --interactive \
-	 --tty \
 	 --detach \
 	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
 	 --workdir /app \
 	 --mount type=bind,src="$(PWD)",target=/app \
-	 $< \
-	 /bin/bash \
-	 > $<
-	while read line; do \
-	 echo $$line; \
-	 if [ "$$line" = "Listening on port $(SSHPORT)" ]; then break; fi \
-	done \
-	 < <(docker logs --follow $$(<$<))
+	 $< > $<
 tcpopen:
 	@sudo echo sudo now enabled for '`sudo tee`' below >&2
 	socat TCP-LISTEN:6000,fork,bind=$(GATEWAY) UNIX-CONNECT:$(X11SOCKET) & \
@@ -68,14 +57,22 @@ tmpclean:
 	-find tmp/ -mindepth 1 -type d | xargs --no-run-if-empty rmdir
 clean: tcpclose tmpclean
 	$(MAKE) stop
-	if [ -s "$(TASKNAME)" ]; then docker rm $$(<$(TASKNAME)); fi
+	-if [ -s "$(TASKNAME)" ]; then docker rm $$(<$(TASKNAME)); fi
 distclean: clean
 	-docker rmi $(TASKNAME):$(TASKNAME)
 	rm -f $(TASKNAME)
 stop:
-	if [ -s "$(TASKNAME)" ]; then \
+	-if [ -s "$(TASKNAME)" ]; then \
 	 docker stop $$(<$(TASKNAME)); \
 	 docker wait $$(<$(TASKNAME)); \
 	fi
-connect attach ssh login:
-	ssh -p $(SSHPORT) root@localhost
+connect attach: | $(TASKNAME)
+	docker exec --interactive --tty $$(<$|) /bin/bash
+ssh login: | $(TASKNAME)
+	ssh $(SSHOPTS) -Y -p $(SSHPORT) \
+	 -oStrictHostKeyChecking=no \
+	 -oUserKnownHostsFile=/dev/null \
+	 -oKexAlgorithms=+diffie-hellman-group1-sha1 \
+	 -oHostKeyAlgorithms=+ssh-rsa \
+	 -oPubkeyAcceptedKeyTypes=+ssh-rsa \
+	 root@localhost
