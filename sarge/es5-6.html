@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>ES5 and ES6 support page</title>
+<meta charset="utf-8">
+<script type="text/javascript">
+try {
+    console.log("testing console.log");
+} catch (error) {
+    console = {};
+    console.log = function(message) {
+        document.getElementById("console-log").appendChild(
+            document.createTextNode(message));
+    /* cannot test console.log here because console-log div doesn't yet exist */
+    };
+}
+var check = function() {
+    var rows, columns, i, script, result;
+    /* sarge firefox doesn't recognize element.children */
+    rows = document.getElementById("test-suite").children;
+    for (i = 0; i < rows.length; i++) {
+        console.log("row " + i + ": " + rows[i]);
+        columns = rows[i].childNodes;
+        script = columns[0].innerText || columns[0].textContent;
+        console.log("trying to eval script: " + script);
+        try {
+            result = eval(script);
+        } catch (error) {
+            result = false;
+            console.log("Error during eval of '" + script + "': " + error);
+        }
+	if (typeof columns[1].innerText == "undefined") {
+            columns[1].textContent = result;
+        } else {
+            columns[1].innerText = result;
+        }
+    }
+}
+window.onload = check;
+</script>
+</head>
+<body>
+<table>
+<thead>
+<tr><th>Example</th><th>Supported</th></tr>
+</thead>
+<tbody id="test-suite">
+<tr><td>(function() {var x = 10; return x == 10})();</td><td>false</td></tr>
+<tr><td>(function() {var x = 10; return x === 10})();</td><td>false</td></tr>
+<tr><td>(function() {let x = 10; return x == 10})();</td><td>false</td></tr>
+<tr><td>(function() {const x = 10; return x == 10})();</td><td>false</td></tr>
+<tr><td>(() =&gt; {let x = 10; return x == 10})();</td><td>false</td></tr>
+</tbody>
+</table>
+<div id="console-log">
+<!-- for ancient browsers without window.console -->
+</div>
+</html>
+<!-- vim: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: -->
