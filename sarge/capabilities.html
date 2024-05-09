@@ -5,26 +5,6 @@
 <meta charset="utf-8">
 <script type="text/javascript">
 var check = function() {
-    try {
-        console.log("testing console.log");
-    } catch (error) {
-        var h1element;
-        console = {};
-        console.div = document.lastChild.lastChild.childNodes[3];
-        //alert("console.div: " +  console.div);
-        h1element = document.createElement("h1");
-        h1element.appendChild(document.createTextNode("Log output"));
-        console.div.appendChild(h1element);
-        console.log = function(message) {
-            var entrydiv, entrytext;
-            entrydiv = document.createElement("div");
-            entrytext = document.createTextNode(message);
-            entrydiv.appendChild(entrytext);
-            console.div.appendChild(entrydiv);
-        };
-    }
-    var spaces = "\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0";  // `&nbsp;`s
-    spaces += spaces + spaces + spaces  // 32 ought to be enough
     var lognode = function(node) {
         logstring = "";
         for (attr in node) logstring += attr + "; ";
@@ -38,6 +18,26 @@ var check = function() {
         }
         return elements;
     };
+    try {
+        console.log("testing console.log");
+    } catch (error) {
+        var h1element;
+        console = {};
+        console.div = document.lastChild.lastChild.childNodes[5];
+        //alert("console.div: " +  console.div + ": " + lognode(console.div));
+        h1element = document.createElement("h1");
+        h1element.appendChild(document.createTextNode("Log output"));
+        console.div.appendChild(h1element);
+        console.log = function(message) {
+            var entrydiv, entrytext;
+            entrydiv = document.createElement("div");
+            entrytext = document.createTextNode(message);
+            entrydiv.appendChild(entrytext);
+            console.div.appendChild(entrydiv);
+        };
+    }
+    var spaces = "\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0";  // `&nbsp;`s
+    spaces += spaces + spaces + spaces  // 32 ought to be enough
     var quote = function(string) {
         return string != null ? '"' + string + '"': null
     };
