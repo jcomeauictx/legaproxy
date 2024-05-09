@@ -10,7 +10,7 @@ var check = function() {
     } catch (error) {
         var h1element;
         console = {};
-        console.div = document.lastChild.lastChild;
+        console.div = document.lastChild.lastChild.childNodes[3];
         //alert("console.div: " +  console.div);
         h1element = document.createElement("h1");
         h1element.appendChild(document.createTextNode("Log output"));
@@ -56,7 +56,7 @@ var check = function() {
         if (!level) console.log("end of node tree");
     };
     console.log("starting check()");
-    var body, childnodes, table, tbody, rows, columns, i, script, result;
+    var body, parts, table, tbody, rows, columns, i, script, result;
     /* sarge firefox doesn't recognize element.children */
     /* NOTE: the following is being figured out by trial-and-error, using
      * firefox over `ssh -Y` to a Debian sarge docker image with a bind mount,
@@ -67,16 +67,16 @@ var check = function() {
     // first child of HTML element is HEAD. We want HTML | BODY
     body = children(document.childNodes[1])[1];
     console.log("body: " + body);
-    childnodes = body.childNodes;
+    parts = children(body);
+    console.log("parts: " + parts);
     table = body.childNodes[3].childNodes[1];
     console.log("table: " + table + ", length: " + table.childNodes.length);
-    tbody = table.childNodes[1];
+    tbody = children(table)[0];
     console.log("tbody: " + tbody + ", length: " + tbody.childNodes.length);
-    rows = tbody.childNodes;
+    rows = children(tbody);
     for (i = 0; i < rows.length; i++) {
         console.log("row " + i + ": " + rows[i]);
-        /*
-        columns = rows[i].childNodes;
+        columns = children(rows[i]);
         script = columns[0].innerText || columns[0].textContent;
         console.log("trying to eval script: " + script);
         try {
@@ -90,9 +90,7 @@ var check = function() {
         } else {
             columns[2].innerText = result;
         }
-        */
     }
-    console.log(tbody.nextSibling.nextSibling);
 };
 window.onload = check;
 </script>
