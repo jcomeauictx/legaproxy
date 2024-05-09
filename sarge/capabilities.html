@@ -23,7 +23,8 @@ var check = function() {
             console.div.appendChild(entrydiv);
         };
     }
-    var spaces = "\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0";  // `&nbsp;`s
+    var spaces = "\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0";  // `&nbsp;`s
+    spaces += spaces + spaces + spaces  // 32 ought to be enough
     var lognode = function(node) {
         logstring = "";
         for (attr in node) logstring += attr + "; ";
@@ -35,6 +36,7 @@ var check = function() {
         for (var i = 0; i < nodes.length; i++) {
             if (nodes[i].tagName != null) elements.push(nodes[i]);
         }
+        return elements;
     };
     var quote = function(string) {
         return string != null ? '"' + string + '"': null
@@ -61,7 +63,10 @@ var check = function() {
      * editing the file, `:w`, refresh the page, and watch the on-page console
      * log update. Tedious but fascinating in a way, too. */
     logtree(document);
-    body = document.childNodes[1].childNodes[2];
+    // first child of document is DocumentType;
+    // first child of HTML element is HEAD. We want HTML | BODY
+    body = children(document.childNodes[1])[1];
+    console.log("body: " + body);
     childnodes = body.childNodes;
     table = body.childNodes[3].childNodes[1];
     console.log("table: " + table + ", length: " + table.childNodes.length);
@@ -88,7 +93,7 @@ var check = function() {
         */
     }
     console.log(tbody.nextSibling.nextSibling);
-}
+};
 window.onload = check;
 </script>
 </head>
