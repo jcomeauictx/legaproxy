@@ -1,31 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>ES5 and ES6 support page</title>
+<title>JavaScript support test page</title>
 <meta charset="utf-8">
 <script type="text/javascript">
+var check = function() {
     try {
         console.log("testing console.log");
     } catch (error) {
+        var h1element;
         console = {};
+        console.div = document.lastChild.lastChild;
+        //alert("console.div: " +  console.div);
+        h1element = document.createElement("h1");
+        h1element.appendChild(document.createTextNode("Log output"));
+        console.div.appendChild(h1element);
         console.log = function(message) {
-            var logdiv = document.lastChild.lastChild;
-            alert(logdiv);
+            var entrydiv, entrytext;
             entrydiv = document.createElement("div");
             entrytext = document.createTextNode(message);
             entrydiv.appendChild(entrytext);
-            logdiv.appendChild(entrydiv);
+            console.div.appendChild(entrydiv);
         };
     }
-var check = function() {
     console.log("starting check()");
-    var table, tbody, rows, columns, i, script, result;
+    var body, table, tbody, rows, columns, i, script, result;
     /* sarge firefox doesn't recognize element.children */
-    table = document.childNodes[1].firstChild;
+    /* NOTE: the following is being figured out by trial-and-error, using
+     * firefox over `ssh -Y` to a Debian sarge docker image with a bind mount,
+     * editing the file, `:w`, refresh the page, and watch the on-page console
+     * log update. Tedious but fascinating in a way, too. */
+    console.log(document.childNodes[0]);
+    console.log(document.childNodes[1]);
+    body = document.childNodes[1].childNodes[2];
+    console.log("body: " + body);
+    table = body.childNodes[3].childNodes[1];
+    console.log("table: " + table);
     tbody = table.childNodes[1];
+    console.log("tbody: " + tbody);
     rows = tbody.childNodes;
     for (i = 0; i < rows.length; i++) {
         console.log("row " + i + ": " + rows[i]);
+        /*
         columns = rows[i].childNodes;
         script = columns[0].innerText || columns[0].textContent;
         console.log("trying to eval script: " + script);
@@ -40,12 +56,14 @@ var check = function() {
         } else {
             columns[2].innerText = result;
         }
+        */
     }
 }
 window.onload = check;
 </script>
 </head>
 <body>
+<h1>Javascript support test page</h1>
 <div>
 <table>
 <thead>
