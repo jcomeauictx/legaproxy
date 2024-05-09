@@ -24,6 +24,11 @@ var check = function() {
         };
     }
     var spaces = "\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0";  // `&nbsp;`s
+    var lognode = function(node) {
+        logstring = "";
+        for (attr in node) logstring += attr + "; ";
+        return logstring;
+    }
     var logtree = function(root, level) {
         var children = root.childNodes;
         var childcount = children.length;
@@ -32,7 +37,7 @@ var check = function() {
             console.log("node tree starting at " + root);
         }
         console.log(spaces.substring(0, level * 2) +
-            root + ": " + root.nodeValue);
+            root + ": " + lognode(root) + ", nodeValue: " + root.nodeValue);
         for (var i = 0; i < childcount; i++) {
             logtree(children[i], level + 1);
         }
