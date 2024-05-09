@@ -37,7 +37,7 @@ var check = function() {
             console.log("node tree starting at " + root);
         }
         console.log(spaces.substring(0, level * 2) +
-            root + ": " + lognode(root) + ", nodeValue: " + root.nodeValue);
+            root + ": " + (root.tagName || root.nodeValue));
         for (var i = 0; i < childcount; i++) {
             logtree(children[i], level + 1);
         }
