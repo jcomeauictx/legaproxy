@@ -33,11 +33,11 @@ var check = function() {
     console.log(document.childNodes[0]);
     console.log(document.childNodes[1]);
     body = document.childNodes[1].childNodes[2];
-    console.log("body: " + body);
+    console.log("body: " + body + ", length: " + body.childNodes.length);
     table = body.childNodes[3].childNodes[1];
-    console.log("table: " + table);
+    console.log("table: " + table + ", length: " + table.childNodes.length);
     tbody = table.childNodes[1];
-    console.log("tbody: " + tbody);
+    console.log("tbody: " + tbody + ", length: " + tbody.childNodes.length);
     rows = tbody.childNodes;
     for (i = 0; i < rows.length; i++) {
         console.log("row " + i + ": " + rows[i]);
@@ -58,6 +58,7 @@ var check = function() {
         }
         */
     }
+    console.log(tbody.nextSibling.nextSibling);
 }
 window.onload = check;
 </script>
