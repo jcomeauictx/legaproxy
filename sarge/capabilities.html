@@ -24,7 +24,7 @@ var check = function() {
         };
     }
     console.log("starting check()");
-    var body, table, tbody, rows, columns, i, script, result;
+    var body, childnodes, table, tbody, rows, columns, i, script, result;
     /* sarge firefox doesn't recognize element.children */
     /* NOTE: the following is being figured out by trial-and-error, using
      * firefox over `ssh -Y` to a Debian sarge docker image with a bind mount,
@@ -33,7 +33,13 @@ var check = function() {
     console.log(document.childNodes[0]);
     console.log(document.childNodes[1]);
     body = document.childNodes[1].childNodes[2];
-    console.log("body: " + body + ", length: " + body.childNodes.length);
+    childnodes = body.childNodes;
+    console.log("body: " + body + ", length: " + childnodes.length);
+    /*
+    for (i = 0; i < childnodes.length; i++) {
+        console.log("body child " + i + ": " + childnodes[i]);
+    }
+    */
     table = body.childNodes[3].childNodes[1];
     console.log("table: " + table + ", length: " + table.childNodes.length);
     tbody = table.childNodes[1];
