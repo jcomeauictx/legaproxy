@@ -23,6 +23,20 @@ var check = function() {
             console.div.appendChild(entrydiv);
         };
     }
+    var spaces = "\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0";  // `&nbsp;`s
+    var logtree = function(root, level) {
+        var children = root.childNodes;
+        var childcount = children.length;
+        if (!level) {
+            level = 0;
+            console.log("node tree starting at " + root);
+        }
+        console.log(spaces.substring(0, level * 2) + root);
+        for (var i = 0; i < childcount; i++) {
+            logtree(children[i], level + 1);
+        }
+        if (!level) console.log("end of node tree");
+    }    
     console.log("starting check()");
     var body, childnodes, table, tbody, rows, columns, i, script, result;
     /* sarge firefox doesn't recognize element.children */
@@ -30,14 +44,9 @@ var check = function() {
      * firefox over `ssh -Y` to a Debian sarge docker image with a bind mount,
      * editing the file, `:w`, refresh the page, and watch the on-page console
      * log update. Tedious but fascinating in a way, too. */
-    console.log(document.childNodes[0]);
-    console.log(document.childNodes[1]);
+    logtree(document);
     body = document.childNodes[1].childNodes[2];
     childnodes = body.childNodes;
-    console.log("body: " + body + ", length: " + childnodes.length);
-    for (i = 0; i < 12; i++) {
-        console.log("body child " + i + ": " + childnodes[i]);
-    }
     table = body.childNodes[3].childNodes[1];
     console.log("table: " + table + ", length: " + table.childNodes.length);
     tbody = table.childNodes[1];
