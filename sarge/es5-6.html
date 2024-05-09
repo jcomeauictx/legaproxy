@@ -4,20 +4,26 @@
 <title>ES5 and ES6 support page</title>
 <meta charset="utf-8">
 <script type="text/javascript">
-try {
-    console.log("testing console.log");
-} catch (error) {
-    console = {};
-    console.log = function(message) {
-        document.getElementById("console-log").appendChild(
-            document.createTextNode(message));
-    /* cannot test console.log here because console-log div doesn't yet exist */
-    };
-}
+    try {
+        console.log("testing console.log");
+    } catch (error) {
+        console = {};
+        console.log = function(message) {
+            var logdiv = document.lastChild.lastChild;
+            alert(logdiv);
+            entrydiv = document.createElement("div");
+            entrytext = document.createTextNode(message);
+            entrydiv.appendChild(entrytext);
+            logdiv.appendChild(entrydiv);
+        };
+    }
 var check = function() {
-    var rows, columns, i, script, result;
+    console.log("starting check()");
+    var table, tbody, rows, columns, i, script, result;
     /* sarge firefox doesn't recognize element.children */
-    rows = document.getElementById("test-suite").children;
+    table = document.childNodes[1].firstChild;
+    tbody = table.childNodes[1];
+    rows = tbody.childNodes;
     for (i = 0; i < rows.length; i++) {
         console.log("row " + i + ": " + rows[i]);
         columns = rows[i].childNodes;
@@ -29,10 +35,10 @@ var check = function() {
             result = false;
             console.log("Error during eval of '" + script + "': " + error);
         }
-	if (typeof columns[1].innerText == "undefined") {
-            columns[1].textContent = result;
+	if (typeof columns[2].innerText == "undefined") {
+            columns[2].textContent = result;
         } else {
-            columns[1].innerText = result;
+            columns[2].innerText = result;
         }
     }
 }
@@ -40,20 +46,42 @@ window.onload = check;
 </script>
 </head>
 <body>
+<div>
 <table>
 <thead>
-<tr><th>Example</th><th>Supported</th></tr>
+<tr><th>Example</th><th>Expected</th><th>Result</th></tr>
 </thead>
 <tbody id="test-suite">
-<tr><td>(function() {var x = 10; return x == 10})();</td><td>false</td></tr>
-<tr><td>(function() {var x = 10; return x === 10})();</td><td>false</td></tr>
-<tr><td>(function() {let x = 10; return x == 10})();</td><td>false</td></tr>
-<tr><td>(function() {const x = 10; return x == 10})();</td><td>false</td></tr>
-<tr><td>(() =&gt; {let x = 10; return x == 10})();</td><td>false</td></tr>
+<tr>
+    <td>(function() {var x = 10; return x == 10})();</td>
+    <td>true</td>
+    <td>&nbsp;</td>
+</tr>
+<tr>
+    <td>(function() {var x = 10; return x === 10})();</td>
+    <td>true</td>
+    <td>&nbsp;</td>
+</tr>
+<tr>
+    <td>(function() {let x = 10; return x == 10})();</td>
+    <td>true</td>
+    <td>&nbsp;</td>
+</tr>
+<tr>
+    <td>(function() {const x = 10; return x == 10})();</td>
+    <td>true</td>
+    <td>&nbsp;</td>
+</tr>
+<tr>
+    <td>(() =&gt; {let x = 10; return x == 10})();</td>
+    <td>true</td>
+    <td>&nbsp;</td>
+</tr>
 </tbody>
 </table>
+</div>
 <div id="console-log">
 <!-- for ancient browsers without window.console -->
 </div>
 </html>
-<!-- vim: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: -->
+<!-- vim: set tabstop=8 expandtab shiftwidth=4 softtabstop=4: -->
