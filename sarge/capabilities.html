@@ -28,21 +28,31 @@ var check = function() {
         logstring = "";
         for (attr in node) logstring += attr + "; ";
         return logstring;
-    }
+    };
+    var children = function(node) {
+        var nodes = node.childNodes;
+        var elements = [];
+        for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].tagName != null) elements.push(nodes[i]);
+        }
+    };
+    var quote = function(string) {
+        return string != null ? '"' + string + '"': null
+    };
     var logtree = function(root, level) {
-        var children = root.childNodes;
-        var childcount = children.length;
+        var childnodes = root.childNodes;
+        var childcount = childnodes.length;
         if (!level) {
             level = 0;
             console.log("node tree starting at " + root);
         }
-        console.log(spaces.substring(0, level * 2) +
-            root + ": " + (root.tagName || root.nodeValue));
+        console.log(spaces.substring(0, level * 4) +
+            (root.tagName || quote(root.nodeValue) || root));
         for (var i = 0; i < childcount; i++) {
-            logtree(children[i], level + 1);
+            logtree(childnodes[i], level + 1);
         }
         if (!level) console.log("end of node tree");
-    }    
+    };
     console.log("starting check()");
     var body, childnodes, table, tbody, rows, columns, i, script, result;
     /* sarge firefox doesn't recognize element.children */
