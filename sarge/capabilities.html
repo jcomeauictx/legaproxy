@@ -23,8 +23,8 @@ var check = function() {
     } catch (error) {
         var h1element;
         console = {};
-        console.div = document.lastChild.lastChild.childNodes[5];
-        //alert("console.div: " +  console.div + ": " + lognode(console.div));
+        console.div = children(document.lastChild.lastChild).slice(-1)[0];
+        alert("console.div: " +  console.div + ": " + lognode(console.div));
         h1element = document.createElement("h1");
         h1element.appendChild(document.createTextNode("Log output"));
         console.div.appendChild(h1element);
