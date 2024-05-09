@@ -23,13 +23,11 @@ else
   export
 endif
 all: $(TASKNAME)
-$(TASKNAME): Dockerfile Makefile ../es5-6.html
+$(TASKNAME): Dockerfile Makefile
 	$(MAKE) tcpopen
-	$(MAKE) tmpclean
-	cp ../es5-6.html tmp/
 	# only mark with TASKNAME file if build successful
 	-docker build --tag $@ $(<D) && touch $@
-	$(MAKE) tcpclose tmpclean
+	$(MAKE) tcpclose
 run: $(TASKNAME)
 	docker run \
 	 --detach \
@@ -52,14 +50,11 @@ tcpclose:
 	envsubst < $< > $@
 env:
 	$@
-tmpclean:
-	find tmp/ -not -type d -and -not -name README.md -delete
-	-find tmp/ -mindepth 1 -type d | xargs --no-run-if-empty rmdir
-clean: tcpclose tmpclean
+clean: tcpclose
 	$(MAKE) stop
 	-if [ -s "$(TASKNAME)" ]; then docker rm $$(<$(TASKNAME)); fi
 distclean: clean
-	-docker rmi $(TASKNAME):$(TASKNAME)
+	-docker rmi $(TASKNAME):latest
 	rm -f $(TASKNAME)
 stop:
 	-if [ -s "$(TASKNAME)" ]; then \

@@ -1,7 +1,7 @@
 FROM wyaeld/sarge
 WORKDIR /application
 ENV DISPLAY=$GATEWAY:0
-ADD tmp/es5-6.html /application
+ADD capabilities.html /application
 RUN apt-get -y install $PACKAGE
 # xeyes for testing
 # each task must return true or build fails
@@ -15,5 +15,5 @@ RUN mkdir -m 0700 -p /root/.ssh
 RUN echo $USERPUB >> /root/.ssh/authorized_keys
 RUN chmod 0600 /root/.ssh/authorized_keys
 RUN timeout 10 /usr/bin/X11/xeyes || /bin/true
-RUN timeout 600 $BROWSER /application/es5-6.html || /bin/true
+RUN timeout 600 $BROWSER /application/capabilities.html || /bin/true
 CMD ["/usr/sbin/sshd", "-D"]
