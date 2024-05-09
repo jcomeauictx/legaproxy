@@ -50,7 +50,7 @@ var check = function() {
         }
         console.log(spaces.substring(0, level * 4) +
             (root.tagName || quote(root.nodeValue) || root));
-        for (var i = 0; i < childcount; i++) {
+        if (childcount < 20) for (var i = 0; i < childcount; i++) {
             logtree(childnodes[i], level + 1);
         }
         if (!level) console.log("end of node tree");
