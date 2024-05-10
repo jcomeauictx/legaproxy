@@ -8,6 +8,7 @@ BROWSER ?= $(shell which firefox open 2>/dev/null | head -n 1)
 MITMDUMP = $(shell which mitmdump 2>/dev/null | head -n 1)
 PYTHON ?= $(shell which python3 2>/dev/null | head -n 1)
 APPNAME := npx
+TESTFILE := capabilities.html
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
 USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
@@ -56,7 +57,10 @@ $(APPNAME): Dockerfile Makefile
 %: %.template Makefile
 	envsubst < $< > $@
 run: | $(APPNAME)
-	cat es5-6.html | docker run --rm $| babel
+	cat $(TESTFILE) | \
+	 sed -n 's/^[<]tr[>][<]td[>]//p' capabilities.html | \
+	 sed -e 's/[<].*[>]//' -e 's/&gt;/>/' | \
+	 docker run --rm $| babel
 rerun:
 	touch $(APPNAME) Dockerfile
 	$(MAKE) run
@@ -76,7 +80,7 @@ connect attach: | $(APPNAME)
 	if [ -s "$|" ]; then \
 	 docker exec --interactive --tty $$(tail -n 1 $|) sh; \
 	else \
-	 echo No active containers; '`make bind-run`' first. >&2; \
+	 echo 'No active containers; `make bind-run` first.' >&2; \
 	fi
 ssh login: $(APPNAME)
 	ssh -p $(SSHPORT) \
@@ -130,12 +134,12 @@ distclean: clean
 	if [ -d storage ]; then rm -rf storage; fi
 useragent:
 	@echo '$(IPHONE6)'
-localserver: es5-6.html
+localserver: | $(TESTFILE)
 	@echo testing $< on local computer
 	# don't fail launching browser if server launched previously
 	-python3 -m http.server --bind 127.0.0.1 8888 &
 	@echo waiting a few seconds to launch the browser
-	sleep 5 && $(BROWSER) http://localhost:8888/$<
+	sleep 5 && $(BROWSER) http://localhost:8888/$|
 env:
 	if [ -z "$(SHOWENV)" ]; then \
 	 $(MAKE) SHOWENV=1 $@; \
