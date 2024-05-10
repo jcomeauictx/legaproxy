@@ -7,9 +7,9 @@ SSHPORT ?= 3022
 BROWSER ?= $(shell which firefox open 2>/dev/null | head -n 1)
 MITMDUMP = $(shell which mitmdump 2>/dev/null | head -n 1)
 PYTHON ?= $(shell which python3 2>/dev/null | head -n 1)
-APPNAME := babel
-DOCKERRUN ?= docker run --rm
+APPNAME ?= npx
 TESTFILE := capabilities.html
+DOCKERRUN ?= docker run --interactive --rm
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
 USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
@@ -43,7 +43,7 @@ http_proxy=http://$(PROXY)
 ifneq ($(SHOWENV),)
  export
 else
- export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB APPNAME
+ export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
 endif
 all: test
 test: bind-run view
@@ -65,7 +65,7 @@ run: | $(APPNAME)
 	 sed -e 's/[<].*[>]//' -e 's/&gt;/>/' | \
 	 $(DOCKERRUN) $| babel
 check:  # run on container itself
-	$(MAKE) SHELL=/bin/sh DOCKERRUN= run
+	$(MAKE) DOCKERRUN= run
 rerun:
 	$(MAKE) retouch
 	$(MAKE) run
@@ -83,7 +83,7 @@ reconnect reattach:
 	$(MAKE) connect
 connect attach: | $(APPNAME)
 	if [ -s "$|" ]; then \
-	 docker exec --interactive --tty $$(tail -n 1 $|) sh; \
+	 docker exec --interactive --tty $$(tail -n 1 $|) /bin/sh; \
 	else \
 	 echo 'No active containers; `make bind-run` first.' >&2; \
 	fi
@@ -122,11 +122,6 @@ proxy.stop:
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
 	-rm -f $(PIDFILE)
-purge:  # stop with no opportunity to restart
-	-$(MAKE) stop
-	# truncate file containing the stopped container ID
-	# same as :>$(APPNAME)
-	>$(APPNAME)
 clean:
 	$(MAKE) stop
 	-for container in $$(<$(APPNAME)); do docker rm $$container; done
