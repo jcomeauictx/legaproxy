@@ -3,14 +3,11 @@ SHELL := /bin/bash
 # prefer /usr/bin over /usr/local/bin, especially for python3
 PATH := /usr/bin:$(PATH)
 HOST ?= 127.0.0.1
-# wanted to change PORT to 3080, but found out it's hardcoded throughout
-# the directory structure. Ain't worth it.
-PORT ?= 3000
 SSHPORT ?= 3022
 BROWSER ?= $(shell which firefox open 2>/dev/null | head -n 1)
 MITMDUMP = $(shell which mitmdump 2>/dev/null | head -n 1)
 PYTHON ?= $(shell which python3 2>/dev/null | head -n 1)
-APPNAME := getting-started
+APPNAME := npx
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
 USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
@@ -44,7 +41,7 @@ http_proxy=http://$(PROXY)
 ifneq ($(SHOWENV),)
  export
 else
- export HOST PORT SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
+ export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
 endif
 all: test
 test: bind-run view
@@ -58,28 +55,16 @@ $(APPNAME): Dockerfile Makefile
 	touch $@
 %: %.template Makefile
 	envsubst < $< > $@
-run: $(APPNAME)
+run: | $(APPNAME)
+	cat es5-6.html | docker run $| babel >> $|
+bind-run: | $(APPNAME)
 	docker run \
 	 --detach \
-	 --publish $(HOST):$(PORT):$(PORT) $< > $<
-	docker exec $$(<$<) rc-service sshd restart
-bind-run: $(APPNAME)
-	docker run \
-	 --detach \
-	 --publish $(HOST):$(PORT):$(PORT) \
 	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
 	 --mount type=bind,src="$(PWD)",target=/app_src \
-	 $< > $<
-	while read line; do \
-	 echo $$line; \
-	 if [ "$$line" = "Listening on port $(PORT)" ]; then break; fi \
-	done \
-	 < <(docker logs --follow $$(<$<))
-	docker exec $$(<$<) rc-service sshd restart
-view:
-	$(BROWSER) $(HOST):$(PORT)/
-connect attach: $(APPNAME)
-	docker exec --interactive --tty $$(<$<) sh
+	 --entrypoint /usr/sbin/sshd $| -D >> $|
+connect attach: | $(APPNAME)
+	docker exec --interactive --tty $$(tail -n 1 $|) sh
 ssh login: $(APPNAME)
 	ssh -p $(SSHPORT) \
 	 -oStrictHostKeyChecking=no \
@@ -87,8 +72,10 @@ ssh login: $(APPNAME)
 	 root@localhost
 stop:
 	-if [ -s "$(APPNAME)" ]; then \
-	 docker stop $$(<$(APPNAME)); \
-	 docker wait $$(<$(APPNAME)); \
+	  for container in $$(<$(APPNAME)); do \
+	   docker stop $$container; \
+	   docker wait $$container; \
+	 done; \
 	fi
 $(dir $(MITMDUMP))mitmdump:
 	@echo mitmdump not found, installing it now... >&2
@@ -120,7 +107,7 @@ purge:  # stop with no opportunity to restart
 	>$(APPNAME)
 clean:
 	$(MAKE) stop
-	-if [ -s "$(APPNAME)" ]; then docker rm $$(<$(APPNAME)); fi
+	-for container in $$(<$(APPNAME)); do docker rm $$container; done
 	-if [ -f "$(APPNAME)" ]; then docker rmi $(APPNAME); fi
 	rm -f $(APPNAME)
 distclean: clean

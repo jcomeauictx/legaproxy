@@ -2,11 +2,9 @@
 
 FROM node:18-alpine
 WORKDIR /app
+# copy everything from here to /app on image
 COPY . .
-RUN yarn install --production
-# fix babel installation to support `npx babel` commands
-#RUN npm uninstall babel
-#RUN npm install --save-dev babel-cli
+RUN npm install babel-cli
 # set up sshd to run in background
 VOLUME /sys/fs/cgroup
 RUN mkdir -p /run/openrc
@@ -14,8 +12,9 @@ RUN touch /run/openrc/softlevel
 RUN apk add openssh openrc
 RUN mv $SSHDCONF $SSHDORIG
 RUN sed 's/.*Port 22$/Port $SSHPORT/' $SSHDORIG > $SSHDCONF
+# running sshd in foreground, but running these now to create host keys
 RUN rc-update add sshd
-RUN rc-status -a
+RUN rc-status
 RUN rc-service sshd restart || true
 # allow $USER to login to container as root
 RUN mkdir -m 700 -p /root/.ssh
@@ -24,5 +23,5 @@ RUN chmod 0600 /root/.ssh/authorized_keys
 # prepare for bind-run
 RUN mkdir -p /app_src
 # command to run
-CMD ["node", "src/index.js"]
-EXPOSE $PORT $SSHPORT
+ENTRYPOINT npx
+EXPOSE $SSHPORT
