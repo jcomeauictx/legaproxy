@@ -1,5 +1,5 @@
 # allow Bashisms
-SHELL := /bin/bash
+SHELL ?= /bin/bash
 # prefer /usr/bin over /usr/local/bin, especially for python3
 PATH := /usr/bin:$(PATH)
 HOST ?= 127.0.0.1
@@ -7,7 +7,8 @@ SSHPORT ?= 3022
 BROWSER ?= $(shell which firefox open 2>/dev/null | head -n 1)
 MITMDUMP = $(shell which mitmdump 2>/dev/null | head -n 1)
 PYTHON ?= $(shell which python3 2>/dev/null | head -n 1)
-APPNAME := npx
+APPNAME := babel
+DOCKERRUN ?= docker run --rm
 TESTFILE := capabilities.html
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
@@ -42,7 +43,7 @@ http_proxy=http://$(PROXY)
 ifneq ($(SHOWENV),)
  export
 else
- export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
+ export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB APPNAME
 endif
 all: test
 test: bind-run view
@@ -54,15 +55,19 @@ $(APPNAME): Dockerfile Makefile
 	fi
 	docker build -t $@ $(<D)
 	touch $@
+retouch:
+	touch Dockerfile $(APPNAME)
 %: %.template Makefile
 	envsubst < $< > $@
 run: | $(APPNAME)
 	cat $(TESTFILE) | \
 	 sed -n 's/^[<]tr[>][<]td[>]//p' capabilities.html | \
 	 sed -e 's/[<].*[>]//' -e 's/&gt;/>/' | \
-	 docker run --rm $| babel
+	 $(DOCKERRUN) $| babel
+check:  # run on container itself
+	$(MAKE) SHELL=/bin/sh DOCKERRUN= run
 rerun:
-	touch $(APPNAME) Dockerfile
+	$(MAKE) retouch
 	$(MAKE) run
 bind-run: | $(APPNAME)
 	docker run \
@@ -71,10 +76,10 @@ bind-run: | $(APPNAME)
 	 --mount type=bind,src="$(PWD)",target=/app_src \
 	 --entrypoint /usr/sbin/sshd $| -D >> $|
 bind-rerun:
-	touch $(APPNAME) Dockerfile
+	$(MAKE) retouch
 	$(MAKE) bind-run
 reconnect reattach:
-	touch $(APPNAME) Dockerfile
+	$(MAKE) retouch
 	$(MAKE) connect
 connect attach: | $(APPNAME)
 	if [ -s "$|" ]; then \

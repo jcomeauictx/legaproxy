@@ -4,6 +4,7 @@ FROM node:18-alpine
 WORKDIR /app
 # copy everything from here to /app on image
 COPY . .
+RUN apk add make
 RUN npm install babel-cli
 # set up sshd to run in background
 VOLUME /sys/fs/cgroup
@@ -23,5 +24,5 @@ RUN chmod 0600 /root/.ssh/authorized_keys
 # prepare for bind-run
 RUN mkdir -p /app_src
 # command to run
-ENTRYPOINT npx
+ENTRYPOINT ["npx", "$APPNAME"]
 EXPOSE $SSHPORT
