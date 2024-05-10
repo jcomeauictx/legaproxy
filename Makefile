@@ -56,15 +56,28 @@ $(APPNAME): Dockerfile Makefile
 %: %.template Makefile
 	envsubst < $< > $@
 run: | $(APPNAME)
-	cat es5-6.html | docker run $| babel >> $|
+	cat es5-6.html | docker run --rm $| babel
+rerun:
+	touch $(APPNAME) Dockerfile
+	$(MAKE) run
 bind-run: | $(APPNAME)
 	docker run \
 	 --detach \
 	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
 	 --mount type=bind,src="$(PWD)",target=/app_src \
 	 --entrypoint /usr/sbin/sshd $| -D >> $|
+bind-rerun:
+	touch $(APPNAME) Dockerfile
+	$(MAKE) bind-run
+reconnect reattach:
+	touch $(APPNAME) Dockerfile
+	$(MAKE) connect
 connect attach: | $(APPNAME)
-	docker exec --interactive --tty $$(tail -n 1 $|) sh
+	if [ -s "$|" ]; then \
+	 docker exec --interactive --tty $$(tail -n 1 $|) sh; \
+	else \
+	 echo No active containers; '`make bind-run`' first. >&2; \
+	fi
 ssh login: $(APPNAME)
 	ssh -p $(SSHPORT) \
 	 -oStrictHostKeyChecking=no \
