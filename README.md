@@ -23,3 +23,4 @@ This application is based on the getting started guide at
 * [Understanding `docker run`, `docker exec`, and how to keep container running in background](https://linuxhandbook.com/run-docker-container/)
 * [`kex_exchange_identification: Connection closed by remote host`](https://github.com/gliderlabs/docker-alpine/issues/437)
 * [CMD vs ENTRYPOINT](https://www.cloudbees.com/blog/understanding-dockers-cmd-and-entrypoint-instructions)
+* [Configuring babel to convert arrow notation](https://stackoverflow.com/questions/52821427/javascript-babel-preset-env-not-transpiling-arrow-functions-for-ie11)
