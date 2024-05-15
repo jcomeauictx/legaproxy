@@ -9,6 +9,8 @@ try:
 except (ImportError, ModuleNotFoundError):  # for doctests
     http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
 
+# NOTE: the following will not necessarily work, use logging.info
+# (apparently mitmdump is configuring the logger)
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.WARNING)
 HOSTSUFFIX = 'redwoodcu.org'
 FILES = os.path.join('storage', 'files')
@@ -25,7 +27,7 @@ def request(flow: http.HTTPFlow):
     if flow.request.host.endswith('gvt1.com'):
         logging.info('dropping spyware(?) junk from gvt1.com')
         flow.kill()
-    logging.debug('request: %s', vars(flow.request))
+    logging.info('request: %s', vars(flow.request))
     logging.info('flow.live: %s', flow.live)
     logging.info('request.method: %s', flow.request.method)
     for header, value in flow.request.headers.items():
@@ -46,11 +48,12 @@ def response(flow: http.HTTPFlow) -> None:
         logging.info('flow.request.path: %s', flow.request.path)
     else:
         logging.info('Not filtering request for %s', flow.request.path)
-    mimetype = flow.response.headers.get('content-type')
+    logging.info('response headers: %s', flow.response.headers)
+    mimetype = flow.response.headers.get('content-type') or ''
     if mimetype == 'text/html':
-        logging.debug('processing any script tags in html')
+        logging.info('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
-        logging.debug('processing %s file', mimetype)
+        logging.info('processing %s file', mimetype)
 
 def md5sum(string, base64encode=True):
     '''
