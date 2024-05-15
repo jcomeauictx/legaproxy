@@ -46,6 +46,11 @@ def response(flow: http.HTTPFlow) -> None:
         logging.info('flow.request.path: %s', flow.request.path)
     else:
         logging.info('Not filtering request for %s', flow.request.path)
+    mimetype = flow.response.headers.get('content-type')
+    if mimetype == 'text/html':
+        logging.debug('processing any script tags in html')
+    elif mimetype.endswith('/javascript'):
+        logging.debug('processing %s file', mimetype)
 
 def md5sum(string, base64encode=True):
     '''
