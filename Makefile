@@ -1,5 +1,5 @@
 # allow Bashisms
-SHELL ?= /bin/bash
+SHELL := /bin/bash
 # prefer /usr/bin over /usr/local/bin, especially for python3
 PATH := /usr/bin:$(PATH)
 HOST ?= 127.0.0.1
