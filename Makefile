@@ -112,12 +112,12 @@ $(PIDFILE): $(dir $(MITMDUMP))mitmdump
 	 --scripts filter.py \
 	 --flow-detail 3 \
 	 --save-stream-file mitmproxy.log &>mitmdump.log & \
-	 echo $$! | tee $@
+	 echo $$! | tee $@  # doesn't necessarily store correct PID
 proxy: $(PIDFILE)
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
 	if [ -f "$(PIDFILE)" ]; then \
-	 kill -s KILL $$(<$(PIDFILE)); \
+	 kill -s KILL $$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT)); \
 	else \
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
