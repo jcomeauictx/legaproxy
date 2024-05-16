@@ -19,7 +19,7 @@ IPHONE6 := Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X)
 IPHONE6 += AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2
 IPHONE6 += Mobile/15E148
 CHROME := $(shell which chromium chromium-browser 2>/dev/null | head -n 1)
-WEBSITE ?= digital.redwoodcu.org
+WEBSITE ?= redwoodcu.org
 INDEXPAGE ?=
 # make sure browser isn't blank in case of no chromium
 ifeq ($(CHROME)$(MITMBROWSER),)
@@ -117,7 +117,7 @@ proxy: $(PIDFILE)
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
 	if [ -f "$(PIDFILE)" ]; then \
-	 kill -s KILL $$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) \
+	 kill $$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) \
 	  -s tcp:listen) ; \
 	else \
 	 echo Nothing to stop: mitmdump has not been running >&2; \
