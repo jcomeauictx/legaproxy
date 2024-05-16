@@ -49,11 +49,15 @@ def response(flow: http.HTTPFlow) -> None:
     else:
         logging.info('Not filtering request for %s', flow.request.path)
     logging.info('response headers: %s', flow.response.headers)
+    for header, value in flow.response.headers.items():
+        logging.info('header "%s": "%s"', header, value)
     mimetype = flow.response.headers.get('content-type') or ''
     if mimetype == 'text/html':
         logging.info('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
         logging.info('processing %s file', mimetype)
+    else:
+        logging.info('passing mime-type %s through unprocessed', mimetype)
 
 def md5sum(string, base64encode=True):
     '''
