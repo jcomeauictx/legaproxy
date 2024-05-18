@@ -110,7 +110,6 @@ $(PIDFILE): $(dir $(MITMDUMP))mitmdump
 	 --anticomp \
 	 --listen-host $(PROXYHOST) \
 	 --listen-port $(PROXYPORT) \
-	 --allow-hosts 'redwoodcu\.org$$' \
 	 --scripts filter.py \
 	 --flow-detail 3 \
 	 --save-stream-file mitmproxy.log &>mitmdump.log & \
