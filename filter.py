@@ -12,7 +12,8 @@ except (ImportError, ModuleNotFoundError):  # for doctests
 # NOTE: the following will not necessarily work, use logging.info
 # (apparently mitmdump is configuring the logger)
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.WARNING)
-HOSTSUFFIX = 'redwoodcu.org'
+# set HOSTSUFFIX= to save everything from all hosts
+HOSTSUFFIX = os.getenv('HOSTSUFFIX', 'redwoodcu.org')
 FILES = os.path.join('storage', 'files')
 # iphone6 (iOS 12.5.7) user-agent string
 USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '

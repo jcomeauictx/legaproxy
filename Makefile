@@ -20,6 +20,8 @@ IPHONE6 += AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2
 IPHONE6 += Mobile/15E148
 CHROME := $(shell which chromium chromium-browser 2>/dev/null | head -n 1)
 WEBSITE ?= redwoodcu.org
+# leave HOSTSUFFIX blank to capture everything
+HOSTSUFFIX=
 INDEXPAGE ?=
 # make sure browser isn't blank in case of no chromium
 ifeq ($(CHROME)$(MITMBROWSER),)
