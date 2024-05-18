@@ -13,7 +13,7 @@ except (ImportError, ModuleNotFoundError):  # for doctests
 # (apparently mitmdump is configuring the logger)
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.WARNING)
 # set HOSTSUFFIX= to save everything from all hosts
-HOSTSUFFIX = os.getenv('HOSTSUFFIX', 'redwoodcu.org')
+HOSTSUFFIX = os.getenv('HOSTSUFFIX') or ''
 FILES = os.path.join('storage', 'files')
 # iphone6 (iOS 12.5.7) user-agent string
 USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '
@@ -41,6 +41,7 @@ def response(flow: http.HTTPFlow) -> None:
     hostname = flow.request.host
     uahash = md5sum(flow.request.headers['user-agent'])
     if hostname.endswith(HOSTSUFFIX):
+        logging.debug('response path: %s', flow.request.path_components)
         savefile(
             os.path.join(
                 FILES, hostname, uahash, *flow.request.path_components),
