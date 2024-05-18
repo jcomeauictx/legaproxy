@@ -4,15 +4,29 @@ Using example internet-in-mirror.py from
 https://docs.mitmproxy.org/stable/addons-examples/
 '''
 import os, logging, base64, hashlib  # pylint: disable=multiple-imports
+from time import strftime
 try:
     from mitmproxy import http
 except (ImportError, ModuleNotFoundError):  # for doctests
     http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
 
-# NOTE: the following will not necessarily work, use logging.info
-# (apparently mitmdump is configuring the logger)
-logging.basicConfig(level=logging.DEBUG if __debug__ else logging.WARNING)
+# NOTE: no point in use logging.basicConfig(); mitmdump has configured it.
+def fixlog(*args, filterlevel='DEBUG', **kwargs):
+    '''
+    for overriding mitmdump's logs with something more easily grepped
+
+    mitmdump starts logging, by default anyway, at INFO level
+    '''
+    if args[0]:
+        args = list(args)
+        args[0] = ':'.join(('', filterlevel, args[0]))
+        args = tuple(args)
+    logging.info(*args, **kwargs)
+logging.debug = lambda *args, **kwargs: fixlog(*args, *kwargs)
+logging.info = lambda *args, **kwargs: fixlog(*args, filterlevel='INFO',
+                                              **kwargs)
 # set HOSTSUFFIX= to save everything from all hosts
+TIMESTAMP = strftime('%Y-%m-%dT%H%M%S')
 HOSTSUFFIX = os.getenv('HOSTSUFFIX') or ''
 FILES = os.path.join('storage', 'files')
 # iphone6 (iOS 12.5.7) user-agent string
@@ -44,7 +58,8 @@ def response(flow: http.HTTPFlow) -> None:
         logging.debug('response path: %s', flow.request.path_components)
         savefile(
             os.path.join(
-                FILES, hostname, uahash, *flow.request.path_components),
+                FILES, hostname, uahash, TIMESTAMP,
+                *flow.request.path_components),
             flow.response.content
         )
         logging.info('flow.request.path: %s', flow.request.path)
