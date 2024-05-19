@@ -21,7 +21,7 @@ def fixlog(*args, filterlevel='DEBUG', **kwargs):
         args = list(args)
         args[0] = ':'.join(('', filterlevel, args[0]))
         args = tuple(args)
-    logging.info(*args, **kwargs)
+    logging.log(getattr(logging, filterlevel), *args, **kwargs)
 logging.debug = lambda *args, **kwargs: fixlog(*args, *kwargs)
 logging.info = lambda *args, **kwargs: fixlog(*args, filterlevel='INFO',
                                               **kwargs)
