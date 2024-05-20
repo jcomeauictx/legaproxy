@@ -101,12 +101,14 @@ def savefile(path, contents, binary=False, overwrite=False, retry_ok=True):
         # pylint: disable=unspecified-encoding
         with open(path, mode) as outfile:
             outfile.write(contents)
+            logging.debug('wrote %s successfully as %s', path,
+                          'binary' if binary else 'string')
     except OSError as failed:
         logging.error('could not write %s: %s', path, failed)
     except TypeError as failed:
-        logging.error('could not write contents of %s: %s', path, failed)
         if retry_ok:
             savefile(path, contents, True, True, False)
-            logging.debug('wrote %s successfully as bytes', path)
+        else:
+            logging.error('could not write contents of %s: %s', path, failed)
 
 # vim: set tabstop=4 expandtab shiftwidth=4 softtabstop=4
