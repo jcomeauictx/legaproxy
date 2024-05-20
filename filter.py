@@ -27,6 +27,19 @@ USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '
              'AppleWebKit/605.1.15 (KHTML, like Gecko) '
              'Version/12.1.2 Mobile/15E148'
 )
+# file extension for index files, based on mime-type
+EXTENSION = {
+    'text/html': '.html',
+    'text/json': '.json',
+    'text/javascript': 'js',
+    'application/javascript': 'js',
+}
+# use CONTENT with content.lstrip().startswith() to determine best extension
+CONTENT = {
+    b'^<': '.html',
+    (b'[', b'{'): '.json',
+    (b'(', b'/', b'!'): '.js',
+}
 
 def request(flow: http.HTTPFlow):
     '''
@@ -88,8 +101,8 @@ def md5sum(string, base64encode=True):
         digest = hashed.hexdigest()
     return digest
 
-def savefile(path, contents, mimetype=None,
-             binary=False, overwrite=False, retry_ok=True):
+def savefile(path, contents,  # pylint: disable=too-many-arguments
+             mimetype=None, binary=False, overwrite=False, retry_ok=True):
     '''
     write contents to disk under given path
     '''
