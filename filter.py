@@ -47,21 +47,21 @@ def response(flow: http.HTTPFlow) -> None:
     '''
     hostname = flow.request.host
     uahash = md5sum(flow.request.headers['user-agent'])
+    logging.debug('response headers: %s', flow.response.headers)
+    for header, value in flow.response.headers.items():
+        logging.debug('header "%s": "%s"', header, value)
+    mimetype = flow.response.headers.get('content-type').split(';')[0] or ''
     if hostname.endswith(HOSTSUFFIX):
         logging.debug('response path: %s', flow.request.path_components)
         savefile(
             os.path.join(
                 FILES, hostname, uahash, TIMESTAMP,
                 *flow.request.path_components),
-            flow.response.content
+            flow.response.content, mimetype
         )
         logging.debug('flow.request.path: %s', flow.request.path)
     else:
-        logging.debug('Not filtering request for %s', flow.request.path)
-    logging.debug('response headers: %s', flow.response.headers)
-    for header, value in flow.response.headers.items():
-        logging.debug('header "%s": "%s"', header, value)
-    mimetype = flow.response.headers.get('content-type') or ''
+        logging.debug('not saving %s', flow.request.path)
     if mimetype == 'text/html':
         logging.debug('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
@@ -88,7 +88,8 @@ def md5sum(string, base64encode=True):
         digest = hashed.hexdigest()
     return digest
 
-def savefile(path, contents, binary=False, overwrite=False, retry_ok=True):
+def savefile(path, contents, mimetype=None,
+             binary=False, overwrite=False, retry_ok=True):
     '''
     write contents to disk under given path
     '''
@@ -104,11 +105,12 @@ def savefile(path, contents, binary=False, overwrite=False, retry_ok=True):
             logging.debug('wrote %s successfully as %s', path,
                           'binary' if binary else 'string')
     except OSError as failed:
-        logging.error('could not write %s: %s', path, failed)
+        logging.error('could not write %s (%s): %s', path, mimetype, failed)
     except TypeError as failed:
         if retry_ok:
-            savefile(path, contents, True, True, False)
+            savefile(path, contents, mimetype, True, True, False)
         else:
-            logging.error('could not write contents of %s: %s', path, failed)
+            logging.error('could not write contents of %s (%s): %s',
+                          path, mimetype, failed)
 
 # vim: set tabstop=4 expandtab shiftwidth=4 softtabstop=4
