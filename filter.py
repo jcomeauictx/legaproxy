@@ -64,7 +64,7 @@ def response(flow: http.HTTPFlow) -> None:
         logging.debug('flow.request.path: %s', flow.request.path)
     else:
         logging.debug('Not filtering request for %s', flow.request.path)
-    logging.info('response headers: %s', flow.response.headers)
+    logging.debug('response headers: %s', flow.response.headers)
     for header, value in flow.response.headers.items():
         logging.debug('header "%s": "%s"', header, value)
     mimetype = flow.response.headers.get('content-type') or ''
