@@ -19,9 +19,10 @@ def fixlog(*args, filterlevel='DEBUG', **kwargs):
     '''
     if args[0]:
         args = list(args)
-        args[0] = ':'.join(('', filterlevel, args[0]))
+        args[0] = ':'.join(('legaproxy', filterlevel, args[0]))
         args = tuple(args)
-    logging.log(getattr(logging, filterlevel), *args, **kwargs)
+        level = max(getattr(logging, filterlevel), logging.getLogger().level)
+    logging.log(level, *args, **kwargs)
 logging.debug = lambda *args, **kwargs: fixlog(*args, *kwargs)
 logging.info = lambda *args, **kwargs: fixlog(*args, filterlevel='INFO',
                                               **kwargs)
@@ -40,13 +41,13 @@ def request(flow: http.HTTPFlow):
     filter requests
     '''
     if flow.request.host.endswith('gvt1.com'):
-        logging.info('dropping spyware(?) junk from gvt1.com')
+        logging.debug('dropping spyware(?) junk from gvt1.com')
         flow.kill()
-    logging.info('request: %s', vars(flow.request))
-    logging.info('flow.live: %s', flow.live)
-    logging.info('request.method: %s', flow.request.method)
+    logging.debug('request: %s', vars(flow.request))
+    logging.debug('flow.live: %s', flow.live)
+    logging.debug('request.method: %s', flow.request.method)
     for header, value in flow.request.headers.items():
-        logging.info('header "%s": "%s"', header, value)
+        logging.debug('header "%s": "%s"', header, value)
 
 def response(flow: http.HTTPFlow) -> None:
     '''
@@ -62,19 +63,19 @@ def response(flow: http.HTTPFlow) -> None:
                 *flow.request.path_components),
             flow.response.content
         )
-        logging.info('flow.request.path: %s', flow.request.path)
+        logging.debug('flow.request.path: %s', flow.request.path)
     else:
-        logging.info('Not filtering request for %s', flow.request.path)
+        logging.debug('Not filtering request for %s', flow.request.path)
     logging.info('response headers: %s', flow.response.headers)
     for header, value in flow.response.headers.items():
-        logging.info('header "%s": "%s"', header, value)
+        logging.debug('header "%s": "%s"', header, value)
     mimetype = flow.response.headers.get('content-type') or ''
     if mimetype == 'text/html':
-        logging.info('processing any script tags in html')
+        logging.debug('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
-        logging.info('processing %s file', mimetype)
+        logging.debug('processing %s file', mimetype)
     else:
-        logging.info('passing mime-type %s through unprocessed', mimetype)
+        logging.debug('passing mime-type %s through unprocessed', mimetype)
 
 def md5sum(string, base64encode=True):
     '''
@@ -114,6 +115,6 @@ def savefile(path, contents, binary=False, overwrite=False, retry_ok=True):
         logging.error('could not write contents of %s: %s', path, failed)
         if retry_ok:
             savefile(path, contents, True, True, False)
-            logging.info('wrote %s successfully as bytes', path)
+            logging.debug('wrote %s successfully as bytes', path)
 
 # vim: set tabstop=4 expandtab shiftwidth=4 softtabstop=4
