@@ -117,9 +117,9 @@ $(PIDFILE): $(dir $(MITMDUMP))mitmdump
 proxy: $(PIDFILE)
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
-	if [ -f "$(PIDFILE)" ]; then \
+	-if [ -f "$(PIDFILE)" ]; then \
 	 kill $$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) \
-	  -s tcp:listen) ; \
+	  -s tcp:listen); \
 	else \
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
