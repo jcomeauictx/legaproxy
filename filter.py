@@ -10,22 +10,20 @@ try:
 except (ImportError, ModuleNotFoundError):  # for doctests
     http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
 
+LOGLEVEL = logging.getLogger().level
 # NOTE: no point in use logging.basicConfig(); mitmdump has configured it.
-def fixlog(*args, filterlevel='DEBUG', **kwargs):
+def fixlog(msg, *args, severity='DEBUG', **kwargs):
     '''
     for overriding mitmdump's logs with something more easily grepped
 
     mitmdump starts logging, by default anyway, at INFO level
     '''
-    if args[0]:
-        args = list(args)
-        args[0] = ':'.join(('legaproxy', filterlevel, args[0]))
-        args = tuple(args)
-        level = max(getattr(logging, filterlevel), logging.getLogger().level)
-    logging.log(level, *args, **kwargs)
-logging.debug = lambda *args, **kwargs: fixlog(*args, *kwargs)
-logging.info = lambda *args, **kwargs: fixlog(*args, filterlevel='INFO',
-                                              **kwargs)
+    msg = ':'.join(('legaproxy', severity, msg or ''))
+    level = max(getattr(logging, severity), LOGLEVEL)
+    logging.log(level, msg, *args, **kwargs)
+logging.debug = lambda *args, **kwargs: fixlog(*args, severity='DEBUG', *kwargs)
+logging.info = lambda *args, **kwargs: fixlog(*args, severity='INFO', **kwargs)
+logging.debug('default loglevel: %d', LOGLEVEL)
 # set HOSTSUFFIX= to save everything from all hosts
 TIMESTAMP = strftime('%Y-%m-%dT%H%M%S')
 HOSTSUFFIX = os.getenv('HOSTSUFFIX') or ''
