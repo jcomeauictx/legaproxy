@@ -35,6 +35,7 @@ EXTENSION = {
     'application/javascript': 'js',
 }
 # use CONTENT with content.lstrip().startswith() to determine best extension
+# or just use index.html for everything, probably better.
 CONTENT = {
     b'^<': '.html',
     (b'[', b'{'): '.json',
