@@ -120,11 +120,32 @@ def savefile(path, contents,  # pylint: disable=too-many-arguments
                           'binary' if binary else 'string')
     except OSError as failed:
         logging.error('could not write %s (%s): %s', path, mimetype, failed)
+        if rebuild(os.path.dirname(path)):
+            savefile(path, contents, mimetype, binary, overwrite, retry_ok)
     except TypeError as failed:
         if retry_ok:
             savefile(path, contents, mimetype, True, True, False)
         else:
             logging.error('could not write contents of %s (%s): %s',
                           path, mimetype, failed)
+
+def rebuild(path):
+    '''
+    Fix where a directory was saved as a file by moving contents to index.html
+
+    Implemented recursively for code simplicity.
+    '''
+    contents = None
+    if path:
+        if os.path.isfile(path):
+            with open(path, 'rb') as infile:
+                contents = infile.read()
+            os.remove(path)
+            os.makedirs(path)
+            with open(path, 'wb') as outfile:
+                outfile.write(contents)
+            return True
+        return rebuild(os.path.dirname(path))
+    return False
 
 # vim: set tabstop=4 expandtab shiftwidth=4 softtabstop=4
