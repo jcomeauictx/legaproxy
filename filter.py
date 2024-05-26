@@ -108,9 +108,15 @@ def savefile(path, contents,  # pylint: disable=too-many-arguments
     write contents to disk under given path
     '''
     mode = 'wb' if binary else 'w'
-    if os.path.exists(path) and not overwrite:
-        logging.warning('not overwriting %s', path)
-        return
+    if os.path.exists(path):
+        if os.path.isfile(path):
+            if not overwrite:
+                logging.warning('not overwriting %s', path)
+                return
+            # no `else` here, we will continue to overwrite
+        else:  # directory, so write as index file
+            path = os.path.join(path, 'index.html')
+            savefile(path, contents, mimetype, binary, overwrite, retry_ok)
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         # pylint: disable=unspecified-encoding
@@ -137,6 +143,7 @@ def rebuild(path):
     '''
     contents = None
     if path:
+        logging.debug('rebuilding path %s', path)
         if os.path.isfile(path):
             with open(path, 'rb') as infile:
                 contents = infile.read()
