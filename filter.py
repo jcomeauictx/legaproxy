@@ -64,7 +64,7 @@ def response(flow: http.HTTPFlow) -> None:
     logging.debug('response headers: %s', flow.response.headers)
     for header, value in flow.response.headers.items():
         logging.debug('header "%s": "%s"', header, value)
-    mimetype = flow.response.headers.get('content-type').split(';')[0] or ''
+    mimetype = flow.response.headers.get('content-type', '').split(';')[0]
     if hostname.endswith(HOSTSUFFIX):
         logging.debug('response path: %s', flow.request.path_components)
         savefile(
