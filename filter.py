@@ -140,19 +140,37 @@ def rebuild(path):
     Fix where a directory was saved as a file by moving contents to index.html
 
     Implemented recursively for code simplicity.
+
+    >>> import tempfile
+    >>> tempdir = tempfile.mkdtemp()
+    >>> temppath = os.path.join(tempdir, 'a')
+    >>> with open(temppath, 'ab') as temp:
+    ...     logging.debug('touched %s', temppath)
+    >>> rebuild(temppath)
+    True
+    >>> os.path.isfile(os.path.join(temppath, 'index.html'))
+    True
+    >>> os.remove(os.path.join(temppath, 'index.html'))
+    >>> os.rmdir(temppath)
+    >>> os.rmdir(tempdir)
     '''
     contents = None
     if path:
-        logging.debug('rebuilding path %s', path)
-        if os.path.isfile(path):
+        if os.path.exists(path):
+            if os.path.isdir(path):
+                return True
+            # presumed to be a file, we don't do symlinks
+            logging.debug('rebuilding path %s', path)
             with open(path, 'rb') as infile:
                 contents = infile.read()
             os.remove(path)
             os.makedirs(path)
-            with open(path, 'wb') as outfile:
+            with open(os.path.join(path, 'index.html'), 'wb') as outfile:
                 outfile.write(contents)
             return True
+        # path doesn't exist, so try one level up
         return rebuild(os.path.dirname(path))
+    # no path remaining, nothing to do
     return False
 
 # vim: set tabstop=4 expandtab shiftwidth=4 softtabstop=4
