@@ -102,27 +102,32 @@ window.onload = check;
 </thead>
 <tbody id="test-suite">
 <tr>
+    <!-- this ought to work in all browsers that implement any scripting -->
     <td>var x = 10; x</td>
     <td>10</td>
     <td>&nbsp;</td>
 </tr>
 <tr>
-    <td>var x = 10; x === 10</td>
+    <!-- testing `===` -->
+    <td>var x = 11; x === 11</td>
     <td>true</td>
     <td>&nbsp;</td>
 </tr>
 <tr>
-    <td>(function() {let x = 10; return x == 10})();</td>
-    <td>true</td>
+    <!-- testing `let` -->
+    <td>let x = 12; x</td>
+    <td>12</td>
     <td>&nbsp;</td>
 </tr>
 <tr>
-    <td>(function() {const x = 10; return x == 10})();</td>
-    <td>true</td>
+    <!-- testing `const` -->
+    <td>const x = 13; x</td>
+    <td>13</td>
     <td>&nbsp;</td>
 </tr>
 <tr>
-    <td>(() =&gt; {let x = 10; return x == 10})();</td>
+    <!-- testing basic arrow function -->
+    <td>(() =&gt; true)();</td>
     <td>true</td>
     <td>&nbsp;</td>
 </tr>
