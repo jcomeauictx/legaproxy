@@ -103,31 +103,31 @@ window.onload = check;
 <tbody id="test-suite">
 <tr>
     <!-- this ought to work in all browsers that implement any scripting -->
-    <td>var x = 10; x</td>
+    <td class="test">var x = 10; x;</td>
     <td>10</td>
     <td>&nbsp;</td>
 </tr>
 <tr>
     <!-- testing `===` -->
-    <td>var x = 11; x === 11</td>
+    <td class="test">var x = 11; x === 11;</td>
     <td>true</td>
     <td>&nbsp;</td>
 </tr>
 <tr>
     <!-- testing `let` -->
-    <td>let x = 12; x</td>
+    <td class="test">let x = 12; x;</td>
     <td>12</td>
     <td>&nbsp;</td>
 </tr>
 <tr>
     <!-- testing `const` -->
-    <td>const x = 13; x</td>
+    <td class="test">const x = 13; x;</td>
     <td>13</td>
     <td>&nbsp;</td>
 </tr>
 <tr>
     <!-- testing basic arrow function -->
-    <td>(() =&gt; true)();</td>
+    <td class="test">(() =&gt; true)();</td>
     <td>true</td>
     <td>&nbsp;</td>
 </tr>

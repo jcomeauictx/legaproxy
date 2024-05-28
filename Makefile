@@ -63,7 +63,7 @@ retouch:
 	envsubst < $< > $@
 run: | $(APPNAME)
 	cat $(TESTFILE) | \
-	 sed -n 's/^[<]tr[>][<]td[>]//p' | \
+	 sed -n 's/ *[<]td class="test"[>]//p' | \
 	 sed -e 's/[<].*[>]//' -e 's/&gt;/>/' | \
 	 $(DOCKERRUN) $| babel
 check:  # run on container itself
