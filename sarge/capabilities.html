@@ -78,7 +78,7 @@ var check = function() {
         script = columns[0].innerText || columns[0].textContent;
         console.log("trying to eval script: " + script);
         try {
-            result = eval(script);
+            result = (function(){return eval(script)})();
         } catch (error) {
             result = false;
             console.log("Error during eval of '" + script + "': " + error);
@@ -102,12 +102,12 @@ window.onload = check;
 </thead>
 <tbody id="test-suite">
 <tr>
-    <td>(function() {var x = 10; return x == 10})();</td>
-    <td>true</td>
+    <td>var x = 10; x</td>
+    <td>10</td>
     <td>&nbsp;</td>
 </tr>
 <tr>
-    <td>(function() {var x = 10; return x === 10})();</td>
+    <td>var x = 10; x === 10</td>
     <td>true</td>
     <td>&nbsp;</td>
 </tr>
