@@ -22,23 +22,37 @@ else
   # export everything so `make env` shows values
   export
 endif
-all: $(TASKNAME)
-$(TASKNAME): Dockerfile Makefile
+all: bind-run ssh
+$(TASKNAME):
 	$(MAKE) tcpopen
 	# only mark with TASKNAME file if build successful
 	-docker build --tag $@ $(<D) && touch $@
 	$(MAKE) tcpclose
 run: $(TASKNAME)
-	docker run \
-	 --detach \
-	 $< > $<
+	if [ -s "$<" ]; then \
+	 echo Docker image is already running >&2; \
+	else \
+	 docker run \
+	  --detach \
+	  --publish $(HOST):$(SSHPORT):$(SSHPORT) \
+	  $< > $<; \
+	 echo Docker image is now running >&2; \
+	fi
+delay:
+	@echo Waiting for image to fully launch before connect attempt
+	sleep 5
 bind-run: $(TASKNAME)
-	docker run \
-	 --detach \
-	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
-	 --workdir /app \
-	 --mount type=bind,src="$(PWD)",target=/app \
-	 $< > $<
+	if [ -s "$<" ]; then \
+	 echo Docker image is already running >&2; \
+	else \
+	 docker run \
+	  --detach \
+	  --publish $(HOST):$(SSHPORT):$(SSHPORT) \
+	  --workdir /app \
+	  --mount type=bind,src="$(PWD)",target=/app \
+	  $< > $<; \
+	  echo Docker image is now running with bind mount >&2; \
+	fi
 tcpopen:
 	@sudo echo sudo now enabled for '`sudo tee`' below >&2
 	socat TCP-LISTEN:6000,fork,bind=$(GATEWAY) UNIX-CONNECT:$(X11SOCKET) & \
@@ -53,6 +67,7 @@ env:
 clean: tcpclose
 	$(MAKE) stop
 	-if [ -s "$(TASKNAME)" ]; then docker rm $$(<$(TASKNAME)); fi
+	>$(TASKNAME)  # zero file without deleting it
 distclean: clean
 	-docker rmi $(TASKNAME):latest
 	rm -f $(TASKNAME)
@@ -63,7 +78,7 @@ stop:
 	fi
 connect attach: | $(TASKNAME)
 	docker exec --interactive --tty $$(<$|) /bin/bash
-ssh login: | $(TASKNAME)
+ssh login: delay | $(TASKNAME)
 	ssh $(SSHOPTS) -Y -p $(SSHPORT) \
 	 -oStrictHostKeyChecking=no \
 	 -oUserKnownHostsFile=/dev/null \
