@@ -8,7 +8,7 @@ BROWSER ?= $(shell which firefox open 2>/dev/null | head -n 1)
 MITMDUMP = $(shell which mitmdump 2>/dev/null | head -n 1)
 PYTHON ?= $(shell which python3 2>/dev/null | head -n 1)
 APPNAME ?= npx
-TESTFILE := capabilities.html
+TESTFILE := sarge/capabilities.html
 DOCKERRUN ?= docker run --interactive --rm
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
@@ -48,14 +48,14 @@ else
  export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
 endif
 all: test
-test: bind-run view
-$(APPNAME): Dockerfile Makefile
+test: run
+$(APPNAME): | Dockerfile
 	if [ -f "$@" ]; then \
 	 echo $@ already exists >&2; \
 	 echo 'Maybe you want to `make distclean` first?' >&2; \
 	 false; \
 	fi
-	docker build -t $@ $(<D)
+	docker build -t $@ .
 	touch $@
 retouch:
 	touch Dockerfile $(APPNAME)
@@ -63,7 +63,7 @@ retouch:
 	envsubst < $< > $@
 run: | $(APPNAME)
 	cat $(TESTFILE) | \
-	 sed -n 's/^[<]tr[>][<]td[>]//p' capabilities.html | \
+	 sed -n 's/^[<]tr[>][<]td[>]//p' | \
 	 sed -e 's/[<].*[>]//' -e 's/&gt;/>/' | \
 	 $(DOCKERRUN) $| babel
 check:  # run on container itself
@@ -127,10 +127,10 @@ proxy.stop:
 clean:
 	$(MAKE) stop
 	-for container in $$(<$(APPNAME)); do docker rm $$container; done
+distclean: clean
 	-if [ -f "$(APPNAME)" ]; then docker rmi $(APPNAME); fi
 	rm -f $(APPNAME)
-distclean: clean
-	-rm -f Dockerfile
+	rm -f Dockerfile
 	if [ -d node_modules ]; then sudo rm -rf node_modules; fi
 	if [ -d fontconfig ]; then sudo rm -rf fontconfig; fi
 	if [ -d storage ]; then rm -rf storage; fi
