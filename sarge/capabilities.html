@@ -24,7 +24,6 @@ var check = function() {
         var h1element;
         console = {};
         console.div = children(document.lastChild.lastChild).slice(-1)[0];
-        alert("console.div: " +  console.div + ": " + lognode(console.div));
         h1element = document.createElement("h1");
         h1element.appendChild(document.createTextNode("Log output"));
         console.div.appendChild(h1element);
@@ -35,6 +34,14 @@ var check = function() {
             entrydiv.appendChild(entrytext);
             console.div.appendChild(entrydiv);
         };
+        try {
+            console.log("testing console.log after monkeypatch")}
+        catch (error) {
+            alert("console.log still not working; " +
+                  "console.div: " +  console.div + ": "
+                  + lognode(console.div)
+                 );
+        }
     }
     var spaces = "\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0";  // `&nbsp;`s
     spaces += spaces + spaces + spaces  // 32 ought to be enough
