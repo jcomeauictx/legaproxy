@@ -26,3 +26,4 @@ This application is based on the getting started guide at
 * [Configuring babel to convert arrow notation](https://stackoverflow.com/questions/52821427/javascript-babel-preset-env-not-transpiling-arrow-functions-for-ie11)
 * [Simple example of using ANTLR parser with Python3](https://github.com/bentrevett/python-antlr-example)
 * [Token stream rewriter](https://www.antlr.org/api/Java/org/antlr/v4/runtime/TokenStreamRewriter.html) for replacing `let` and `const` with `var`, converting arrow functions to old-style, etc.
+* [ANTLR 4 Reference PDF](https://dl.icdst.org/pdfs/files3/a91ace57a8c4c8cdd9f1663e1051bf93.pdf)
