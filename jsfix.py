@@ -6,13 +6,11 @@ adapted from sample script at
 https://github.com/antlr/grammars-v4/tree/master/javascript/javascript/Python3
 '''
 import sys, logging  # pylint: disable=multiple-imports
-from antlr4 import FileStream, CommonTokenStream, ParseTreeWalker
+from antlr4 import FileStream, InputStream, CommonTokenStream, ParseTreeWalker
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from JavaScriptLexer import JavaScriptLexer
 from JavaScriptParser import JavaScriptParser
 from JavaScriptParserListener import JavaScriptParserListener
-
-logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
 
 LOWERCASE_LETTERS = tuple('abcdefghijklmnopqrstuvwxyz')
 
@@ -64,11 +62,14 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
             self.rewriter.insertBeforeToken(body.start, '{return ')
             self.rewriter.insertAfterToken(body.stop, '}')
 
-def main(filename):
+def fixup(filename=None):
     '''
     Parse file, fix for older browsers, and print out modified source
     '''
-    input_stream = FileStream(filename)
+    try:
+        input_stream = FileStream(filename)
+    except TypeError:  # assume stdin
+        input_stream = InputStream(sys.stdin.read())
     lexer = JavaScriptLexer(input_stream)
     tokens = CommonTokenStream(lexer)
     parser = JavaScriptParser(tokens)
@@ -98,4 +99,6 @@ def show(something):
     return result
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
+    sys.argv.append(None)  # make sure there's an arg
+    fixup(sys.argv[1])

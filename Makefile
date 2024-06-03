@@ -42,6 +42,30 @@ endif
 # proxy envvars lowercase, for testing with wget
 https_proxy=http://$(PROXY)
 http_proxy=http://$(PROXY)
+# copied from python-antlr-example Makefile
+GRAMMARS := https://raw.githubusercontent.com/antlr/grammars-v4/master
+JAVASCRIPT := JavaScript
+PARSER ?= JAVASCRIPT
+TARGET ?= Python3
+JAVASCRIPTGRAMMAR := $(GRAMMARS)/javascript/javascript
+GRAMMAR := $($(PARSER)GRAMMAR)
+BASE := $(GRAMMAR)/$(TARGET)
+EXAMPLES = $(GRAMMAR)/examples
+JAVASCRIPTG4FILES := $(JAVASCRIPT)Parser.g4 $(JAVASCRIPT)Lexer.g4
+G4FILES := $($(PARSER)G4FILES)
+G4FILE := $(word 1, $(G4FILES))
+PARSERS := $($(PARSER))Parser.py $($(PARSER))Lexer.py
+PARSE := $(word 1, $(PARSERS))
+LISTENER := $(G4FILE:.g4=Listener.py)
+JAVASCRIPTEXAMPLES := ArrowFunctions.js Constants.js LetAndAsync.js
+JAVASCRIPTEXAMPLE ?= $(word 1, $(JAVASCRIPTEXAMPLES))
+EXAMPLE := $($(PARSER)EXAMPLE)
+JAVASCRIPTBASEFILES := $(G4FILES:.g4=Base.py)
+BASEFILES := $($(PARSER)BASEFILES)
+DOWNLOADED = $(BASEFILES) $(JAVASCRIPTEXAMPLE)
+DOWNLOADED += *Parser.g4 *Lexer.g4
+GENERATED = *Parser.py *Lexer.py
+GENERATED += *Listener.py *.interp *.tokens __pycache__
 ifneq ($(SHOWENV),)
  export
 else
@@ -61,11 +85,11 @@ retouch:
 	touch Dockerfile $(APPNAME)
 %: %.template Makefile
 	envsubst < $< > $@
-run: | $(APPNAME)
+run: jsfix.py | $(APPNAME) $(PARSERS)
 	cat $(TESTFILE) | \
 	 sed -n 's/ *[<]td class="test"[>]//p' | \
 	 sed -e 's/[<].*[>]//' -e 's/&gt;/>/' | \
-	 $(DOCKERRUN) $| babel
+	 ./$<
 check:  # run on container itself
 	$(MAKE) DOCKERRUN= run
 rerun:
@@ -127,6 +151,7 @@ proxy.stop:
 clean:
 	$(MAKE) stop
 	-for container in $$(<$(APPNAME)); do docker rm $$container; done
+	rm -rf dummy $(GENERATED) __pycache__
 distclean: clean
 	-if [ -f "$(APPNAME)" ]; then docker rmi $(APPNAME); fi
 	rm -f $(APPNAME)
@@ -134,6 +159,7 @@ distclean: clean
 	if [ -d node_modules ]; then sudo rm -rf node_modules; fi
 	if [ -d fontconfig ]; then sudo rm -rf fontconfig; fi
 	if [ -d storage ]; then rm -rf storage; fi
+	rm -f dummy $(DOWNLOADED)
 useragent:
 	@echo '$(IPHONE6)'
 localserver: | $(TESTFILE)
@@ -142,9 +168,23 @@ localserver: | $(TESTFILE)
 	-python3 -m http.server --bind 127.0.0.1 8888 &
 	@echo waiting a few seconds to launch the browser
 	sleep 5 && $(BROWSER) http://localhost:8888/$|
-env:
-	if [ -z "$(SHOWENV)" ]; then \
-	 $(MAKE) SHOWENV=1 $@; \
-	else \
-	 env; \
+# copied from python-antlr-example project Makefile
+$(G4FILES):
+	wget -O- $(GRAMMAR)/$@ | sed -e 's/\<this[.]/self./g' \
+	 -e s'/!self[.]/not self./g' > $@
+$(EXAMPLE):
+	if [ "$(PARSER)" = "JAVASCRIPT" ]; then \
+	 wget $(EXAMPLES)/$@; \
 	fi
+$(BASEFILES):
+	if [ "$(PARSER)" = "JAVASCRIPT" ]; then \
+	 wget $(BASE)/$@; \
+	fi
+env:
+ifneq ($(SHOWENV),)
+	env
+else
+	$(MAKE) SHOWENV=1 $@
+endif
+$(PARSERS): $(G4FILES) | $(BASEFILES)
+	antlr4 -Dlanguage=$(TARGET) $+
