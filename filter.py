@@ -5,6 +5,7 @@ https://docs.mitmproxy.org/stable/addons-examples/
 '''
 import os, logging, base64, hashlib  # pylint: disable=multiple-imports
 from time import strftime
+from jsfix import fixup
 try:
     from mitmproxy import http
 except (ImportError, ModuleNotFoundError):  # for doctests
