@@ -62,14 +62,11 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
             self.rewriter.insertBeforeToken(body.start, '{return ')
             self.rewriter.insertAfterToken(body.stop, '}')
 
-def fixup(filename=None):
+def fixup(filedata):
     '''
-    Parse file, fix for older browsers, and print out modified source
+    Parse data, fix for older browsers, and return modified source
     '''
-    try:
-        input_stream = FileStream(filename)
-    except TypeError:  # assume stdin
-        input_stream = InputStream(sys.stdin.read())
+    input_stream = InputStream(filedata)
     lexer = JavaScriptLexer(input_stream)
     tokens = CommonTokenStream(lexer)
     parser = JavaScriptParser(tokens)
@@ -80,7 +77,7 @@ def fixup(filename=None):
     walker.walk(listener, tree)
     logging.log(logging.NOTSET,  # change to logging.DEBUG to see this
         'parse tree: %s', tree.toStringTree(recog=parser))
-    print(listener.rewriter.getDefaultText())
+    return listener.rewriter.getDefaultText()
 
 def show(something):
     '''
@@ -100,5 +97,9 @@ def show(something):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
-    sys.argv.append(None)  # make sure there's an arg
-    fixup(sys.argv[1])
+    if len(sys.argv) > 1:
+        for filename in sys.argv[1:]:
+            with open(filename, 'r') as infile:
+                print(fixup(infile.read()))
+    else:
+        logging.error('Usage: %s filename.js', sys.argv[0])
