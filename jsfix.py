@@ -43,13 +43,18 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         convert arrow function to old-style `function(){;}`
         '''
         logging.debug('ctx: %r: %s', ctx.getText(), show(ctx))
-        parameters, arrow, body = ctx.children
-        logging.debug('ctx.arrowFunctionParameters: %s',
-                      parameters.getText())
-        logging.debug('ctx.arrowFunctionBody: %s',
-                      body.getText())
+        parameters = ctx.arrowFunctionParameters()
+        body = ctx.arrowFunctionBody()
+        arrow = [child.symbol for child in ctx.children
+                 if getattr(child, 'symbol', None) is not None
+                 and child.symbol.text == '=>'][0]
+        logging.debug('ctx.arrowFunctionParameters: %s: %s`',
+                      parameters, show(parameters))
+        logging.debug('ctx.arrowFunctionBody: %s: %s',
+                      body, show(body))
+        logging.debug('arrow: %s: %s', arrow, show(arrow))
         #import pdb; pdb.set_trace()
-        self.rewriter.deleteToken(arrow.symbol)
+        self.rewriter.deleteToken(arrow)
         if parameters.start.text != '(':
             # assume single unparenthesized arg
             self.rewriter.insertBeforeToken(parameters.start, 'function(')
