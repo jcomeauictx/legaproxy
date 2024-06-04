@@ -103,3 +103,5 @@ if __name__ == '__main__':
                 print(fixup(infile.read()))
     else:
         logging.error('Usage: %s filename.js', sys.argv[0])
+        logging.warning('assuming data on stdin, ^D or ^C if necessary')
+        print(fixup(sys.stdin.read()))
