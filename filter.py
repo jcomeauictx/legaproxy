@@ -1,7 +1,12 @@
 #!/usr/bin/python3
 '''
-Using example internet-in-mirror.py from
+legaproxy -- JavaScript translator for legacy devices
+
+Based on example internet-in-mirror.py from
 https://docs.mitmproxy.org/stable/addons-examples/
+
+This will allow old computers/operating systems, smartphones, tablets,
+iPod Touch, and many other legacy devices to access the modern Web.
 '''
 import os, logging, base64, hashlib  # pylint: disable=multiple-imports
 from time import strftime
@@ -28,20 +33,6 @@ USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '
              'AppleWebKit/605.1.15 (KHTML, like Gecko) '
              'Version/12.1.2 Mobile/15E148'
 )
-# file extension for index files, based on mime-type
-EXTENSION = {
-    'text/html': '.html',
-    'text/json': '.json',
-    'text/javascript': 'js',
-    'application/javascript': 'js',
-}
-# use CONTENT with content.lstrip().startswith() to determine best extension
-# or just use index.html for everything, probably better.
-CONTENT = {
-    b'^<': '.html',
-    (b'[', b'{'): '.json',
-    (b'(', b'/', b'!'): '.js',
-}
 
 def request(flow: http.HTTPFlow):
     '''
@@ -66,12 +57,23 @@ def response(flow: http.HTTPFlow) -> None:
     for header, value in flow.response.headers.items():
         logging.debug('header "%s": "%s"', header, value)
     mimetype = flow.response.headers.get('content-type', '').split(';')[0]
+    try:
+        text = flow.response.content.decode('utf-8')
+        logging.debug('webpage text was utf-8 encoded')
+    except UnicodeError:
+        text = flow.response.content.decode('latin1')
+        logging.debug('assuming webpage text latin1-encoded')
+        # this can happen on binary/image data as well, but will be unused
+    except AttributeError:
+        text = flow.response.content
+        logging.debug('webpage text was already encoded')
     if hostname.endswith(HOSTSUFFIX):
         logging.debug('response path: %s', flow.request.path_components)
         savefile(
             os.path.join(
                 FILES, hostname, uahash, TIMESTAMP,
-                *flow.request.path_components),
+                *flow.request.path_components
+            ),
             flow.response.content, mimetype
         )
         logging.debug('flow.request.path: %s', flow.request.path)
@@ -81,6 +83,7 @@ def response(flow: http.HTTPFlow) -> None:
         logging.debug('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
         logging.debug('processing %s file', mimetype)
+        flow.response.content = fixup(text).encode()
     else:
         logging.debug('passing mime-type %s through unprocessed', mimetype)
 
