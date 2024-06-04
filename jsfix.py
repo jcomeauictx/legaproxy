@@ -26,7 +26,7 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         '''
         self.rewriter = rewriter
 
-    def enterVariableDeclarationList(self, ctx):
+    def exitVariableDeclarationList(self, ctx):
         '''
         convert `let` and `const` to `var`
         '''
@@ -38,23 +38,26 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
                 modifier.start, modifier.stop, 'var'
             )
 
-    def enterArrowFunction(self, ctx):
+    def exitArrowFunction(self, ctx):
         '''
         convert arrow function to old-style `function(){;}`
         '''
         logging.debug('ctx: %r: %s', ctx.getText(), show(ctx))
         parameters = ctx.arrowFunctionParameters()
         body = ctx.arrowFunctionBody()
-        arrow = [child.symbol for child in ctx.children
+        arrow = ([child.symbol for child in ctx.children
                  if getattr(child, 'symbol', None) is not None
-                 and child.symbol.text == '=>'][0]
+                 and child.symbol.text == '=>'] + [None])[0]
         logging.debug('ctx.arrowFunctionParameters: %s: %s`',
                       parameters, show(parameters))
         logging.debug('ctx.arrowFunctionBody: %s: %s',
                       body, show(body))
-        logging.debug('arrow: %s: %s', arrow, show(arrow))
         #import pdb; pdb.set_trace()
-        self.rewriter.deleteToken(arrow)
+        if arrow is not None:
+            logging.debug('arrow: %s: %s', arrow, show(arrow))
+            self.rewriter.deleteToken(arrow)
+        else:
+            logging.error('no arrow was parsed, likely an antlr4 error node')
         if parameters.start.text != '(':
             # assume single unparenthesized arg
             self.rewriter.insertBeforeToken(parameters.start, 'function(')
