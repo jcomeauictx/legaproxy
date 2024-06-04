@@ -9,3 +9,5 @@ fontconfig
 npx
 legaproxy.pid
 *.old
+JavaScriptParser*
+JavaScriptLexer*
