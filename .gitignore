@@ -2,8 +2,7 @@ Dockerfile
 getting-started
 node_modules
 __pycache__
-mitmdump.log
-mitmproxy.log
+*.log
 storage
 fontconfig
 npx
