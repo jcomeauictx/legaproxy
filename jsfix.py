@@ -6,7 +6,7 @@ adapted from sample script at
 https://github.com/antlr/grammars-v4/tree/master/javascript/javascript/Python3
 '''
 import sys, logging  # pylint: disable=multiple-imports
-from antlr4 import FileStream, InputStream, CommonTokenStream, ParseTreeWalker
+from antlr4 import InputStream, CommonTokenStream, ParseTreeWalker
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from JavaScriptLexer import JavaScriptLexer
 from JavaScriptParser import JavaScriptParser
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
     if len(sys.argv) > 1:
         for filename in sys.argv[1:]:
-            with open(filename, 'r') as infile:
+            with open(filename, 'r', encoding='utf-8') as infile:
                 print(fixup(infile.read()))
     else:
         logging.error('Usage: %s filename.js', sys.argv[0])
