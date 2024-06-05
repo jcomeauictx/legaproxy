@@ -28,6 +28,7 @@ logging.debug('setting up filter')
 TIMESTAMP = strftime('%Y-%m-%dT%H%M%S')
 HOSTSUFFIX = os.getenv('HOSTSUFFIX') or ''
 FILES = os.path.join('storage', 'files')
+MODIFIED = os.path.join('storage', 'modified')
 # iphone6 (iOS 12.5.7) user-agent string
 USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '
              'AppleWebKit/605.1.15 (KHTML, like Gecko) '
@@ -83,7 +84,15 @@ def response(flow: http.HTTPFlow) -> None:
         logging.debug('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
         logging.debug('processing %s file', mimetype)
-        flow.response.content = fixup(text).encode()
+        fixed = fixup(text).encode()
+        if fixed != flow.response.content:
+            savefile(os.path.join(
+                MODIFIED, hostname, uahash, TIMESTAMP,
+                *flow.request.path_components
+                ),
+                fixed, mimetype
+            )
+            flow.response.content = fixed
     else:
         logging.debug('passing mime-type %s through unprocessed', mimetype)
 
