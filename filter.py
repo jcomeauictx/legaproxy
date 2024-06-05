@@ -58,16 +58,20 @@ def response(flow: http.HTTPFlow) -> None:
     for header, value in flow.response.headers.items():
         logging.debug('header "%s": "%s"', header, value)
     mimetype = flow.response.headers.get('content-type', '').split(';')[0]
+    encode = str  # for encoding after modification
     try:
         text = flow.response.content.decode('utf-8')
         logging.debug('webpage text was utf-8 encoded')
+        encode = str.encode
     except UnicodeError:
         text = flow.response.content.decode('latin1')
         logging.debug('assuming webpage text latin1-encoded')
         # this can happen on binary/image data as well, but will be unused
+        # pylint: disable=unnecessary-lambda-assignment
+        encode = lambda s: s.encode('latin1')
     except AttributeError:
         text = flow.response.content
-        logging.debug('webpage text was already encoded')
+        logging.debug('webpage text was already decoded')
     if hostname.endswith(HOSTSUFFIX):
         logging.debug('response path: %s', flow.request.path_components)
         savefile(
@@ -84,15 +88,18 @@ def response(flow: http.HTTPFlow) -> None:
         logging.debug('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
         logging.debug('processing %s file', mimetype)
-        fixed = fixup(text).encode()
-        if fixed != flow.response.content:
+        fixed = fixup(text)
+        if fixed != text:
+            logging.debug('fixup modified webpage, saving to %s', MODIFIED)
             savefile(os.path.join(
                 MODIFIED, hostname, uahash, TIMESTAMP,
                 *flow.request.path_components
                 ),
                 fixed, mimetype
             )
-            flow.response.content = fixed
+            flow.response.content = encode(fixed)
+        else:
+            logging.debug("fixup didn't change content of webpage")
     else:
         logging.debug('passing mime-type %s through unprocessed', mimetype)
 
