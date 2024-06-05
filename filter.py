@@ -73,6 +73,7 @@ def response(flow: http.HTTPFlow) -> None:
     except AttributeError:
         text = flow.response.content
         logging.debug('webpage text was already decoded')
+    encoded = text.encode()
     if hostname.endswith(HOSTSUFFIX):
         logging.debug('response path: %s', flow.request.path_components)
         savefile(
@@ -80,7 +81,7 @@ def response(flow: http.HTTPFlow) -> None:
                 FILES, hostname, uahash, TIMESTAMP,
                 *flow.request.path_components
             ),
-            flow.response.content, mimetype
+            encoded, mimetype
         )
         logging.debug('flow.request.path: %s', flow.request.path)
     else:
@@ -96,7 +97,7 @@ def response(flow: http.HTTPFlow) -> None:
                 MODIFIED, hostname, uahash, TIMESTAMP,
                 *flow.request.path_components
                 ),
-                fixed, mimetype
+                fixed.encode(), mimetype
             )
             flow.response.content = encode(fixed)
         else:
