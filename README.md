@@ -1,9 +1,20 @@
-# Getting started
+# Legaproxy
 
-This application is based on the getting started guide at
+This project stems from my use of older portable devices, which are generally
+far cheaper than the latest and greatest pushed by manufacturers. I find it
+difficult to impossible to use many webapps and sites due to expired
+certificates and use of javascript features that my phones and other devices
+don't support.
+
+This application was based on the getting started guide at
 <https://docs.docker.com/get-started/>, tutorial at
 <https://github.com/docker/getting-started>, and sample app source at
-<https://github.com/docker/getting-started-app>.
+<https://github.com/docker/getting-started-app>, because originally I
+thought Babel was my best potential solution to the javascript problem,
+and, not wanting to pollute my dev machine with npm ever again, was going
+to run it in a Docker image. I'm glad I did, because I learned a lot about
+Docker, but decided to code my own JavaScript translator after finding the
+ANTLR4 parser project.
 
 ## Developer notes
 
@@ -27,3 +38,12 @@ This application is based on the getting started guide at
 * [Simple example of using ANTLR parser with Python3](https://github.com/bentrevett/python-antlr-example)
 * [Token stream rewriter](https://www.antlr.org/api/Java/org/antlr/v4/runtime/TokenStreamRewriter.html) for replacing `let` and `const` with `var`, converting arrow functions to old-style, etc.
 * [ANTLR 4 Reference PDF](https://dl.icdst.org/pdfs/files3/a91ace57a8c4c8cdd9f1663e1051bf93.pdf)
+* antlr4 runs way too slowly for realtime processing of javascript. I will
+  have to return unprocessed script at first, and process it in the background,
+  to be available on reload. (2024-06-05)
+* Need to change storage of retrieved files to use sha256sums as filenames,
+  and have the existing directory structure symlink to these files instead.
+  This will allow easier retrieval of cached modified scripts. (2024-06-05)
+* Need to change capabilities.html to retrieve a report from the browser via
+  an xhr, save that information for the useragent hash, and use it to determine
+  which js features need to be translated. (2024-06-05)
