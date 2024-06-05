@@ -188,3 +188,8 @@ else
 endif
 $(PARSERS): $(G4FILES) | $(BASEFILES)
 	antlr4 -Dlanguage=$(TARGET) $+
+diff:
+	for modified in $$(find storage/modified/ -type f); \
+	 do original=storage/files/$${modified##storage/modified/}; \
+	 colordiff $$original $$modified; \
+	done
