@@ -10,6 +10,7 @@ iPod Touch, and many other legacy devices to access the modern Web.
 '''
 import os, logging, base64, hashlib  # pylint: disable=multiple-imports
 from time import strftime
+from hashlib import sha256
 from jsfix import fixup
 try:
     from mitmproxy import http
@@ -193,4 +194,14 @@ def rebuild(path):
     # no path remaining, nothing to do
     return False
 
+def sha256sum(bytestring):
+    '''
+    return sha256 digest as a hexadecimal string
+    '''
+    digest = None
+    try:
+        digest = sha256(bytestring).hexdigest()
+    except TypeError:
+        digest = sha256(bytestring.encode()).hexdigest()
+    return digest
 # vim: set tabstop=4 expandtab shiftwidth=4 softtabstop=4
