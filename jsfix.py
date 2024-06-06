@@ -5,7 +5,7 @@ Parse and modify JavaScript
 adapted from sample script at
 https://github.com/antlr/grammars-v4/tree/master/javascript/javascript/Python3
 '''
-import sys, logging  # pylint: disable=multiple-imports
+import sys, threading, logging  # pylint: disable=multiple-imports
 from antlr4 import InputStream, CommonTokenStream, ParseTreeWalker
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from JavaScriptLexer import JavaScriptLexer
@@ -25,6 +25,18 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         associate a TokenStreamRewriter with this listener
         '''
         self.rewriter = rewriter
+
+    def enterEveryRule(self, ctx):
+        '''
+        for analyzing how antlr4 works, with an eye to multithreading it
+        '''
+        logging.debug('enterEveryRule: ctx=%s: %s', ctx, show(ctx))
+
+    def exitEveryRule(self, ctx):
+        '''
+        see docstring for enterEveryRule
+        '''
+        logging.debug('exitEveryRule: ctx=%s: %s', ctx, show(ctx))
 
     def exitVariableDeclarationList(self, ctx):
         '''
