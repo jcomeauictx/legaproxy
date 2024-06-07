@@ -91,10 +91,10 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
             self.rewriter.insertAfterToken(body.stop, '}')
 
     def visitErrorNode(self, node):
-        logging.debug('Visiting error node: %s', show(node))
+        logging.debug('Visiting error node: %s', node)
 
     def visitTerminal(self, node):
-        logging.debug('Visiting terminal node: %s', show(node))
+        logging.debug('Visiting terminal node: %s (%s)', node.symbol, node)
 
 def fixup(filedata):
     '''
