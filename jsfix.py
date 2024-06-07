@@ -108,7 +108,8 @@ def fixup(filedata):
     lexer = JavaScriptLexer(input_stream)
     tokens = CommonTokenStream(lexer)
     tokens.fill()
-    logging.debug('tokens: %r', list(t.text for t in tokens.tokens))
+    tokenlist = list(t.text for t in tokens.tokens)
+    logging.debug('tokens: %s', snippet(str(tokenlist), 1024))
     parser = JavaScriptParser(tokens)
     rewriter = TokenStreamRewriter(tokens)
     listener = DowngradingJavascriptListener(rewriter)
@@ -135,12 +136,13 @@ def show(something):
             result[k] = v
     return result
 
-def snippet(string):
+def snippet(string, maxlength=80):
     '''
     limit debugging output for long strings
     '''
-    if len(string) > 80:
-        string = string[:40] + '...' + string[-40:]
+    half = maxlength // 2
+    if len(string) > maxlength:
+        string = string[:half] + '...' + string[-half:]
     return string
 
 if __name__ == '__main__':
