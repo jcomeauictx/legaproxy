@@ -66,10 +66,11 @@ DOWNLOADED = $(BASEFILES) $(JAVASCRIPTEXAMPLE)
 DOWNLOADED += *Parser.g4 *Lexer.g4
 GENERATED = *Parser.py *Lexer.py
 GENERATED += *Listener.py *.interp *.tokens __pycache__
+FIXUP ?= arrow,var
 ifneq ($(SHOWENV),)
  export
 else
- export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
+ export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP
 endif
 all: test
 test: run

@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 '''
-Parse and modify JavaScript
+Parse and optionally modify JavaScript
 
 adapted from sample script at
 https://github.com/antlr/grammars-v4/tree/master/javascript/javascript/Python3
 '''
-import sys, threading, logging  # pylint: disable=multiple-imports
+import sys, os, threading, logging  # pylint: disable=multiple-imports
 from antlr4 import InputStream, CommonTokenStream, ParseTreeWalker
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from JavaScriptLexer import JavaScriptLexer
@@ -13,6 +13,7 @@ from JavaScriptParser import JavaScriptParser
 from JavaScriptParserListener import JavaScriptParserListener
 
 LOWERCASE_LETTERS = tuple('abcdefghijklmnopqrstuvwxyz')
+FIXUP = os.getenv('FIXUP', '')
 
 class DowngradingJavascriptListener(JavaScriptParserListener):
     '''
@@ -30,13 +31,13 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         '''
         for analyzing how antlr4 works, with an eye to multithreading it
         '''
-        logging.debug('enterEveryRule: ctx=%s: %s', ctx, show(ctx))
+        logging.debug('enterEveryRule: ctx=%s: %s', ctx.getText(), show(ctx))
 
     def exitEveryRule(self, ctx):
         '''
         see docstring for enterEveryRule
         '''
-        logging.debug('exitEveryRule: ctx=%s: %s', ctx, show(ctx))
+        logging.debug('exitEveryRule: ctx=%s: %s', ctx.getText(), show(ctx))
 
     def exitVariableDeclarationList(self, ctx):
         '''
@@ -45,7 +46,7 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         logging.debug('ctx: %r: %s', ctx.getText(), show(ctx))
         modifier = ctx.varModifier()
         logging.debug('varModifier: %s', modifier)
-        if modifier.getText() != 'var':
+        if FIXUP and modifier.getText() != 'var':
             self.rewriter.replaceRangeTokens(
                 modifier.start, modifier.stop, 'var'
             )
@@ -55,6 +56,8 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         convert arrow function to old-style `function(){;}`
         '''
         logging.debug('ctx: %r: %s', ctx.getText(), show(ctx))
+        if not FIXUP:
+            return
         parameters = ctx.arrowFunctionParameters()
         body = ctx.arrowFunctionBody()
         arrow = ([child.symbol for child in ctx.children
