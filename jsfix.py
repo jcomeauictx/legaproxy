@@ -5,7 +5,8 @@ Parse and optionally modify JavaScript
 adapted from sample script at
 https://github.com/antlr/grammars-v4/tree/master/javascript/javascript/Python3
 '''
-import sys, os, threading, logging  # pylint: disable=multiple-imports
+import sys, os, logging  # pylint: disable=multiple-imports
+#import threading  # for speeding up parsing if I find a likely path forward
 from antlr4 import InputStream, CommonTokenStream, ParseTreeWalker
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from JavaScriptLexer import JavaScriptLexer
@@ -31,13 +32,17 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         '''
         for analyzing how antlr4 works, with an eye to multithreading it
         '''
-        logging.debug('enterEveryRule: ctx=%s: %s', ctx.getText(), show(ctx))
+        text = ctx.getText()
+        logging.debug('enterEveryRule: ctx=%s (%d chars): %s',
+                      snippet(text), len(text), show(ctx))
 
     def exitEveryRule(self, ctx):
         '''
         see docstring for enterEveryRule
         '''
-        logging.debug('exitEveryRule: ctx=%s: %s', ctx.getText(), show(ctx))
+        text = ctx.getText()
+        logging.debug('exitEveryRule: ctx=%s: (%d chars): %s',
+                      snippet(text), len(text), show(ctx))
 
     def exitVariableDeclarationList(self, ctx):
         '''
@@ -53,7 +58,7 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
 
     def exitArrowFunction(self, ctx):
         '''
-        convert arrow function to old-style `function(){;}`
+        convert arrow function to old-style `function(){}`
         '''
         logging.debug('ctx: %r: %s', ctx.getText(), show(ctx))
         if not FIXUP:
@@ -84,6 +89,12 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
             # assume single statement (for now)
             self.rewriter.insertBeforeToken(body.start, '{return ')
             self.rewriter.insertAfterToken(body.stop, '}')
+
+    def visitErrorNode(self, node):
+        logging.debug('Visiting error node: %s', show(node))
+
+    def visitTerminal(self, node):
+        logging.debug('Visiting terminal node: %s', show(node))
 
 def fixup(filedata):
     '''
@@ -117,6 +128,14 @@ def show(something):
         else:
             result[k] = v
     return result
+
+def snippet(string):
+    '''
+    limit debugging output for long strings
+    '''
+    if len(string) > 80:
+        string = string[:40] + '...' + string[-40:]
+    return string
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
