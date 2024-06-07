@@ -12,6 +12,8 @@ from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from JavaScriptLexer import JavaScriptLexer
 from JavaScriptParser import JavaScriptParser
 from JavaScriptParserListener import JavaScriptParserListener
+logging.disabled = lambda *args, **kwargs: logging.log(
+    logging.NOTSET, *args, **kwargs)
 
 LOWERCASE_LETTERS = tuple('abcdefghijklmnopqrstuvwxyz')
 FIXUP = os.getenv('FIXUP', '')
@@ -19,6 +21,14 @@ FIXUP = os.getenv('FIXUP', '')
 class DowngradingJavascriptListener(JavaScriptParserListener):
     '''
     Subclass listener to change `let` to `var` and other primitivizations
+
+    (Appending methods I removed but may need again)
+
+    def visitErrorNode(self, node):
+        logging.debug('Visiting error node: %s', node)
+
+    def visitTerminal(self, node):
+        logging.debug('Visiting terminal node: %s (%s)', node.symbol, node)
     '''
     rewriter = None
 
@@ -33,22 +43,22 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         for analyzing how antlr4 works, with an eye to multithreading it
         '''
         text = ctx.getText()
-        logging.debug('enterEveryRule: ctx=%s (%d chars): %s',
-                      snippet(text), len(text), show(ctx))
+        logging.debug('enterEveryRule: ctx=%r (%d chars)',
+                      snippet(text), len(text))
 
     def exitEveryRule(self, ctx):
         '''
         see docstring for enterEveryRule
         '''
         text = ctx.getText()
-        logging.debug('exitEveryRule: ctx=%s: (%d chars): %s',
-                      snippet(text), len(text), show(ctx))
+        logging.debug('exitEveryRule: ctx=%r: (%d chars)',
+                      snippet(text), len(text))
 
     def exitVariableDeclarationList(self, ctx):
         '''
         convert `let` and `const` to `var`
         '''
-        logging.debug('ctx: %r: %s', ctx.getText(), show(ctx))
+        logging.debug('ctx: %r', ctx.getText())
         modifier = ctx.varModifier()
         logging.debug('varModifier: %s', modifier)
         if FIXUP and modifier.getText() != 'var':
@@ -60,7 +70,7 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         '''
         convert arrow function to old-style `function(){}`
         '''
-        logging.debug('ctx: %r: %s', ctx.getText(), show(ctx))
+        logging.debug('ctx: %r', ctx.getText())
         if not FIXUP:
             return
         parameters = ctx.arrowFunctionParameters()
@@ -68,13 +78,13 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         arrow = ([child.symbol for child in ctx.children
                  if getattr(child, 'symbol', None) is not None
                  and child.symbol.text == '=>'] + [None])[0]
-        logging.debug('ctx.arrowFunctionParameters: %s: %s`',
+        logging.disabled('ctx.arrowFunctionParameters: %s: %s`',
                       parameters, show(parameters))
-        logging.debug('ctx.arrowFunctionBody: %s: %s',
+        logging.disabled('ctx.arrowFunctionBody: %s: %s',
                       body, show(body))
         #import pdb; pdb.set_trace()
         if arrow is not None:
-            logging.debug('arrow: %s: %s', arrow, show(arrow))
+            logging.disabled('arrow: %r: %s', arrow, show(arrow))
             self.rewriter.deleteToken(arrow)
         else:
             logging.error('no arrow was parsed, likely an antlr4 error node')
@@ -89,12 +99,6 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
             # assume single statement (for now)
             self.rewriter.insertBeforeToken(body.start, '{return ')
             self.rewriter.insertAfterToken(body.stop, '}')
-
-    def visitErrorNode(self, node):
-        logging.debug('Visiting error node: %s', node)
-
-    def visitTerminal(self, node):
-        logging.debug('Visiting terminal node: %s (%s)', node.symbol, node)
 
 def fixup(filedata):
     '''
