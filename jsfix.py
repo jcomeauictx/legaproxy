@@ -107,6 +107,8 @@ def fixup(filedata):
     input_stream = InputStream(filedata)
     lexer = JavaScriptLexer(input_stream)
     tokens = CommonTokenStream(lexer)
+    tokens.fill()
+    logging.debug('tokens: %r', list(t.text for t in tokens.tokens))
     parser = JavaScriptParser(tokens)
     rewriter = TokenStreamRewriter(tokens)
     listener = DowngradingJavascriptListener(rewriter)
