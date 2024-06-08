@@ -105,19 +105,24 @@ def fixup(filedata):
     Parse data, fix for older browsers, and return modified source
     '''
     input_stream = InputStream(filedata)
+    logging.debug('starting lexer phase')
     lexer = JavaScriptLexer(input_stream)
+    logging.debug('getting tokens')
     tokens = CommonTokenStream(lexer)
     tokens.fill()
     tokenlist = list(t.text for t in tokens.tokens)
     logging.debug('tokens: %s', snippet(str(tokenlist), 1024))
+    logging.debug('starting parse phase')
     parser = JavaScriptParser(tokens)
     rewriter = TokenStreamRewriter(tokens)
     listener = DowngradingJavascriptListener(rewriter)
     tree = parser.program()
+    logging.debug('walking parse tree')
     walker = ParseTreeWalker()
     walker.walk(listener, tree)
     logging.log(logging.NOTSET,  # change to logging.DEBUG to see this
         'parse tree: %s', tree.toStringTree(recog=parser))
+    logging.debug('returning modified program text')
     return listener.rewriter.getDefaultText()
 
 def show(something):
@@ -146,7 +151,11 @@ def snippet(string, maxlength=80):
     return string
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
+    logging.basicConfig(
+        format='%(asctime)s:jsfix:%(levelname)s:%(message)s',
+        level=logging.DEBUG if __debug__ else logging.INFO,
+        datefmt='%Y-%m-%dT%H:%M:%S'
+    )
     if len(sys.argv) > 1:
         for filename in sys.argv[1:]:
             with open(filename, 'r', encoding='utf-8') as infile:

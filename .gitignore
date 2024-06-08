@@ -10,3 +10,4 @@ legaproxy.pid
 *.old
 JavaScriptParser*
 JavaScriptLexer*
+pathological.js
