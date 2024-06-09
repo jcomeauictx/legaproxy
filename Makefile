@@ -55,6 +55,8 @@ JAVASCRIPTG4FILES := $(JAVASCRIPT)Parser.g4 $(JAVASCRIPT)Lexer.g4
 G4FILES := $($(PARSER)G4FILES)
 G4FILE := $(word 1, $(G4FILES))
 PARSERS := $($(PARSER))Parser.py $($(PARSER))Lexer.py
+HEADERS := $($(PARSER))Parser.h $($(PARSER))Lexer.h
+CXXFLAGS += -I/usr/include/antlr4-runtime
 PARSE := $(word 1, $(PARSERS))
 LISTENER := $(G4FILE:.g4=Listener.py)
 JAVASCRIPTEXAMPLES := ArrowFunctions.js Constants.js LetAndAsync.js
@@ -189,6 +191,10 @@ else
 endif
 $(PARSERS): $(G4FILES) | $(BASEFILES)
 	antlr4 -Dlanguage=$(TARGET) $+
+$(HEADERS): $(G4FILES) | $(BASEFILES)
+	antlr4 -Dlanguage=Cpp $+
+cpp: $(HEADERS)
+	$(MAKE) parse
 diff:
 	for modified in $$(find storage/modified/ -type f); \
 	 do original=storage/files/$${modified##storage/modified/}; \
