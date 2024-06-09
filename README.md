@@ -47,3 +47,7 @@ ANTLR4 parser project.
 * Need to change capabilities.html to retrieve a report from the browser via
   an xhr, save that information for the useragent hash, and use it to determine
   which js features need to be translated. (2024-06-05)
+* Lexing a large-ish (300kb) blob of minimized js takes over 10 seconds in
+  Python, and parsing another second or more. Using
+  [C++](https://www.codeproject.com/Articles/5308882/ANTLR-Parsing-and-Cplusplus-Part-1-Introduction)
+  or Java should reduce that time.
