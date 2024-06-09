@@ -19,6 +19,43 @@ ID_START = tuple(ascii_letters + '$_')
 ID_CONTINUE = ID_START + tuple(digits)
 ID = re.compile('[' + ''.join(ID_START) + '][' +
                 ''.join(ID_CONTINUE) + ']*')
+KEYWORDS = [
+    'break',
+    'case',
+    'catch',
+    'class',
+    'const',
+    'continue',
+    'debugger',
+    'default',
+    'delete',
+    'do',
+    'else',
+    'export',
+    'extends',
+    'false',
+    'finally',
+    'for',
+    'function',
+    'if',
+    'import',
+    'in',
+    'instanceof',
+    'new',
+    'null',
+    'return',
+    'super',
+    'switch',
+    'this',
+    'throw',
+    'true',
+    'try',
+    'typeof',
+    'var',
+    'void',
+    'while',
+    'with',
+]
 
 def jslex(string):
     '''
