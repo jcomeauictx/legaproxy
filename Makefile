@@ -195,6 +195,7 @@ $(HEADERS): $(G4FILES) | $(BASEFILES)
 	antlr4 -Dlanguage=Cpp $+
 cpp: $(HEADERS)
 	$(MAKE) parse
+	./parse pathological.js
 diff:
 	for modified in $$(find storage/modified/ -type f); \
 	 do original=storage/files/$${modified##storage/modified/}; \
