@@ -8,7 +8,7 @@
 int main(int argc, const char* argv[]) {
 
     // Provide the input text in a stream
-    antlr4::CharStream input("6*(2+3)");
+    antlr4::CharStream input = antlr4::CharStream.fromFileName(argv[1]);
     
     // Create a lexer from the input
     JavaScriptLexer lexer(&input);
