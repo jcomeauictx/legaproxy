@@ -20,6 +20,6 @@ int main(int argc, const char* argv[]) {
     JavaScriptParser parser(&tokens);    
 
     // Display the parse tree
-    std::cout << parser.expr()->toStringTree() << std::endl;
+    std::cout << parser.program()->toStringTree() << std::endl;
     return 0;
 }
