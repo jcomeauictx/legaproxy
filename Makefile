@@ -45,11 +45,13 @@ http_proxy=http://$(PROXY)
 # copied from python-antlr-example Makefile
 GRAMMARS := https://raw.githubusercontent.com/antlr/grammars-v4/master
 JAVASCRIPT := JavaScript
+CPP := Cpp
+PYTHON3 := Python3
 PARSER ?= JAVASCRIPT
-TARGET ?= Python3
+TARGET ?= PYTHON3
 JAVASCRIPTGRAMMAR := $(GRAMMARS)/javascript/javascript
 GRAMMAR := $($(PARSER)GRAMMAR)
-BASE := $(GRAMMAR)/$(TARGET)
+BASE := $(GRAMMAR)/$($(TARGET))
 EXAMPLES = $(GRAMMAR)/examples
 JAVASCRIPTG4FILES := $(JAVASCRIPT)Parser.g4 $(JAVASCRIPT)Lexer.g4
 G4FILES := $($(PARSER)G4FILES)
@@ -190,7 +192,7 @@ else
 	$(MAKE) SHOWENV=1 $@
 endif
 $(PARSERS): $(G4FILES) | $(BASEFILES)
-	antlr4 -Dlanguage=$(TARGET) $+
+	antlr4 -Dlanguage=$($(TARGET)) $+
 $(HEADERS): $(G4FILES) | $(BASEFILES)
 	antlr4 -Dlanguage=Cpp $+
 cpp: $(HEADERS)
