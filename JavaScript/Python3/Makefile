@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 # prefer /usr/bin over /usr/local/bin, especially for python3
 PATH := /usr/bin:$(PATH)
-TESTFILE := ../sarge/capabilities.html
+TESTFILE := ../../sarge/capabilities.html
 # leave HOSTSUFFIX blank to capture everything
 HOSTSUFFIX=
 INDEXPAGE ?=
