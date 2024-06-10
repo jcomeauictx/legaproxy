@@ -14,7 +14,23 @@ COMMENTS = {
     '#!': ENDLINE,  # only valid at start of script, but lexer needn't care
     '/*': '*/',
 }
-COMMENT_START = tuple(COMMENTS)
+STRING = {
+    '"': '"',
+    "'": "'",
+    '`': '`',
+}
+GROUP = {
+    '{': '}',
+    '[': ']',
+    '(': ')',
+}
+OPERATOR = [
+    '>>>=',
+    '>>=',
+    '=>',
+    '<<=',
+    '??=',
+]
 ID_START = tuple(ascii_letters + '$_')
 ID_CONTINUE = ID_START + tuple(digits)
 ID = re.compile('[' + ''.join(ID_START) + '][' +
@@ -64,6 +80,7 @@ def jslex(string):
     //developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar
     '''
     tokens = []
+    
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
