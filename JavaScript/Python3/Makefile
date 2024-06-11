@@ -19,6 +19,8 @@ GRAMMARS := https://raw.githubusercontent.com/antlr/grammars-v4/master
 JAVASCRIPT := JavaScript
 CPP := Cpp
 PYTHON3 := Python3
+PYLINT ?= $(shell which pylint pylint3 2>/dev/null | head -n 1)
+PYTHONPATH ?= $(PWD)
 PARSER ?= JAVASCRIPT
 TARGET ?= PYTHON3
 JAVASCRIPTGRAMMAR := $(GRAMMARS)/javascript/javascript
@@ -93,3 +95,5 @@ $(HEADERS): $(G4FILES) | $(BASEFILES)
 cpp: $(HEADERS)
 	$(MAKE) parse
 	./parse pathological.js
+%.pylint: %.py
+	$(PYLINT) $<
