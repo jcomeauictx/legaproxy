@@ -122,10 +122,10 @@ $(PIDFILE): $(dir $(MITMDUMP))mitmdump
 	 echo $$! | tee $@  # doesn't necessarily store correct PID
 proxy: $(PIDFILE)
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
-proxy.stop:  # provide a safe dummy arg to kill in case proxy not running
-	-if [ -f "$(PIDFILE)" ]; then \
-	 kill $$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) \
-	  -s tcp:listen) dummy 2>kill.log; \
+proxy.stop:
+	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
+	if [ "$$pid" ]; then \
+	 kill $$pid; \
 	else \
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
