@@ -111,7 +111,11 @@ def fixup(filedata):
     tokens = CommonTokenStream(lexer)
     tokens.fill()
     tokenlist = list(t.text for t in tokens.tokens)
-    logging.debug('tokens: %s', snippet(str(tokenlist), 1024))
+    if os.getenv('FIXUP_RETURN_TOKENS_ONLY'):
+        logging.debug('returning list of token text')
+        return tokenlist
+    else:
+        logging.debug('tokens: %s', snippet(str(tokenlist), 1024))
     logging.debug('starting parse phase')
     parser = JavaScriptParser(tokens)
     logging.debug('creating stream rewriter')
