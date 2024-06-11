@@ -156,6 +156,7 @@ if __name__ == '__main__':
         level=logging.DEBUG if __debug__ else logging.INFO,
         datefmt='%Y-%m-%dT%H:%M:%S'
     )
+    logging.debug('starting jsfix')
     if len(sys.argv) > 1:
         for filename in sys.argv[1:]:
             with open(filename, 'r', encoding='utf-8') as infile:

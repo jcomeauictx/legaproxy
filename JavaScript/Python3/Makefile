@@ -59,7 +59,7 @@ rerun:
 	$(MAKE) retouch
 	$(MAKE) run
 clean:
-	rm -f $(GENERATED)
+	rm -rf dummy $(GENERATED)
 distclean: clean
 	rm -f dummy $(DOWNLOADED)
 localserver: | $(TESTFILE)
