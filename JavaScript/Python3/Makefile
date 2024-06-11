@@ -44,6 +44,7 @@ DOWNLOADED = $(BASEFILES) $(JAVASCRIPTEXAMPLE)
 DOWNLOADED += *Parser.g4 *Lexer.g4
 GENERATED = *Parser.py *Lexer.py
 GENERATED += *Listener.py *.interp *.tokens __pycache__
+GENERATED += tokens.txt
 FIXUP ?= arrow,var
 ifneq ($(SHOWENV),)
  export
@@ -97,3 +98,6 @@ cpp: $(HEADERS)
 	./parse pathological.js
 %.pylint: %.py
 	$(PYLINT) $<
+# pathological.js is a copy of any large minimized js blob captured by mitmdump
+tokens.txt: jsfix.py pathological.js
+	FIXUP_RETURN_TOKENS_ONLY=1 ./$+ > $@
