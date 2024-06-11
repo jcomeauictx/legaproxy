@@ -49,6 +49,7 @@ CPP := Cpp
 PYTHON3 := Python3
 PARSER ?= JAVASCRIPT
 TARGET ?= PYTHON3
+PYTHONPATH += $(PWD)/$($(PARSER))/$($(TARGET))
 JAVASCRIPTGRAMMAR := $(GRAMMARS)/javascript/javascript
 GRAMMAR := $($(PARSER)GRAMMAR)
 BASE := $(GRAMMAR)/$($(TARGET))
@@ -90,11 +91,8 @@ retouch:
 	touch Dockerfile $(APPNAME)
 %: %.template Makefile
 	envsubst < $< > $@
-run: jsfix.py | $(APPNAME) $(PARSERS)
-	cat $(TESTFILE) | \
-	 sed -n 's/ *[<]td class="test"[>]//p' | \
-	 sed -e 's/[<].*[>]//' -e 's/&gt;/>/' | \
-	 ./$<
+run:
+	$(MAKE) -C $(PYTHONPATH)
 check:  # run on container itself
 	$(MAKE) DOCKERRUN= run
 rerun:
