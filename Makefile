@@ -50,32 +50,11 @@ PYTHON3 := Python3
 PARSER ?= JAVASCRIPT
 TARGET ?= PYTHON3
 PYTHONPATH += $(PWD)/$($(PARSER))/$($(TARGET))
-JAVASCRIPTGRAMMAR := $(GRAMMARS)/javascript/javascript
-GRAMMAR := $($(PARSER)GRAMMAR)
-BASE := $(GRAMMAR)/$($(TARGET))
-EXAMPLES = $(GRAMMAR)/examples
-JAVASCRIPTG4FILES := $(JAVASCRIPT)Parser.g4 $(JAVASCRIPT)Lexer.g4
-G4FILES := $($(PARSER)G4FILES)
-G4FILE := $(word 1, $(G4FILES))
-PARSERS := $($(PARSER))Parser.py $($(PARSER))Lexer.py
-HEADERS := $($(PARSER))Parser.h $($(PARSER))Lexer.h
-CXXFLAGS += -I/usr/include/antlr4-runtime
-PARSE := $(word 1, $(PARSERS))
-LISTENER := $(G4FILE:.g4=Listener.py)
-JAVASCRIPTEXAMPLES := ArrowFunctions.js Constants.js LetAndAsync.js
-JAVASCRIPTEXAMPLE ?= $(word 1, $(JAVASCRIPTEXAMPLES))
-EXAMPLE := $($(PARSER)EXAMPLE)
-JAVASCRIPTBASEFILES := $(G4FILES:.g4=Base.py)
-BASEFILES := $($(PARSER)BASEFILES)
-DOWNLOADED = $(BASEFILES) $(JAVASCRIPTEXAMPLE)
-DOWNLOADED += *Parser.g4 *Lexer.g4
-GENERATED = *Parser.py *Lexer.py
-GENERATED += *Listener.py *.interp *.tokens __pycache__
 FIXUP ?= arrow,var
 ifneq ($(SHOWENV),)
  export
-else
- export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP
+else  # export what's needed for envsubst and for python scripts
+ export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH
 endif
 all: test
 test: run
@@ -143,10 +122,10 @@ $(PIDFILE): $(dir $(MITMDUMP))mitmdump
 	 echo $$! | tee $@  # doesn't necessarily store correct PID
 proxy: $(PIDFILE)
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
-proxy.stop:
+proxy.stop:  # provide a safe dummy arg to kill in case proxy not running
 	-if [ -f "$(PIDFILE)" ]; then \
 	 kill $$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) \
-	  -s tcp:listen); \
+	  -s tcp:listen) dummy 2>kill.log; \
 	else \
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
@@ -171,33 +150,16 @@ localserver: | $(TESTFILE)
 	-python3 -m http.server --bind 127.0.0.1 8888 &
 	@echo waiting a few seconds to launch the browser
 	sleep 5 && $(BROWSER) http://localhost:8888/$|
-# copied from python-antlr-example project Makefile
-$(G4FILES):
-	wget -O- $(GRAMMAR)/$@ | sed -e 's/\<this[.]/self./g' \
-	 -e s'/!self[.]/not self./g' > $@
-$(EXAMPLE):
-	if [ "$(PARSER)" = "JAVASCRIPT" ]; then \
-	 wget $(EXAMPLES)/$@; \
-	fi
-$(BASEFILES):
-	if [ "$(PARSER)" = "JAVASCRIPT" ]; then \
-	 wget $(BASE)/$@; \
-	fi
 env:
 ifneq ($(SHOWENV),)
 	env
 else
 	$(MAKE) SHOWENV=1 $@
 endif
-$(PARSERS): $(G4FILES) | $(BASEFILES)
-	antlr4 -Dlanguage=$($(TARGET)) $+
-$(HEADERS): $(G4FILES) | $(BASEFILES)
-	antlr4 -Dlanguage=Cpp $+
-cpp: $(HEADERS)
-	$(MAKE) parse
-	./parse pathological.js
 diff:
 	for modified in $$(find storage/modified/ -type f); \
 	 do original=storage/files/$${modified##storage/modified/}; \
 	 colordiff $$original $$modified; \
 	done
+shell:
+	$(PYTHON)

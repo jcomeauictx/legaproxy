@@ -11,7 +11,7 @@ iPod Touch, and many other legacy devices to access the modern Web.
 import os, logging, base64, hashlib  # pylint: disable=multiple-imports
 from time import strftime
 from hashlib import sha256
-from jsfix import fixup
+from JavaScript.Python3.jsfix import fixup
 try:
     from mitmproxy import http
 except (ImportError, ModuleNotFoundError):  # for doctests
