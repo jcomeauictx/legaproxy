@@ -13,25 +13,26 @@ NOTES:
 '''
 import sys, logging, re  # pylint: disable=multiple-imports
 from string import ascii_letters, digits
+from collections import OrderedDict
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
 WHITESPACE = tuple('\t\v\f \xa0\ufeff')  # may need to add more
 ENDLINE = tuple('\n\r\u2028\u2029')
 ZEROWIDTH = tuple('\u200c\u200d')  # non-joiner and joiner
-COMMENTS = {
-    '//': ENDLINE,
-    '#!': ENDLINE,  # only valid at start of script, but lexer needn't care
-    '/*': '*/',
-}
-STRING = {
-    '"': '"',
-    "'": "'",
-    '`': '`',
-}
-GROUP = {
-    '{': '}',
-    '[': ']',
-    '(': ')',
-}
+COMMENTS = OrderedDict([
+    ('/*', '*/'),
+    ('//', ENDLINE),
+    ('#!', ENDLINE),  # only valid at start of script, but lexer needn't care
+])
+STRING = OrderedDict([
+    ('"', '"'),
+    ("'", "'"),
+    ('`', '`'),
+])
+GROUP = OrderedDict([
+    ('{', '}'),
+    ('[', ']'),
+    ('(', ')'),
+])
 OPERATOR = [
     '>>>=',  # right shift logical assign
     '>>=',   # right shift arithmetic assign
@@ -140,7 +141,7 @@ def escape(string):
     '''
     escape characters for regex
     '''
-    return string.replace('|', '\|')
+    return string.replace('|', r'\|')
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
