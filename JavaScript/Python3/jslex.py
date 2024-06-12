@@ -139,7 +139,7 @@ def jslex(string):
     '''
     logging.debug('OPERATORS: %r', OPERATORS)
     tokens = []
-    tokens.extend(SPLITTER.split(string))
+    tokens.extend([token for token in SPLITTER.split(string) if token])
     return tokens
 
 if __name__ == '__main__':
