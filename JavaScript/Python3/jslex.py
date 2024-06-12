@@ -90,6 +90,8 @@ ID_CONTINUE = ID_START + tuple(digits) + ZEROWIDTH
 ID = re.compile('[' + ''.join(ID_START) + '][' +
                 ''.join(ID_CONTINUE) + ']*')
 OPERATORS = '|'.join([op.replace('|', r'\|') for op in OPERATOR])
+GROUPS = '|'.join(['|'.join([k, v]) for k, v in GROUP.items()])
+SPLITTER = re.compile('(' + '|'.join([OPERATORS, GROUPS]) + ')')
 KEYWORDS = [
     'break',
     'case',
