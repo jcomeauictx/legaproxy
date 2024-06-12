@@ -22,10 +22,21 @@ def jsparse(tokens):
             ordered.append((token, order[order[token]]))
         else:
             ordered.append((token, None))
-    return ordered
+    #return ordered
+    for index in range(len(ordered)):
+        pair = ordered[index]
+        if pair[0] in openers:
+            closer = ordered.index((GROUP[pair[0]], pair[1]), index)
+            span = ' '.join(tokens[index:closer + 1])
+            logging.debug('found group: %s', span)
 
 if __name__ == '__main__':
-    os.environ['FIXUP_RETURN_TOKENS_ONLY'] = '1'
-    with open('pathological.js', 'r', encoding='utf-8') as testfile:
-        testdata = fixup(testfile.read())
+    if os.path.exists('tokens.txt'):
+        from ast import literal_eval
+        with open('tokens.txt', 'r', encoding='utf-8') as testfile:
+            testdata = literal_eval(testfile.read())
+    elif os.path.exists('pathological.js'):
+        os.environ['FIXUP_RETURN_TOKENS_ONLY'] = '1'
+        with open('pathological.js', 'r', encoding='utf-8') as testfile:
+            testdata = fixup(testfile.read())
     print(jsparse(testdata))
