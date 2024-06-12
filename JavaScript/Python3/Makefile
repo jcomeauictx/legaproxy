@@ -101,3 +101,8 @@ cpp: $(HEADERS)
 # pathological.js is a copy of any large minimized js blob captured by mitmdump
 tokens.txt: jsfix.py pathological.js
 	FIXUP_RETURN_TOKENS_ONLY=1 ./$+ > $@
+tokens.log: jslex.py pathological.js
+	./$+ > $@
+diff: tokens.txt tokens.log
+	-colordiff $+
+	@echo 'Use `$(MAKE) $@ | less -R` to page it, preserving colors' >&2
