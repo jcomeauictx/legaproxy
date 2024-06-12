@@ -28,7 +28,7 @@ def jsparse(tokens):
         if pair[0] in openers:
             closer = ordered.index((GROUP[pair[0]], pair[1]), index)
             span = ' '.join(tokens[index:closer + 1])
-            logging.debug('found group: %s', span)
+            logging.debug('found group length %d: %r', len(span), span)
 
 if __name__ == '__main__':
     if os.path.exists('tokens.txt'):
