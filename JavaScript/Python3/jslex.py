@@ -89,6 +89,7 @@ ID_START = tuple(ascii_letters + '$_')
 ID_CONTINUE = ID_START + tuple(digits) + ZEROWIDTH
 ID = re.compile('[' + ''.join(ID_START) + '][' +
                 ''.join(ID_CONTINUE) + ']*')
+OPERATORS = '|'.join([op.replace('|', r'\|') for op in OPERATOR])
 KEYWORDS = [
     'break',
     'case',
@@ -133,15 +134,8 @@ def jslex(string):
 
     //developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar
     '''
-    operators = '|'.join([escape(op) for op in OPERATOR])
-    logging.debug('operators: %s', operators)
+    logging.debug('OPERATORS: %r', OPERATORS)
     tokens = []
-
-def escape(string):
-    '''
-    escape characters for regex
-    '''
-    return string.replace('|', r'\|')
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
