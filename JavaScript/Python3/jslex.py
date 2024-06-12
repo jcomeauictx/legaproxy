@@ -139,6 +139,8 @@ def jslex(string):
     '''
     logging.debug('OPERATORS: %r', OPERATORS)
     tokens = []
+    tokens.extend(SPLITTER.split(string))
+    return tokens
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
