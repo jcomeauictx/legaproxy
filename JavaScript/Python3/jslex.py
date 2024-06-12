@@ -12,6 +12,7 @@ NOTES:
     nullish="null or undefined"
 '''
 import sys, logging, re  # pylint: disable=multiple-imports
+from re import escape as esc
 from string import ascii_letters, digits
 from collections import OrderedDict
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
@@ -89,8 +90,8 @@ ID_START = tuple(ascii_letters + '$_')
 ID_CONTINUE = ID_START + tuple(digits) + ZEROWIDTH
 ID = re.compile('[' + ''.join(ID_START) + '][' +
                 ''.join(ID_CONTINUE) + ']*')
-OPERATORS = '|'.join([op.replace('|', r'\|') for op in OPERATOR])
-GROUPS = '|'.join(['|'.join([k, v]) for k, v in GROUP.items()])
+OPERATORS = '|'.join([esc(op) for op in OPERATOR])
+GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
 SPLITTER = re.compile('(' + '|'.join([OPERATORS, GROUPS]) + ')')
 KEYWORDS = [
     'break',
