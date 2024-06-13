@@ -27,10 +27,11 @@ COMMENT = OrderedDict([
     # shebang comment only valid at start of script, but lexer needn't care
     ('#!', '#![^' + ENDLINE + ']*[' + ENDLINE + ']+'),
 ])
-STRING = {
-    # back reference \1 is the entire SPLITTER regex, so we need \2 here
-    ('"', "'", '`'): r'''(['`"]).*?\2''',
-}
+STRING = OrderedDict([
+    ('"', r'["].*?["]'),
+    ("'", r"['].*?[']"),
+    ('`', r'[`].*?[`]'),
+])
 GROUP = OrderedDict([
     ('{', '}'),
     ('[', ']'),
@@ -94,7 +95,7 @@ IDS = '[' + ''.join(ID_START) + '][' + ''.join(ID_CONTINUE) + ']*'
 # NOTE: keywords are also matched by IDS
 OPERATORS = '|'.join([esc(op) for op in OPERATOR])
 GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
-STRINGS = STRING['"', "'", '`']
+STRINGS = '|'.join(STRING.values())
 COMMENTS = '|'.join(COMMENT.values())
 WHITESPACES = '[' + ''.join(WHITESPACE + ENDLINE) + ']+'
 SPLITTER = re.compile('(' + '|'.join(
