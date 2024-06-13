@@ -16,22 +16,21 @@ from re import escape as esc
 from string import ascii_letters, digits
 from collections import OrderedDict
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
-WHITESPACE = tuple('\t\v\f \xa0\ufeff')  # may need to add more
+WHITESPACE = '\t\v\f \xa0\ufeff'  # may need to add more
 ENDLINE = '\n\r\u2028\u2029'
 ZEROWIDTH = tuple('\u200c\u200d')  # non-joiner and joiner
 # parsing comments is problematic, because comment delimiters are meaningless
 # inside strings, and strings need not be parsed inside comments.
-COMMENTS = OrderedDict([
-    ('/*', re.compile(r'/\*.*?\*/')),
-    ('//', re.compile('//[^' + ENDLINE + ']*[' + ENDLINE + ']+')),
+COMMENT = OrderedDict([
+    ('/*', r'/\*.*?\*/'),
+    ('//', '//[^' + ENDLINE + ']*[' + ENDLINE + ']+'),
     # shebang comment only valid at start of script, but lexer needn't care
-    ('#!', re.compile('#![^' + ENDLINE + ']*[' + ENDLINE + ']+')),
+    ('#!', '#![^' + ENDLINE + ']*[' + ENDLINE + ']+'),
 ])
-STRING = OrderedDict([
-    ('"', '"'),
-    ("'", "'"),
-    ('`', '`'),
-])
+STRING = {
+    # back reference \1 is the entire SPLITTER regex, so we need \2 here
+    ('"', "'", '`'): r'''(['`"]).*?\2''',
+}
 GROUP = OrderedDict([
     ('{', '}'),
     ('[', ']'),
@@ -91,48 +90,16 @@ OPERATOR = [
 ]
 ID_START = tuple(ascii_letters + '$_')
 ID_CONTINUE = ID_START + tuple(digits) + ZEROWIDTH
-ID = re.compile('[' + ''.join(ID_START) + '][' +
-                ''.join(ID_CONTINUE) + ']*')
+IDS = '[' + ''.join(ID_START) + '][' + ''.join(ID_CONTINUE) + ']*'
+# NOTE: keywords are also matched by IDS
 OPERATORS = '|'.join([esc(op) for op in OPERATOR])
 GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
-SPLITTER = re.compile('(' + '|'.join([OPERATORS, GROUPS]) + ')')
-KEYWORDS = [
-    'break',
-    'case',
-    'catch',
-    'class',
-    'const',
-    'continue',
-    'debugger',
-    'default',
-    'delete',
-    'do',
-    'else',
-    'export',
-    'extends',
-    'false',
-    'finally',
-    'for',
-    'function',
-    'if',
-    'import',
-    'in',
-    'instanceof',
-    'new',
-    'null',
-    'return',
-    'super',
-    'switch',
-    'this',
-    'throw',
-    'true',
-    'try',
-    'typeof',
-    'var',
-    'void',
-    'while',
-    'with',
-]
+STRINGS = STRING['"', "'", '`']
+COMMENTS = '|'.join(COMMENT.values())
+WHITESPACES = '[' + ''.join(WHITESPACE + ENDLINE) + ']+'
+SPLITTER = re.compile('(' + '|'.join(
+    [COMMENTS, STRINGS, OPERATORS, GROUPS, IDS, WHITESPACES]
+) + ')')
 
 def jslex(string):
     '''
@@ -142,11 +109,6 @@ def jslex(string):
     '''
     logging.debug('OPERATORS: %r', OPERATORS)
     tokens = []
-    comments = []
-    strings = []
-    for start in COMMENTS:
-        comments.extend(COMMENTS[start].findall(string))
-    logging.debug('comments: %s', comments)
     tokens.extend([token for token in SPLITTER.split(string) if token])
     return tokens
 
