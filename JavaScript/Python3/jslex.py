@@ -18,13 +18,14 @@ from collections import OrderedDict
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
 WHITESPACE = tuple('\t\v\f \xa0\ufeff')  # may need to add more
 ENDLINE = '\n\r\u2028\u2029'
-ENDSEARCH = re.compile('[' + ENDLINE + ']+')
-ENDLINE = tuple(ENDLINE)
 ZEROWIDTH = tuple('\u200c\u200d')  # non-joiner and joiner
+# parsing comments is problematic, because comment delimiters are meaningless
+# inside strings, and strings need not be parsed inside comments.
 COMMENTS = OrderedDict([
-    ('/*', '*/'),
-    ('//', '\n'),
-    ('#!', '\n'),  # only valid at start of script, but lexer needn't care
+    ('/*', re.compile(r'/\*.*?\*/')),
+    ('//', re.compile('//[^' + ENDLINE + ']*[' + ENDLINE + ']+')),
+    # shebang comment only valid at start of script, but lexer needn't care
+    ('#!', re.compile('#![^' + ENDLINE + ']*[' + ENDLINE + ']+')),
 ])
 STRING = OrderedDict([
     ('"', '"'),
@@ -141,17 +142,11 @@ def jslex(string):
     '''
     logging.debug('OPERATORS: %r', OPERATORS)
     tokens = []
-    string, count = ENDSEARCH.subn('\n', string)
-    if count:
-        logging.debug('replaced %d end-of-line groups with "\\n"', count)
-    for start_comment in COMMENTS:
-        start, end = 0, None
-        try:
-            start = string.index(start_comment, start)
-            end = string.index(COMMENTS[start_comment], start)
-            logging.debug('found comment: %r', string[start:end + 1])
-        except ValueError:
-            pass
+    comments = []
+    strings = []
+    for start in COMMENTS:
+        comments.extend(COMMENTS[start].findall(string))
+    logging.debug('comments: %s', comments)
     tokens.extend([token for token in SPLITTER.split(string) if token])
     return tokens
 
