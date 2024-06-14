@@ -112,7 +112,7 @@ def jslex(string):
     tokens = []
     ignored = ('', None) + tuple(STRING)
     tokens.extend([token for token in SPLITTER.split(string)
-                  if token not in ignored])
+                  if token not in ignored] + ['<EOF>'])
     return tokens
 
 if __name__ == '__main__':
