@@ -103,6 +103,8 @@ tokens.txt: jsfix.py pathological.js
 	FIXUP_RETURN_TOKENS_ONLY=1 ./$+ > $@
 tokens.log: jslex.py pathological.js
 	./$+ > $@
+wdiff: tokens.txt tokens.log
+	wdiff --no-common --auto-pager $+
 diff: tokens.txt tokens.log
 	-colordiff $+
 	@# check if output is terminal before showing `less -R` hint
