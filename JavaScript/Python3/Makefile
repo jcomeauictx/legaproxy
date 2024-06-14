@@ -51,7 +51,7 @@ ifneq ($(SHOWENV),)
 else
  export FIXUP
 endif
-all: test
+all: diff
 test: run
 run: jsfix.py | $(APPNAME) $(PARSERS)
 	cat $(TESTFILE) | \
@@ -105,4 +105,7 @@ tokens.log: jslex.py pathological.js
 	./$+ > $@
 diff: tokens.txt tokens.log
 	-colordiff $+
-	@echo 'Use `$(MAKE) $@ | less -R` to page it, preserving colors' >&2
+	@# check if output is terminal before showing `less -R` hint
+	@if [ -t 1 ]; then \
+	 echo 'Use `$(MAKE) $@ | less -R` to page it, showing colors' >&2; \
+	fi
