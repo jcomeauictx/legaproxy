@@ -28,9 +28,9 @@ COMMENT = OrderedDict([
     ('#!', '#![^' + ENDLINE + ']*[' + ENDLINE + ']+'),
 ])
 STRING = OrderedDict([
-    ('"', r'["].*?["]'),
-    ("'", r"['].*?[']"),
-    ('`', r'[`].*?[`]'),
+    ('"', '"'),
+    ("'", "'"),
+    ('`', '`'),
 ])
 GROUP = OrderedDict([
     ('{', '}'),
@@ -95,7 +95,7 @@ IDS = '[' + ''.join(ID_START) + '][' + ''.join(ID_CONTINUE) + ']*'
 # NOTE: keywords are also matched by IDS
 OPERATORS = '|'.join([esc(op) for op in OPERATOR])
 GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
-STRINGS = '|'.join(STRING.values())
+STRINGS = r'''(['"`]).*?(?<!\\)(?:\\\\)*\2'''
 COMMENTS = '|'.join(COMMENT.values())
 WHITESPACES = '[' + ''.join(WHITESPACE + ENDLINE) + ']+'
 SPLITTER = re.compile('(' + '|'.join(
@@ -110,7 +110,8 @@ def jslex(string):
     '''
     logging.debug('OPERATORS: %r', OPERATORS)
     tokens = []
-    tokens.extend([token for token in SPLITTER.split(string) if token])
+    tokens.extend([token for token in SPLITTER.split(string)
+                  if token and token not in ("'", '"', '`')])
     return tokens
 
 if __name__ == '__main__':
