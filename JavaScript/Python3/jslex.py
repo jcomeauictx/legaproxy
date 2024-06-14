@@ -95,7 +95,7 @@ IDS = '[' + ''.join(ID_START) + '][' + ''.join(ID_CONTINUE) + ']*'
 # NOTE: keywords are also matched by IDS
 OPERATORS = '|'.join([esc(op) for op in OPERATOR])
 GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
-STRINGS = r'''(['"`]).*?(?<!\\)(?:\\\\)*\2'''
+STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(STRING)
 COMMENTS = '|'.join(COMMENT.values())
 WHITESPACES = '[' + ''.join(WHITESPACE + ENDLINE) + ']+'
 SPLITTER = re.compile('(' + '|'.join(
@@ -110,8 +110,9 @@ def jslex(string):
     '''
     logging.debug('OPERATORS: %r', OPERATORS)
     tokens = []
+    ignored = ('', None) + tuple(STRING)
     tokens.extend([token for token in SPLITTER.split(string)
-                  if token and token not in ("'", '"', '`')])
+                  if token not in ignored])
     return tokens
 
 if __name__ == '__main__':
