@@ -124,13 +124,20 @@ def jslex(string):
     ignored = ('', None) + tuple(STRING)
     tokens.extend([token for token in SPLITTER.split(string)
                   if token not in ignored] + ['<EOF>'])
+    # now postprocess template strings by different rules
     ignored = ('', None) + tuple(s for s in STRING if s != '`')
     for index in reversed(range(len(tokens))):
         token = tokens[index]
         if token.startswith('`'):
             logging.debug('template: %s', token)
-            tokens[index:index + 1] = [t for t in T_SPLITTER.split(token)
-                                       if t not in ignored]
+            firstsplit = [t for t in T_SPLITTER.split(token)
+                          if t not in ignored]
+            for subindex in reversed(range(len(firstsplit))):
+                subtoken = firstsplit[subindex]
+                if re.compile(T_GROUPS).match(subtoken):
+                    logging.debug('need to split %s', subtoken)
+                firstsplit[subindex] = subtoken  # FIXME: add split code
+            tokens[index:index + 1] = firstsplit
     return tokens
 
 if __name__ == '__main__':
