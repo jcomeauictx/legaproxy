@@ -21,7 +21,7 @@ ENDLINE = '\n\r\u2028\u2029'
 ZEROWIDTH = tuple('\u200c\u200d')  # non-joiner and joiner
 # parsing comments is problematic, because comment delimiters are meaningless
 # inside strings, and strings need not be parsed inside comments.
-# NOTE: T_ versions of following are for post-lexing of templates
+# NOTE: T_ and T2_ versions of following are for post-lexing of templates
 COMMENT = OrderedDict([
     ('/*', r'/\*.*?\*/'),
     ('//', '//[^' + ENDLINE + ']*[' + ENDLINE + ']+'),
@@ -95,13 +95,14 @@ OPERATOR = [
     ',',     # comma
     ';',     # semicolon
 ]
-T_OPERATOR = '${'
 ID_START = tuple(ascii_letters + '$_')
 ID_CONTINUE = ID_START + tuple(digits) + ZEROWIDTH
 IDS = '[' + ''.join(ID_START) + '][' + ''.join(ID_CONTINUE) + ']*'
 # NOTE: keywords are also matched by IDS
 OPERATORS = '|'.join([esc(op) for op in OPERATOR])
 GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
+T_GROUP = ('${', '}')
+T_GROUPS = esc(T_GROUP[0]) + '.*?' + esc(T_GROUP[1])
 STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(STRING)
 REGEXES = r'(?<=[!=(])/.*?(?<!\\)(?:\\\\)*/[dgimsuvy]?'
 COMMENTS = '|'.join(COMMENT.values())
@@ -110,7 +111,7 @@ NUMBERS = '|'.join(NUMBER.values())
 SPLITTER = re.compile('(' + '|'.join(
     [COMMENTS, REGEXES, STRINGS, OPERATORS, GROUPS, IDS, NUMBERS, WHITESPACES]
 ) + ')')
-T_SPLITTER = re.compile('(' + '|'.join([T_OPERATOR, '.']) + ')')
+T_SPLITTER = re.compile('(' + '|'.join([T_GROUPS, '.']) + ')')
 
 def jslex(string):
     '''
