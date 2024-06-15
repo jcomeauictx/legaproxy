@@ -95,16 +95,14 @@ OPERATOR = [
     ',',     # comma
     ';',     # semicolon
 ]
-T_OPERATOR = OPERATOR + ['${'] + list(GROUP.keys()) + list(GROUP.values())
+T_OPERATOR = '${'
 ID_START = tuple(ascii_letters + '$_')
 ID_CONTINUE = ID_START + tuple(digits) + ZEROWIDTH
 IDS = '[' + ''.join(ID_START) + '][' + ''.join(ID_CONTINUE) + ']*'
 # NOTE: keywords are also matched by IDS
 OPERATORS = '|'.join([esc(op) for op in OPERATOR])
-T_OPERATORS = '|'.join([esc(op) for op in T_OPERATOR])
 GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
 STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(STRING)
-T_STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(tuple(STRING)[:2])
 REGEXES = r'(?<=[!=(])/.*?(?<!\\)(?:\\\\)*/[dgimsuvy]?'
 COMMENTS = '|'.join(COMMENT.values())
 WHITESPACES = '[' + ''.join(WHITESPACE + ENDLINE) + ']+'
@@ -112,9 +110,7 @@ NUMBERS = '|'.join(NUMBER.values())
 SPLITTER = re.compile('(' + '|'.join(
     [COMMENTS, REGEXES, STRINGS, OPERATORS, GROUPS, IDS, NUMBERS, WHITESPACES]
 ) + ')')
-T_SPLITTER = re.compile('(' + '|'.join(
-    [REGEXES, T_STRINGS, T_OPERATORS, NUMBERS, WHITESPACES]
-) + ')')
+T_SPLITTER = re.compile('(' + '|'.join([T_OPERATOR, '.']) + ')')
 
 def jslex(string):
     '''
