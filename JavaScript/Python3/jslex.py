@@ -113,7 +113,7 @@ SPLITTER = re.compile('(' + '|'.join(
     [COMMENTS, REGEXES, STRINGS, OPERATORS, GROUPS, IDS, NUMBERS, WHITESPACES]
 ) + ')')
 T_SPLITTER = re.compile('(' + '|'.join(
-    [REGEXES, T_STRINGS, T_OPERATORS, IDS, NUMBERS, WHITESPACES]
+    [REGEXES, T_STRINGS, T_OPERATORS, NUMBERS, WHITESPACES]
 ) + ')')
 
 def jslex(string):
@@ -127,11 +127,11 @@ def jslex(string):
     ignored = ('', None) + tuple(STRING)
     tokens.extend([token for token in SPLITTER.split(string)
                   if token not in ignored] + ['<EOF>'])
-    for index in range(len(tokens)):
+    for index in reversed(range(len(tokens))):
         token = tokens[index]
         if token.startswith('`'):
             logging.debug('template: %s', token)
-            tokens[index] = [t for t in T_SPLITTER.split(token)
+            tokens[index:index + 1] = [t for t in T_SPLITTER.split(token)
                              if t not in ignored]
     return tokens
 
