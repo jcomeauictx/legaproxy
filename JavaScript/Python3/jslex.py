@@ -102,7 +102,7 @@ IDS = '[' + ''.join(ID_START) + '][' + ''.join(ID_CONTINUE) + ']*'
 OPERATORS = '|'.join([esc(op) for op in OPERATOR])
 GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
 T_GROUP = ('${', '}')
-T_GROUPS = esc(T_GROUP[0]) + '.*?' + esc(T_GROUP[1])
+T_GROUPS = esc(T_GROUP[0]) + '.*?(?:' + esc(T_GROUP[1]) + '|$)'
 T2_OPERATORS = '|'.join([esc(T_GROUP[0]), OPERATORS, GROUPS])
 STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(STRING)
 REGEXES = r'(?<=[!=(])/.*?(?<!\\)(?:\\\\)*/[dgimsuvy]?'
