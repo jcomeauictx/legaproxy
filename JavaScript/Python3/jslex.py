@@ -123,12 +123,13 @@ def jslex(string):
     ignored = ('', None) + tuple(STRING)
     tokens.extend([token for token in SPLITTER.split(string)
                   if token not in ignored] + ['<EOF>'])
+    ignored = ('', None) + tuple(s for s in STRING if s != '`')
     for index in reversed(range(len(tokens))):
         token = tokens[index]
         if token.startswith('`'):
             logging.debug('template: %s', token)
             tokens[index:index + 1] = [t for t in T_SPLITTER.split(token)
-                             if t not in ignored]
+                                       if t not in ignored]
     return tokens
 
 if __name__ == '__main__':
