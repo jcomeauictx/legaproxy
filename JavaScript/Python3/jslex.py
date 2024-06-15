@@ -101,11 +101,12 @@ IDS = '[' + ''.join(ID_START) + '][' + ''.join(ID_CONTINUE) + ']*'
 OPERATORS = '|'.join([esc(op) for op in OPERATOR])
 GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
 STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(STRING)
+REGEXES = r'(?<=[!=(])/.*?(?<!\\)(?:\\\\)*/[dgimsuvy]?'
 COMMENTS = '|'.join(COMMENT.values())
 WHITESPACES = '[' + ''.join(WHITESPACE + ENDLINE) + ']+'
 NUMBERS = '|'.join(NUMBER.values())
 SPLITTER = re.compile('(' + '|'.join(
-    [COMMENTS, STRINGS, OPERATORS, GROUPS, IDS, NUMBERS, WHITESPACES]
+    [COMMENTS, REGEXES, STRINGS, OPERATORS, GROUPS, IDS, NUMBERS, WHITESPACES]
 ) + ')')
 
 def jslex(string):
