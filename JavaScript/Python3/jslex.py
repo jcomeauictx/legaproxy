@@ -37,6 +37,11 @@ GROUP = OrderedDict([
     ('[', ']'),
     ('(', ')'),
 ])
+NUMBER = OrderedDict([
+    # let any preceding sign be handled by the parser
+    ('integer', '(?:0[BbOoXx])?[0-9A-Fa-f]+[n]?'),
+    ('float', '(?:[.][0-9]+|[0-9]+.[0-9]*)(?:[Ee][+-]?[0-9]+)?'),
+])
 OPERATOR = [
     '>>>=',  # right shift logical assign
     '>>=',   # right shift arithmetic assign
@@ -98,8 +103,9 @@ GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
 STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(STRING)
 COMMENTS = '|'.join(COMMENT.values())
 WHITESPACES = '[' + ''.join(WHITESPACE + ENDLINE) + ']+'
+NUMBERS = '|'.join(NUMBER.values())
 SPLITTER = re.compile('(' + '|'.join(
-    [COMMENTS, STRINGS, OPERATORS, GROUPS, IDS, WHITESPACES]
+    [COMMENTS, STRINGS, OPERATORS, GROUPS, IDS, NUMBERS, WHITESPACES]
 ) + ')')
 
 def jslex(string):
