@@ -103,6 +103,7 @@ OPERATORS = '|'.join([esc(op) for op in OPERATOR])
 GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
 T_GROUP = ('${', '}')
 T_GROUPS = esc(T_GROUP[0]) + '.*?' + esc(T_GROUP[1])
+T2_OPERATORS = '|'.join([esc(T_GROUP[0]), OPERATORS, GROUPS])
 STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(STRING)
 REGEXES = r'(?<=[!=(])/.*?(?<!\\)(?:\\\\)*/[dgimsuvy]?'
 COMMENTS = '|'.join(COMMENT.values())
@@ -113,7 +114,7 @@ SPLITTER = re.compile('(' + '|'.join(
 ) + ')')
 T_SPLITTER = re.compile('(' + '|'.join([T_GROUPS, '.']) + ')')
 T2_SPLITTER = re.compile('(' + '|'.join(
-    [STRINGS, OPERATORS, esc(T_GROUP[0]), GROUPS, IDS, NUMBERS, WHITESPACES]
+    [STRINGS, T2_OPERATORS, IDS, NUMBERS, WHITESPACES]
 ) + ')')
 
 def jslex(string):
@@ -129,16 +130,18 @@ def jslex(string):
                   if token not in ignored] + ['<EOF>'])
     # now postprocess template strings by different rules
     # must do it in reverse order to avoid breaking list indices
+    logging.debug('T2_SPLITTER: %s', T2_SPLITTER)
     ignored = ('', None) + tuple(s for s in STRING if s != '`')
     for index in reversed(range(len(tokens))):
         token = tokens[index]
         if token.startswith('`'):
-            logging.debug('template: %s', token)
+            logging.debug('template: %r', token)
             firstsplit = [t for t in T_SPLITTER.split(token)
                           if t not in ignored]
             for subindex in reversed(range(len(firstsplit))):
                 subtoken = firstsplit[subindex]
                 if re.compile(T_GROUPS).match(subtoken):
+                    logging.debug('splitting group: %r', subtoken)
                     secondsplit = [t for t in T2_SPLITTER.split(subtoken)
                                    if t not in ignored]
                     firstsplit[subindex:subindex + 1] = secondsplit
