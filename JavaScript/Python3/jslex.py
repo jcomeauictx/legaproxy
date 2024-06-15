@@ -21,6 +21,7 @@ ENDLINE = '\n\r\u2028\u2029'
 ZEROWIDTH = tuple('\u200c\u200d')  # non-joiner and joiner
 # parsing comments is problematic, because comment delimiters are meaningless
 # inside strings, and strings need not be parsed inside comments.
+# NOTE: T_ versions of following are for post-lexing of templates
 COMMENT = OrderedDict([
     ('/*', r'/\*.*?\*/'),
     ('//', '//[^' + ENDLINE + ']*[' + ENDLINE + ']+'),
@@ -94,19 +95,25 @@ OPERATOR = [
     ',',     # comma
     ';',     # semicolon
 ]
+T_OPERATOR = OPERATOR + ['${'] + list(GROUP.keys()) + list(GROUP.values())
 ID_START = tuple(ascii_letters + '$_')
 ID_CONTINUE = ID_START + tuple(digits) + ZEROWIDTH
 IDS = '[' + ''.join(ID_START) + '][' + ''.join(ID_CONTINUE) + ']*'
 # NOTE: keywords are also matched by IDS
 OPERATORS = '|'.join([esc(op) for op in OPERATOR])
+T_OPERATORS = '|'.join([esc(op) for op in T_OPERATOR])
 GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
 STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(STRING)
+T_STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(tuple(STRING)[:2])
 REGEXES = r'(?<=[!=(])/.*?(?<!\\)(?:\\\\)*/[dgimsuvy]?'
 COMMENTS = '|'.join(COMMENT.values())
 WHITESPACES = '[' + ''.join(WHITESPACE + ENDLINE) + ']+'
 NUMBERS = '|'.join(NUMBER.values())
 SPLITTER = re.compile('(' + '|'.join(
     [COMMENTS, REGEXES, STRINGS, OPERATORS, GROUPS, IDS, NUMBERS, WHITESPACES]
+) + ')')
+T_SPLITTER = re.compile('(' + '|'.join(
+    [REGEXES, T_STRINGS, T_OPERATORS, IDS, NUMBERS, WHITESPACES]
 ) + ')')
 
 def jslex(string):
@@ -120,9 +127,12 @@ def jslex(string):
     ignored = ('', None) + tuple(STRING)
     tokens.extend([token for token in SPLITTER.split(string)
                   if token not in ignored] + ['<EOF>'])
-    for token in tokens:
+    for index in range(len(tokens)):
+        token = tokens[index]
         if token.startswith('`'):
             logging.debug('template: %s', token)
+            tokens[index] = [t for t in T_SPLITTER.split(token)
+                             if t not in ignored]
     return tokens
 
 if __name__ == '__main__':
