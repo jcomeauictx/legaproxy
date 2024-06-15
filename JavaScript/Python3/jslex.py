@@ -112,6 +112,9 @@ SPLITTER = re.compile('(' + '|'.join(
     [COMMENTS, REGEXES, STRINGS, OPERATORS, GROUPS, IDS, NUMBERS, WHITESPACES]
 ) + ')')
 T_SPLITTER = re.compile('(' + '|'.join([T_GROUPS, '.']) + ')')
+T2_SPLITTER = re.compile('(' + '|'.join(
+    [STRINGS, OPERATORS, esc(T_GROUP[0]), GROUPS, IDS, NUMBERS, WHITESPACES]
+) + ')')
 
 def jslex(string):
     '''
@@ -125,6 +128,7 @@ def jslex(string):
     tokens.extend([token for token in SPLITTER.split(string)
                   if token not in ignored] + ['<EOF>'])
     # now postprocess template strings by different rules
+    # must do it in reverse order to avoid breaking list indices
     ignored = ('', None) + tuple(s for s in STRING if s != '`')
     for index in reversed(range(len(tokens))):
         token = tokens[index]
@@ -135,8 +139,9 @@ def jslex(string):
             for subindex in reversed(range(len(firstsplit))):
                 subtoken = firstsplit[subindex]
                 if re.compile(T_GROUPS).match(subtoken):
-                    logging.debug('need to split %s', subtoken)
-                firstsplit[subindex] = subtoken  # FIXME: add split code
+                    secondsplit = [t for t in T2_SPLITTER.split(subtoken)
+                                   if t not in ignored]
+                    firstsplit[subindex:subindex + 1] = secondsplit
             tokens[index:index + 1] = firstsplit
     return tokens
 
