@@ -47,7 +47,15 @@ ANTLR4 parser project.
 * Need to change capabilities.html to retrieve a report from the browser via
   an xhr, save that information for the useragent hash, and use it to determine
   which js features need to be translated. (2024-06-05)
-* Lexing a large-ish (300kb) blob of minimized js takes over 10 seconds in
-  Python, and parsing another second or more. Using
+* Lexing a large-ish (300kb) blob of minimized js takes over 10 minutes in
+  Python, and parsing another minute or more. Using
   [C++](https://www.codeproject.com/Articles/5308882/ANTLR-Parsing-and-Cplusplus-Part-1-Introduction)
   or Java should reduce that time.
+* My minimized lexer in JavaScript/Python3 is currently failing on string
+  interpolations (the `${...}` syntax) that span multiple template strings.
+  My first choice was to process the first-pass lexing in reverse, so as to
+  insert the post-processed shards into the token strings list in one pass,
+  but this discovery nixes that approach. It will have to be done in forward
+  order with a state machine, making a multi-level list, then flatten it when
+  done. And probably better to move it from the lexer into the parser, but
+  not sure about that.
