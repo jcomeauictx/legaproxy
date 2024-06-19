@@ -11,6 +11,7 @@ NOTES:
     iff="if and only if"
     nullish="null or undefined"
 '''
+# pylint: disable=consider-using-f-string, consider-using-enumerate
 import sys, logging, re  # pylint: disable=multiple-imports
 from re import escape as esc
 from string import ascii_letters, digits
@@ -103,6 +104,7 @@ OPERATORS = '|'.join([esc(op) for op in OPERATOR])
 GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
 T_GROUP = ('${', '}')
 T_GROUPS = esc(T_GROUP[0]) + '.*?(?:' + esc(T_GROUP[1]) + '|$)'
+T_GROUP_END = '[^' + T_GROUP[0][1] + ']*' + esc(T_GROUP[1])
 T2_OPERATORS = '|'.join([esc(T_GROUP[0]), OPERATORS, GROUPS])
 STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(STRING)
 REGEXES = r'(?<=[!=(])/.*?(?<!\\)(?:\\\\)*/[dgimsuvy]*'
@@ -137,12 +139,24 @@ def jslex(string):
             if isinstance(subsublist, list):
                 sublist[index:index + 1] = flatten(subsublist)
         return sublist
+    state = None
     for index in range(len(tokens)):
         token = tokens[index]
         if token.startswith('`'):
             logging.debug('template: %r', token)
-            firstsplit = [t for t in T_SPLITTER.split(token)
-                          if t not in ('', None)]
+            firstsplit = []
+            if state == 'interpolating':
+                if re.compile(T_GROUP_END).match(token):
+                    firstsplit.extend([token[0],
+                                       token[1:token.index(T_GROUP[1])]
+                                      ])
+                    token = token[token.index(T_GROUP[1]):]
+                    state = None
+                else:
+                    firstsplit.extend([token[0], token[1:]])
+                    token = ''
+            firstsplit.extend([t for t in T_SPLITTER.split(token)
+                               if t not in ('', None)])
             for subindex in reversed(range(len(firstsplit))):
                 subtoken = firstsplit[subindex]
                 if re.compile(T_GROUPS).match(subtoken):
@@ -150,6 +164,8 @@ def jslex(string):
                     secondsplit = [t for t in T2_SPLITTER.split(subtoken)
                                    if t not in ignored]
                     firstsplit[subindex] = secondsplit
+                    if not re.compile(T_GROUP_END).match(subtoken):
+                        state = 'interpolating'
             tokens[index] = firstsplit
     return flatten(tokens)
 
