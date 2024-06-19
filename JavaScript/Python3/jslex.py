@@ -131,13 +131,12 @@ def jslex(string):
     # now postprocess template strings by different rules
     # must do it in reverse order to avoid breaking list indices
     logging.debug('T2_SPLITTER: %s', T2_SPLITTER)
-    ignored = ('', None)
     for index in reversed(range(len(tokens))):
         token = tokens[index]
         if token.startswith('`'):
             logging.debug('template: %r', token)
             firstsplit = [t for t in T_SPLITTER.split(token)
-                          if t not in ignored]
+                          if t not in ('', None)]
             for subindex in reversed(range(len(firstsplit))):
                 subtoken = firstsplit[subindex]
                 if re.compile(T_GROUPS).match(subtoken):
