@@ -131,7 +131,13 @@ def jslex(string):
     # now postprocess template strings by different rules
     # must do it in reverse order to avoid breaking list indices
     logging.debug('T2_SPLITTER: %s', T2_SPLITTER)
-    for index in reversed(range(len(tokens))):
+    def flatten(sublist):
+        for index in reversed(range(len(sublist))):
+            subsublist = sublist[index]
+            if isinstance(subsublist, list):
+                sublist[index:index + 1] = flatten(subsublist)
+        return sublist
+    for index in range(len(tokens)):
         token = tokens[index]
         if token.startswith('`'):
             logging.debug('template: %r', token)
@@ -143,9 +149,9 @@ def jslex(string):
                     logging.debug('splitting group: %r', subtoken)
                     secondsplit = [t for t in T2_SPLITTER.split(subtoken)
                                    if t not in ignored]
-                    firstsplit[subindex:subindex + 1] = secondsplit
-            tokens[index:index + 1] = firstsplit
-    return tokens
+                    firstsplit[subindex] = secondsplit
+            tokens[index] = firstsplit
+    return flatten(tokens)
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
