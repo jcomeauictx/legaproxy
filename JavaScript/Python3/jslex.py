@@ -105,7 +105,7 @@ T_GROUP = ('${', '}')
 T_GROUPS = esc(T_GROUP[0]) + '.*?(?:' + esc(T_GROUP[1]) + '|$)'
 T2_OPERATORS = '|'.join([esc(T_GROUP[0]), OPERATORS, GROUPS])
 STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(STRING)
-REGEXES = r'(?<=[!=(])/.*?(?<!\\)(?:\\\\)*/[dgimsuvy]?'
+REGEXES = r'(?<=[!=(])/.*?(?<!\\)(?:\\\\)*/[dgimsuvy]*'
 COMMENTS = '|'.join(COMMENT.values())
 WHITESPACES = '[' + ''.join(WHITESPACE + ENDLINE) + ']+'
 NUMBERS = '|'.join(NUMBER.values())
