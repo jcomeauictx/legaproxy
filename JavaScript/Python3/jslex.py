@@ -116,7 +116,7 @@ SPLITTER = re.compile('(' + '|'.join(
 ) + ')')
 T_SPLITTER = re.compile('(' + '|'.join([T_GROUPS, '.']) + ')')
 T2_SPLITTER = re.compile('(' + '|'.join(
-    [STRINGS, T2_OPERATORS, IDS, NUMBERS, WHITESPACES]
+    [STRINGS, REGEXES, T2_OPERATORS, IDS, NUMBERS, WHITESPACES]
 ) + ')')
 
 def jslex(string):
