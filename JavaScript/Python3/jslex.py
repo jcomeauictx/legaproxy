@@ -146,20 +146,19 @@ def jslex(string):
         if token.startswith('`'):
             logging.debug('template: %r, state: %s', token, state)
             firstsplit = []
+            token = token[1:-1]  # strip backticks
             if state == 'placeholder':
                 if re.compile(T_GROUP_END).match(token):
-                    firstsplit.extend([token[0],
-                                       token[1:token.index(T_GROUP[1])]
-                                      ])
+                    firstsplit.extend([token[1:token.index(T_GROUP[1])]])
                     token = token[token.index(T_GROUP[1]):]
                     state = 'template'
                 else:
-                    firstsplit.extend([token[0], token[1:-1], token[-1]])
+                    firstsplit.extend([token[1:-1]])
                     token = ''
             firstsplit.extend([t for t in T_SPLITTER.split(token)
                                if t not in ('', None)])
             logging.debug('firstsplit: %r, state: %s', firstsplit, state)
-            for subindex in reversed(range(len(firstsplit))):
+            for subindex in range(len(firstsplit)):
                 subtoken = firstsplit[subindex]
                 if re.compile(T_GROUPS).match(subtoken):
                     logging.debug('splitting group: %r', subtoken)
@@ -171,7 +170,8 @@ def jslex(string):
                     ]
             logging.debug('firstsplit after secondsplit: %r, state: %s',
                           firstsplit, state)
-            tokens[index] = firstsplit
+            # add back the backticks
+            tokens[index] = ['`'] + firstsplit + ['`']
     return flatten(tokens)
 
 if __name__ == '__main__':
