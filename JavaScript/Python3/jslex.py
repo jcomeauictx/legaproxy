@@ -104,7 +104,7 @@ OPERATORS = '|'.join([esc(op) for op in OPERATOR])
 GROUPS = '|'.join(['|'.join([esc(k), esc(v)]) for k, v in GROUP.items()])
 T_GROUP = ('${', '}')
 T_GROUPS = esc(T_GROUP[0]) + '.*?(?:' + esc(T_GROUP[1]) + '|$)'
-T_GROUP_END = '[^' + esc(T_GROUP[0][1]) + ']*' + esc(T_GROUP[1])
+T_GROUP_END = '[^' + esc(T_GROUP[1]) + ']*' + esc(T_GROUP[1])
 T2_OPERATORS = '|'.join([esc(T_GROUP[0]), OPERATORS, GROUPS])
 STRINGS = r'''([%s]).*?(?<!\\)(?:\\\\)*\2''' % ''.join(STRING)
 REGEXES = r'(?<=[!=(&])/.*?(?<!\\)(?:\\\\)*/[dgimsuvy]*'
@@ -166,8 +166,10 @@ def jslex(string):
                                    if t not in ignored]
                     firstsplit[subindex] = secondsplit
                     state = states[
-                        bool(re.compile(T_GROUP_END).match(subtoken))
+                        not re.compile(T_GROUP_END).search(subtoken)
                     ]
+                    logging.debug('after splitting group %r, state=%s',
+                                  subtoken, state)
             logging.debug('firstsplit after secondsplit: %r, state: %s',
                           firstsplit, state)
             # add back the backticks
