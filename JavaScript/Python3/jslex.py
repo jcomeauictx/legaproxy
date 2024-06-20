@@ -139,24 +139,26 @@ def jslex(string):
             if isinstance(subsublist, list):
                 sublist[index:index + 1] = flatten(subsublist)
         return sublist
-    state = None
+    states = ('template', 'placeholder')
+    state = 'template'
     for index in range(len(tokens)):
         token = tokens[index]
         if token.startswith('`'):
-            logging.debug('template: %r', token)
+            logging.debug('template: %r, state: %s', token, state)
             firstsplit = []
-            if state == 'interpolating':
+            if state == 'placeholder':
                 if re.compile(T_GROUP_END).match(token):
                     firstsplit.extend([token[0],
                                        token[1:token.index(T_GROUP[1])]
                                       ])
                     token = token[token.index(T_GROUP[1]):]
-                    state = None
+                    state = 'template'
                 else:
-                    firstsplit.extend([token[0], token[1:]])
+                    firstsplit.extend([token[0], token[1:-1], token[-1]])
                     token = ''
             firstsplit.extend([t for t in T_SPLITTER.split(token)
                                if t not in ('', None)])
+            logging.debug('firstsplit: %r, state: %s', firstsplit, state)
             for subindex in reversed(range(len(firstsplit))):
                 subtoken = firstsplit[subindex]
                 if re.compile(T_GROUPS).match(subtoken):
@@ -164,8 +166,11 @@ def jslex(string):
                     secondsplit = [t for t in T2_SPLITTER.split(subtoken)
                                    if t not in ignored]
                     firstsplit[subindex] = secondsplit
-                    if not re.compile(T_GROUP_END).match(subtoken):
-                        state = 'interpolating'
+                    state = states[
+                        bool(re.compile(T_GROUP_END).match(subtoken))
+                    ]
+            logging.debug('firstsplit after secondsplit: %r, state: %s',
+                          firstsplit, state)
             tokens[index] = firstsplit
     return flatten(tokens)
 
