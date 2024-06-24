@@ -49,7 +49,7 @@ def request(flow: http.HTTPFlow):
     for header, value in flow.request.headers.items():
         logging.debug('header "%s": "%s"', header, value)
 
-def response(flow: http.HTTPFlow) -> None:
+async def response(flow: http.HTTPFlow) -> None:
     '''
     filter responses
     '''
@@ -90,7 +90,7 @@ def response(flow: http.HTTPFlow) -> None:
         logging.debug('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
         logging.debug('processing %s file', mimetype)
-        fixed = fixup(text)
+        fixed = await fixup(text)
         if fixed != text:
             logging.debug('fixup modified webpage, saving to %s', MODIFIED)
             savefile(os.path.join(

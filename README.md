@@ -41,6 +41,7 @@ ANTLR4 parser project.
 * antlr4 runs way too slowly for realtime processing of javascript. I will
   have to return unprocessed script at first, and process it in the background,
   to be available on reload. (2024-06-05)
+* alternatively, can try [async or concurrent methods](https://docs.mitmproxy.org/stable/addons-examples/#nonblocking), to avoid blocking on one long-running parse.
 * Need to change storage of retrieved files to use sha256sums as filenames,
   and have the existing directory structure symlink to these files instead.
   This will allow easier retrieval of cached modified scripts. (2024-06-05)
