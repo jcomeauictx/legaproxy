@@ -14,6 +14,7 @@ from hashlib import sha256
 from JavaScript.Python3.jsfix import fixup
 try:
     from mitmproxy import http
+    from mitmproxy.script import concurrent
 except (ImportError, ModuleNotFoundError):  # for doctests
     http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
 
@@ -49,7 +50,8 @@ def request(flow: http.HTTPFlow):
     for header, value in flow.request.headers.items():
         logging.debug('header "%s": "%s"', header, value)
 
-async def response(flow: http.HTTPFlow) -> None:
+@concurrent
+def response(flow: http.HTTPFlow) -> None:
     '''
     filter responses
     '''
@@ -90,7 +92,7 @@ async def response(flow: http.HTTPFlow) -> None:
         logging.debug('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
         logging.debug('processing %s file', mimetype)
-        fixed = await fixup(text)
+        fixed = fixup(text)
         if fixed != text:
             logging.debug('fixup modified webpage, saving to %s', MODIFIED)
             savefile(os.path.join(
