@@ -49,7 +49,7 @@ FIXUP ?= arrow,var
 ifneq ($(SHOWENV),)
  export
 else
- export FIXUP
+ export FIXUP PYTHONPATH
 endif
 all: diff
 test: run

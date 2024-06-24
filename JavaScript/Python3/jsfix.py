@@ -43,7 +43,7 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         for analyzing how antlr4 works, with an eye to multithreading it
         '''
         text = ctx.getText()
-        logging.debug('enterEveryRule: ctx=%r (%d chars)',
+        doctest_debug('enterEveryRule: ctx=%r (%d chars)',
                       snippet(text), len(text))
 
     def exitEveryRule(self, ctx):
@@ -51,7 +51,7 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         see docstring for enterEveryRule
         '''
         text = ctx.getText()
-        logging.debug('exitEveryRule: ctx=%r: (%d chars)',
+        doctest_debug('exitEveryRule: ctx=%r: (%d chars)',
                       snippet(text), len(text))
 
     def exitVariableDeclarationList(self, ctx):
@@ -70,7 +70,7 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         '''
         convert arrow function to old-style `function(){}`
         '''
-        logging.debug('ctx: %r', ctx.getText())
+        doctest_debug('ctx: %r', ctx.getText())
         if not FIXUP:
             return
         parameters = ctx.arrowFunctionParameters()
@@ -78,9 +78,9 @@ class DowngradingJavascriptListener(JavaScriptParserListener):
         arrow = ([child.symbol for child in ctx.children
                  if getattr(child, 'symbol', None) is not None
                  and child.symbol.text == '=>'] + [None])[0]
-        logging.disabled('ctx.arrowFunctionParameters: %s: %s`',
+        doctest_debug('ctx.arrowFunctionParameters: %s: %s`',
                       parameters, show(parameters))
-        logging.disabled('ctx.arrowFunctionBody: %s: %s',
+        doctest_debug('ctx.arrowFunctionBody: %s: %s',
                       body, show(body))
         #import pdb; pdb.set_trace()
         if arrow is not None:
@@ -114,8 +114,7 @@ def fixup(filedata):
     if os.getenv('FIXUP_RETURN_TOKENS_ONLY'):
         logging.debug('returning list of token text')
         return tokenlist
-    else:
-        logging.debug('tokens: %s', snippet(str(tokenlist), 1024))
+    logging.debug('tokens: %s', snippet(str(tokenlist), 1024))
     logging.debug('starting parse phase')
     parser = JavaScriptParser(tokens)
     logging.debug('creating stream rewriter')
@@ -158,12 +157,25 @@ def snippet(string, maxlength=80):
         string = string[:half] + '...' + string[-half:]
     return string
 
+def doctest_debug(msg, *args, **kwargs):
+    # pylint: disable=unused-argument
+    '''
+    enable only for doctests
+    '''
+
 if __name__ == '__main__':
     logging.basicConfig(
         format='%(asctime)s:jsfix:%(levelname)s:%(message)s',
         level=logging.DEBUG if __debug__ else logging.INFO,
         datefmt='%Y-%m-%dT%H:%M:%S'
     )
+    if os.path.split(sys.argv[0])[1].startswith('doctest'):
+        # pylint: disable=function-redefined
+        def doctest_debug(msg, *args, **kwargs):
+            '''
+            verbose debugging only during doctests
+            '''
+            logging.debug(msg, *args, **kwargs)
     logging.debug('starting jsfix')
     if len(sys.argv) > 1:
         for filename in sys.argv[1:]:
