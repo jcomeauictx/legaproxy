@@ -2,11 +2,12 @@ SHELL := /bin/bash
 HOST ?= 127.0.0.1
 BROWSER ?= /usr/bin/mozilla-firefox
 PACKAGE := $(notdir $(BROWSER))
+RELEASE := $(notdir $(CURDIR))
 TASKNAME := browse
-TAG := $(TASKNAME)\:latest
+TAG := $(RELEASE)\:$(TASKNAME)
 IMAGES ?= $(HOME)/mnt/docker-images
 CONTAINERS ?= $(HOME)/mnt/docker-containers
-CONTAINER := $(notdir $(CURDIR))-$(TASKNAME)
+CONTAINER := $(RELEASE)-$(TASKNAME)
 SSHPORT := 3322
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
@@ -28,7 +29,6 @@ endif
 all: bind-run ssh
 $(IMAGES)/$(TAG): $(IMAGES)/README
 	$(MAKE) tcpopen
-	# only mark with TASKNAME file if build successful
 	-docker build --tag $(@F) .
 	$(MAKE) tcpclose
 $(IMAGES)/README:
@@ -39,11 +39,12 @@ delay:
 	sleep 5
 bind-run: $(CONTAINERS)/$(CONTAINER)
 $(CONTAINERS)/$(CONTAINER): $(IMAGES)/$(TAG)
+	@echo Attempting to run $(<F)... >&2
 	docker run \
 	 --detach \
 	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
 	 --workdir /app \
-	 --name $(@F)
+	 --name $(@F) \
 	 --mount type=bind,src="$(PWD)",target=/app \
 	 $(<F)
 tcpopen:
@@ -66,7 +67,7 @@ stop:
 	-docker stop $(CONTAINER)
 connect attach: | $(CONTAINERS)/$(CONTAINER)
 	docker exec --interactive --tty $(<F) /bin/bash
-ssh login: delay | $(TASKNAME)
+ssh login: delay | $(CONTAINERS)/$(CONTAINER)
 	ssh $(SSHOPTS) -Y -p $(SSHPORT) \
 	 -oStrictHostKeyChecking=no \
 	 -oUserKnownHostsFile=/dev/null \
