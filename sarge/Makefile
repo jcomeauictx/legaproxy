@@ -3,13 +3,16 @@ HOST ?= 127.0.0.1
 BROWSER ?= /usr/bin/mozilla-firefox
 PACKAGE := $(notdir $(BROWSER))
 TASKNAME := browse
+TAG := $(TASKNAME)\:latest
+IMAGES ?= $(HOME)/mnt/docker-images
+CONTAINERS ?= $(HOME)/mnt/docker-containers
+CONTAINER := $(notdir $(CURDIR))-$(TASKNAME)
 SSHPORT := 3322
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
 USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
 X11SOCKET := /tmp/.X11-unix/X0
 TCPPID := /var/run/socat_x11.pid
-DOCKERPID := /var/run/docker_sarge.pid
 SSHOPTS ?=  # set to -vvv to debug
 GATEWAY ?= $(subst ",,$(shell docker network inspect bridge | \
 	 awk '$$1 ~ /^"Gateway":$$/ {print $$2}'))
@@ -23,36 +26,26 @@ else
   export
 endif
 all: bind-run ssh
-$(TASKNAME):
+$(IMAGES)/$(TAG): $(IMAGES)/README
 	$(MAKE) tcpopen
 	# only mark with TASKNAME file if build successful
-	-docker build --tag $@ $(<D) && touch $@
+	-docker build --tag $(@F) .
 	$(MAKE) tcpclose
-run: $(TASKNAME)
-	if [ -s "$<" ]; then \
-	 echo Docker image is already running >&2; \
-	else \
-	 docker run \
-	  --detach \
-	  --publish $(HOST):$(SSHPORT):$(SSHPORT) \
-	  $< > $<; \
-	 echo Docker image is now running >&2; \
-	fi
+$(IMAGES)/README:
+	systemctl --user start dockerfs
+	time.sleep(10)
 delay:
 	@echo Waiting for image to fully launch before connect attempt
 	sleep 5
-bind-run: $(TASKNAME)
-	if [ -s "$<" ]; then \
-	 echo Docker image is already running >&2; \
-	else \
-	 docker run \
-	  --detach \
-	  --publish $(HOST):$(SSHPORT):$(SSHPORT) \
-	  --workdir /app \
-	  --mount type=bind,src="$(PWD)",target=/app \
-	  $< > $<; \
-	  echo Docker image is now running with bind mount >&2; \
-	fi
+bind-run: $(CONTAINERS)/$(CONTAINER)
+$(CONTAINERS)/$(CONTAINER): $(IMAGES)/$(TAG)
+	docker run \
+	 --detach \
+	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
+	 --workdir /app \
+	 --name $(@F)
+	 --mount type=bind,src="$(PWD)",target=/app \
+	 $(<F)
 tcpopen:
 	@sudo echo sudo now enabled for '`sudo tee`' below >&2
 	socat TCP-LISTEN:6000,fork,bind=$(GATEWAY) UNIX-CONNECT:$(X11SOCKET) & \
@@ -66,18 +59,13 @@ env:
 	$@
 clean: tcpclose
 	$(MAKE) stop
-	-if [ -s "$(TASKNAME)" ]; then docker rm $$(<$(TASKNAME)); fi
-	>$(TASKNAME)  # zero file without deleting it
+	-docker rm $(CONTAINER)
 distclean: clean
-	-docker rmi $(TASKNAME):latest
-	rm -f $(TASKNAME)
+	-docker rmi $(TAG)
 stop:
-	-if [ -s "$(TASKNAME)" ]; then \
-	 docker stop $$(<$(TASKNAME)); \
-	 docker wait $$(<$(TASKNAME)); \
-	fi
-connect attach: | $(TASKNAME)
-	docker exec --interactive --tty $$(<$|) /bin/bash
+	-docker stop $(CONTAINER)
+connect attach: | $(CONTAINERS)/$(CONTAINER)
+	docker exec --interactive --tty $(<F) /bin/bash
 ssh login: delay | $(TASKNAME)
 	ssh $(SSHOPTS) -Y -p $(SSHPORT) \
 	 -oStrictHostKeyChecking=no \
