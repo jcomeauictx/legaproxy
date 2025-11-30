@@ -26,17 +26,14 @@ else
   # export everything so `make env` shows values
   export
 endif
-all: bind-run ssh
+all: bind-run capabilities
 $(IMAGES)/$(TAG): $(IMAGES)/README
 	$(MAKE) tcpopen
 	-docker build --tag $(@F) .
 	$(MAKE) tcpclose
 $(IMAGES)/README:
 	systemctl --user start dockerfs
-	time.sleep(10)
-delay:
-	@echo Waiting for image to fully launch before connect attempt
-	sleep 5
+	sleep 10
 bind-run: $(CONTAINERS)/$(CONTAINER)
 $(CONTAINERS)/$(CONTAINER): $(IMAGES)/$(TAG)
 	@echo Attempting to run $(<F)... >&2
@@ -47,6 +44,8 @@ $(CONTAINERS)/$(CONTAINER): $(IMAGES)/$(TAG)
 	 --name $(@F) \
 	 --mount type=bind,src="$(PWD)",target=/app \
 	 $(<F)
+	@echo Waiting for image to fully launch before connect attempt
+	-sleep 5
 tcpopen:
 	@sudo echo sudo now enabled for '`sudo tee`' below >&2
 	socat TCP-LISTEN:6000,fork,bind=$(GATEWAY) UNIX-CONNECT:$(X11SOCKET) & \
@@ -67,11 +66,13 @@ stop:
 	-docker stop $(CONTAINER)
 connect attach: | $(CONTAINERS)/$(CONTAINER)
 	docker exec --interactive --tty $(<F) /bin/bash
-ssh login: delay | $(CONTAINERS)/$(CONTAINER)
+ssh login: $(CONTAINERS)/$(CONTAINER)
 	ssh $(SSHOPTS) -Y -p $(SSHPORT) \
 	 -oStrictHostKeyChecking=no \
 	 -oUserKnownHostsFile=/dev/null \
 	 -oKexAlgorithms=+diffie-hellman-group1-sha1 \
 	 -oHostKeyAlgorithms=+ssh-rsa \
 	 -oPubkeyAcceptedKeyTypes=+ssh-rsa \
-	 root@localhost
+	 root@localhost '$(SSH_COMMAND)'
+capabilities:
+	$(MAKE) SSH_COMMAND='mozilla-firefox /app/$@.html' ssh
