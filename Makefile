@@ -163,3 +163,6 @@ diff:
 	done
 shell:
 	$(PYTHON)
+push:
+	-$(foreach remote, $(filter-out original, $(shell git remote)), \
+	 git push $(remote);)

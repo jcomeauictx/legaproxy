@@ -76,3 +76,6 @@ ssh login: $(CONTAINERS)/$(CONTAINER)
 	 root@localhost '$(SSH_COMMAND)'
 capabilities:
 	$(MAKE) SSH_COMMAND='mozilla-firefox /app/$@.html' ssh
+push:
+	-$(foreach remote, $(filter-out original, $(shell git remote)), \
+	 git push $(remote);)
