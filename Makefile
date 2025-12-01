@@ -163,6 +163,11 @@ diff:
 	done
 shell:
 	$(PYTHON)
+%.es5.js %.es3.js: %.js
+	swc compile \
+	 --config-file $(patsubst .%,%,$(suffix $(basename $@))).swcrc \
+	 --out-file $@ \
+	 $<
 push:
 	-$(foreach remote, $(filter-out original, $(shell git remote)), \
 	 git push $(remote);)

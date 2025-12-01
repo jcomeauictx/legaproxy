@@ -1,0 +1,13 @@
+{
+  "jsc": {
+    "parser": {
+      "syntax": "ecmascript",
+      "jsx": false
+    },
+    "target": "es3",
+    "externalHelpers": false
+  },
+  "module": {
+    "type": "commonjs"
+  }
+}
