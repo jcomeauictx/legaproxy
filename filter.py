@@ -11,7 +11,17 @@ iPod Touch, and many other legacy devices to access the modern Web.
 import os, logging, base64, hashlib  # pylint: disable=multiple-imports
 from time import strftime
 from hashlib import sha256
-from JavaScript.Python3.jsfix import fixup
+from subprocess import Popen, PIPE
+# anticipate mitmproxy < 8.1.1-4 error `from blinker import _saferef`
+try:
+    import blinker
+except ImportError:
+    blinker = type('', (), {})  # pylint: disable=invalid-name
+try:
+    from blinker import _saferef
+except ImportError:
+    from saferef_patch import saferef
+    blinker._saferef = saferef
 try:
     from mitmproxy import http
     from mitmproxy.script import concurrent
@@ -92,7 +102,7 @@ def response(flow: http.HTTPFlow) -> None:
         logging.debug('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
         logging.debug('processing %s file', mimetype)
-        fixed = fixup(text)
+        fixed = fixup(text, flow.request.path)
         if fixed != text:
             logging.debug('fixup modified webpage, saving to %s', MODIFIED)
             savefile(os.path.join(
@@ -106,6 +116,38 @@ def response(flow: http.HTTPFlow) -> None:
             logging.debug("fixup didn't change content of webpage")
     else:
         logging.debug('passing mime-type %s through unprocessed', mimetype)
+
+def fixup(text, path):
+    '''
+    convert modern javascript to legacy code
+    '''
+    with Popen([
+            'swc', 'compile',
+            '--config-file', 'es3.swcrc',
+            '--file-name', path],
+            stdin=PIPE, stdout=PIPE, stderr=PIPE,
+            encoding='utf-8') as command:
+        stdout, stderr = communicate(text)
+    if stderr:
+        logging.error('"swc convert" %s to ES3 problems: %s',
+                      path, ', '.join(stderr))
+    if stdout:
+        return stdout
+    with Popen([
+            'swc', 'compile',
+            '--config-file', 'es5.swcrc',
+            '--file-name', path],
+            stdin=PIPE, stdout=PIPE, stderr=PIPE,
+            encoding='utf-8') as command:
+        stdout, stderr = communicate(text)
+    if stderr:
+        logging.error('"swc convert" %s to ES5 problems: %s',
+                      path, ', '.join(stderr))
+    if stdout:
+        return stdout
+    else:
+        logging.error('swc could not convert %s, returning original', path)
+    return text
 
 def md5sum(string, base64encode=True):
     '''
