@@ -9,6 +9,7 @@ This will allow old computers/operating systems, smartphones, tablets,
 iPod Touch, and many other legacy devices to access the modern Web.
 '''
 import os, logging, base64, hashlib  # pylint: disable=multiple-imports
+import asyncio  # pylint: disable=multiple-imports
 from time import strftime
 from hashlib import sha256
 from subprocess import Popen, PIPE
@@ -24,7 +25,6 @@ except ImportError:
     blinker._saferef = saferef
 try:
     from mitmproxy import http
-    from mitmproxy.script import concurrent
 except (ImportError, ModuleNotFoundError):  # for doctests
     http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
 
@@ -60,8 +60,7 @@ def request(flow: http.HTTPFlow):
     for header, value in flow.request.headers.items():
         logging.debug('header "%s": "%s"', header, value)
 
-@concurrent
-def response(flow: http.HTTPFlow) -> None:
+async def response(flow: http.HTTPFlow) -> None:
     '''
     filter responses
     '''
@@ -102,7 +101,7 @@ def response(flow: http.HTTPFlow) -> None:
         logging.debug('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
         logging.debug('processing %s file', mimetype)
-        fixed = fixup(text, flow.request.path)
+        fixed = await fixup(text, flow.request.path)
         if fixed != text:
             logging.debug('fixup modified webpage, saving to %s', MODIFIED)
             savefile(os.path.join(
