@@ -5,6 +5,8 @@ SHELL := /bin/bash
 # existed for years.
 PATH := $(HOME)/.local/bin:$(PATH)
 HOST ?= 127.0.0.1
+BRANCH := $(shell git branch --show-current)
+REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
 BROWSER ?= $(shell which firefox open 2>/dev/null | head -n 1)
 MITMDUMP = $(shell which mitmdump 2>/dev/null | head -n 1)
@@ -175,5 +177,4 @@ shell:
 	 --out-file $@ \
 	 $<
 push:
-	-$(foreach remote, $(filter-out original, $(shell git remote)), \
-	 git push $(remote);)
+	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)
