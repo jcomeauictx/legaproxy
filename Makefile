@@ -1,7 +1,9 @@
 # allow Bashisms
 SHELL := /bin/bash
-# prefer /usr/bin over /usr/local/bin, especially for python3
-PATH := /usr/bin:$(PATH)
+# prefer pip-installed mitmdump over Debian package
+# as of Trixie, it still attempts to import blinker._saferef, which hasn't
+# existed for years.
+PATH := $(HOME)/.local/bin:$(PATH)
 HOST ?= 127.0.0.1
 SSHPORT ?= 3022
 BROWSER ?= $(shell which firefox open 2>/dev/null | head -n 1)
@@ -13,7 +15,6 @@ DOCKERRUN ?= docker run --interactive --rm
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
 USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
-PIDFILE := legaproxy.pid
 # add UserAgent strings of some legacy devices we want to support
 IPHONE6 := Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X)
 IPHONE6 += AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2
@@ -56,7 +57,7 @@ ifneq ($(SHOWENV),)
 else  # export what's needed for envsubst and for python scripts
  export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH
 endif
-all: test
+all: proxy
 test: run
 $(APPNAME): | Dockerfile
 	if [ -f "$@" ]; then \
@@ -109,18 +110,23 @@ stop:
 	fi
 $(dir $(MITMDUMP))mitmdump:
 	@echo mitmdump not found, installing it now... >&2
-	pip3 install mitmproxy || \
-	 pip3 install --break-system-packages mitmproxy
-$(PIDFILE): $(dir $(MITMDUMP))mitmdump
-	$< --anticache \
-	 --anticomp \
-	 --listen-host $(PROXYHOST) \
-	 --listen-port $(PROXYPORT) \
-	 --scripts filter.py \
-	 --flow-detail 3 \
-	 --save-stream-file mitmproxy.log &>mitmdump.log & \
-	 echo $$! | tee $@  # doesn't necessarily store correct PID
-proxy: $(PIDFILE)
+	pip3 install --user -U mitmproxy || \
+	 pip3 install --user -U --break-system-packages mitmproxy
+mitmdump.log: | $(dir $(MITMDUMP))mitmdump
+	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
+	if [ "$$pid" ]; then \
+	 echo mitmdump is already running >&2; \
+	else \
+	 : "creating an empty logfile" > $@; \
+	 $| --anticache \
+	  --anticomp \
+	  --listen-host $(PROXYHOST) \
+	  --listen-port $(PROXYPORT) \
+	  --scripts filter.py \
+	  --flow-detail 3 \
+	  --save-stream-file mitmproxy.log &>$@ & \
+	fi
+proxy: mitmdump.log
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
 	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
@@ -129,7 +135,7 @@ proxy.stop:
 	else \
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
-	-rm -f $(PIDFILE)
+	mv mitmdump.log /var/tmp/mitmdump.$(date +%Y%m%d%H%M%S).log
 clean:
 	$(MAKE) stop
 	-for container in $$(<$(APPNAME)); do docker rm $$container; done
