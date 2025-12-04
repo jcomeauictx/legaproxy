@@ -9,13 +9,13 @@ after importing, patch blinker thus:
 try:
     from blinker import _saferef
 except ImportError:
-    blinker._saferef = sys.modules['_saferef'] 
+    blinker._saferef = sys.modules['saferef_patch'] 
 
 code and patch suggested by claude.ai, Sonnet 4.5.
 '''
 import weakref
 
-def saferef(target, on_delete=None):
+def saferef_patch(target, on_delete=None):
     '''
     return a safe weak reference to a callable target
     '''

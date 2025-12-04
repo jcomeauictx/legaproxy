@@ -11,3 +11,4 @@ legaproxy.pid
 JavaScriptParser*
 JavaScriptLexer*
 pathological*.js
+mitmdump.py

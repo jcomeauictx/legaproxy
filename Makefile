@@ -1,7 +1,7 @@
 # allow Bashisms
 SHELL := /bin/bash
 # prefer /usr/bin over /usr/local/bin, especially for python3
-PATH := /usr/bin:$(PATH)
+PATH := /usr/bin:$(PATH):.
 HOST ?= 127.0.0.1
 SSHPORT ?= 3022
 BROWSER ?= $(shell which firefox open 2>/dev/null | head -n 1)
@@ -13,7 +13,6 @@ DOCKERRUN ?= docker run --interactive --rm
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
 USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
-PIDFILE := legaproxy.pid
 # add UserAgent strings of some legacy devices we want to support
 IPHONE6 := Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X)
 IPHONE6 += AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2
@@ -107,20 +106,22 @@ stop:
 	   docker wait $$container; \
 	 done; \
 	fi
+mitmdump.py: | $(dir $(MITMDUMP))mitmdump
+	ln -s $| $@
 $(dir $(MITMDUMP))mitmdump:
-	@echo mitmdump not found, installing it now... >&2
-	pip3 install mitmproxy || \
-	 pip3 install --break-system-packages mitmproxy
-$(PIDFILE): $(dir $(MITMDUMP))mitmdump
-	$< --anticache \
-	 --anticomp \
-	 --listen-host $(PROXYHOST) \
-	 --listen-port $(PROXYPORT) \
-	 --scripts filter.py \
-	 --flow-detail 3 \
-	 --save-stream-file mitmproxy.log &>mitmdump.log & \
-	 echo $$! | tee $@  # doesn't necessarily store correct PID
-proxy: $(PIDFILE)
+proxy: | launch_mitmdump.py
+	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
+	if [ ! "$$pid" ]; then \
+	 $| --anticache \
+	  --anticomp \
+	  --listen-host $(PROXYHOST) \
+	  --listen-port $(PROXYPORT) \
+	  --scripts filter.py \
+	  --flow-detail 3 \
+	  --save-stream-file mitmproxy.log &>mitmdump.log & \
+	else \
+	 echo mitmdump already running >&2; \
+	fi
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
 	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
@@ -129,7 +130,6 @@ proxy.stop:
 	else \
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
-	-rm -f $(PIDFILE)
 clean:
 	$(MAKE) stop
 	-for container in $$(<$(APPNAME)); do docker rm $$container; done
