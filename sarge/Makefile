@@ -27,7 +27,7 @@ else
   export
 endif
 all: bind-run capabilities
-$(IMAGES)/$(TAG): $(IMAGES)/README
+$(IMAGES)/$(TAG): $(IMAGES)/README Dockerfile
 	$(MAKE) tcpopen
 	-docker build --tag $(@F) .
 	$(MAKE) tcpclose
