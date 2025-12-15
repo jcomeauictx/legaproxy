@@ -54,6 +54,8 @@ PARSER ?= JAVASCRIPT
 TARGET ?= PYTHON3
 PYTHONPATH += $(PWD)/$($(PARSER))/$($(TARGET))
 FIXUP ?= arrow,var
+CARGO := $(word 1, $(shell which cargo false))
+SWC := $(word 1, $(shell which swc false))
 ifneq ($(SHOWENV),)
  export
 else  # export what's needed for envsubst and for python scripts
@@ -169,10 +171,20 @@ diff:
 	 do original=storage/files/$${modified##storage/modified/}; \
 	 colordiff $$original $$modified; \
 	done
+swc.is_installed:
+	if [ "$(notdir $(SWC))" = "false" ]; then \
+	 echo 'Must install swc: `cargo install swc_cli`' >&2; \
+	 echo 'Then add $(HOME)/.cargo/bin to your PATH' >&2; \
+	fi
+cargo.is_installed:
+	if [ "(notdir $(CARGO))" = "false" ]; then \
+	 echo 'Must install cargo: e.g. `sudo apt install rustup`' >&2; \
+	 echo 'Then `rustup toolchain install stable` >&2; \
+	fi
 shell:
 	$(PYTHON)
-%.es5.js %.es3.js: %.js
-	swc compile \
+%.es5.js %.es3.js: %.js swc.is_installed
+	$(SWC) compile \
 	 --config-file $(patsubst .%,%,$(suffix $(basename $@))).swcrc \
 	 --out-file $@ \
 	 $<
