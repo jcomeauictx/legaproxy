@@ -139,7 +139,7 @@ proxy.stop:
 	else \
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
-	mv mitmdump.log /var/tmp/mitmdump.$(date +%Y%m%d%H%M%S).log
+	mv mitmdump.log /var/tmp/mitmdump.$$(date +%Y%m%d%H%M%S).log
 clean:
 	$(MAKE) stop
 	-for container in $$(<$(APPNAME)); do docker rm $$container; done
