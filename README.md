@@ -20,8 +20,9 @@ ANTLR4 parser project.
 
 Chrome/Chromium ignores the CA certificate store whose instructions are
 provided at http://mitm.it/. Instead, after downloading the .pem file,
-type `chrome://settings/certificates` into the address bar, select the
-Authorities tab, and import the certificate. Close and reopen the browser.
+type `chrome://certificate-manager` into the address bar, select 
+"Local certificates", "Custom", "Installed by you", and import
+the certificate into "Trusted Certificates". Close and reopen the browser.
 
 ## Developer notes
 
