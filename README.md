@@ -16,6 +16,13 @@ to run it in a Docker image. I'm glad I did, because I learned a lot about
 Docker, but decided to code my own JavaScript translator after finding the
 ANTLR4 parser project.
 
+## Installing MITM certificate
+
+Chrome/Chromium ignores the CA certificate store whose instructions are
+provided at http://mitm.it/. Instead, after downloading the .pem file,
+type `chrome://settings/certificates` into the address bar, select the
+Authorities tab, and import the certificate. Close and reopen the browser.
+
 ## Developer notes
 
 * You will need to `usermod -a -G docker $USER`.
