@@ -120,6 +120,13 @@ $(dir $(MITMDUMP))mitmdump:
 	@echo mitmdump not found, installing it now... >&2
 	pip3 install --user -U mitmproxy || \
 	 pip3 install --user -U --break-system-packages mitmproxy
+%.log: %.py | $(dir $(MITMDUMP)mitmdump
+	$| --anticache \
+	 --anticomp \
+	 --listen-host $(PROXYHOST) \
+	 --listen-port $(TESTPORT) \
+	 --scripts $< \
+	 --flow-detail 3 2>&1 | tee $@
 mitmdump.log: | $(dir $(MITMDUMP))mitmdump
 	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
 	if [ "$$pid" ]; then \
