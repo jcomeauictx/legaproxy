@@ -22,7 +22,7 @@ Chrome/Chromium ignores the CA certificate store whose instructions are
 provided at http://mitm.it/. Instead, after downloading the .pem file,
 type `chrome://certificate-manager` into the address bar, select 
 "Local certificates", "Custom", "Installed by you", and import
-the certificate into "Trusted Certificates". Close and reopen the browser.
+the certificate into "Trusted Certificates".
 
 ## Developer notes
 

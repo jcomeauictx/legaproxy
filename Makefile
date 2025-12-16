@@ -5,6 +5,7 @@ SHELL := /bin/bash
 # existed for years.
 PATH := $(HOME)/.local/bin:$(PATH)
 HOST ?= 127.0.0.1
+DATADIR := $(HOME)/.legaproxy/chrome
 BRANCH := $(shell git branch --show-current)
 REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
@@ -39,7 +40,8 @@ PROXYHOST := 127.0.0.1
 PROXYPORT := 8080
 PROXY := $(PROXYHOST):$(PROXYPORT)
 ifeq ($(MITMBROWSER),$(CHROME))
- BROWSE += --temp-profile  # forces new chromium instance
+#BROWSE += --temp-profile  # forces new chromium instance
+ BROWSE += --user-data-dir=$(DATADIR)
  BROWSE += --proxy-server=$(PROXY)  # add proxy to browser commandline
 endif
 # proxy envvars lowercase, for testing with wget
@@ -75,6 +77,8 @@ retouch:
 	touch Dockerfile $(APPNAME)
 %: %.template Makefile
 	envsubst < $< > $@
+$(HOME)/%:
+	mkdir --parents $@
 run:
 	$(MAKE) -C $(PYTHONPATH)
 check:  # run on container itself
@@ -130,7 +134,7 @@ mitmdump.log: | $(dir $(MITMDUMP))mitmdump
 	  --flow-detail 3 \
 	  --save-stream-file mitmproxy.log &>$@ & \
 	fi
-proxy: mitmdump.log
+proxy: mitmdump.log $(DATADIR)
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
 	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
