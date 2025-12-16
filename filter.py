@@ -13,16 +13,6 @@ import asyncio  # pylint: disable=multiple-imports
 from time import strftime
 from hashlib import sha256
 from subprocess import Popen, PIPE
-# anticipate mitmproxy < 8.1.1-4 error `from blinker import _saferef`
-try:
-    import blinker
-except ImportError:
-    blinker = type('', (), {})  # pylint: disable=invalid-name
-try:
-    from blinker import _saferef
-except ImportError:
-    from saferef_patch import saferef
-    blinker._saferef = saferef
 try:
     from mitmproxy import http
 except (ImportError, ModuleNotFoundError):  # for doctests
