@@ -20,7 +20,10 @@ def request(flow: http.HTTPFlow) -> None:
     '''
     logging.debug('request received: %s', flow.request.url)
     directory, filename = split(flow.request.path.lstrip(sep))
-    if directory == 'mitm' and os.path.exists(filename):
+    if flow.request.host.endswith('gvt1.com'):
+        logging.debug('dropping google spyware')
+        flow.kill()
+    elif directory == 'mitm' and os.path.exists(filename):
         logging.debug('serving file %s', filename)
         mimetype = MIMETYPES.get(os.path.splitext(filename)[1], 'text/plain')
         flow.response = http.Response.make(
@@ -36,6 +39,9 @@ def request(flow: http.HTTPFlow) -> None:
             {'Content-Type': 'text/plain'}
         )
         ctx.master.shutdown()
+    else:
+        logging.warning('dropping unexpected request %s', flow.request.url)
+        flow.kill()
 
 async def response(flow: http.HTTPFlow) -> None:
     '''
