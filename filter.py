@@ -238,4 +238,4 @@ def sha256sum(bytestring):
     except TypeError:
         digest = sha256(bytestring.encode()).hexdigest()
     return digest
-# vim: set tabstop=4 expandtab shiftwidth=4 softtabstop=4
+# vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
