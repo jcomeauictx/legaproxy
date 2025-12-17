@@ -121,8 +121,8 @@ $(dir $(MITMDUMP))mitmdump:
 	@echo mitmdump not found, installing it now... >&2
 	pip3 install --user -U mitmproxy || \
 	 pip3 install --user -U --break-system-packages mitmproxy
-async.proxy: async.log
-async.proxy.stop:
+async: async.log
+async.stop:
 	wget --verbose --output-document=- http://example.com//mitm/shutdown
 %.log: %.py %.html .FORCE | $(dir $(MITMDUMP))mitmdump
 	$| --anticache \
@@ -132,9 +132,9 @@ async.proxy.stop:
 	 --scripts $< \
 	 --flow-detail 3 2>&1 | tee $@ &
 	sleep 3  # allow mitmproxy to start up
-	$(BROWSE) http://example.com/mitm/$*.html
+	$(BROWSE) http://example.com/
 	# on closing browser window, the following should run
-	$(MAKE) $*.proxy.stop
+	$(MAKE) $*.stop
 mitmdump.log: | $(dir $(MITMDUMP))mitmdump
 	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
 	if [ "$$pid" ]; then \
@@ -212,3 +212,4 @@ pixel.png:
 push:
 	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)
 .FORCE:
+.PRECIOUS: %.log
