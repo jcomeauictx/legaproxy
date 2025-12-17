@@ -2,9 +2,9 @@
 '''
 mitmdump filter to test delayed responses
 '''
-import os, logging, re  # pylint: disable=multiple-imports
+import os, logging, time  # pylint: disable=multiple-imports
 from http import HTTPStatus
-from posixpath import basename, dirname, split, sep
+from posixpath import split, sep
 from mitmproxy import http, ctx
 
 MIMETYPES = {
@@ -15,6 +15,9 @@ MIMETYPES = {
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
 
 def request(flow: http.HTTPFlow) -> None:
+    '''
+    capture and modify http.Request object
+    '''
     logging.debug('request received: %s', flow.request.url)
     directory, filename = split(flow.request.path.lstrip(sep))
     if directory == 'mitm' and os.path.exists(filename):
@@ -27,12 +30,20 @@ def request(flow: http.HTTPFlow) -> None:
         )
     elif directory == 'mitm' and filename == 'shutdown':
         logging.warning('shutting down MITM')
+        flow.response = http.Response.make(
+            HTTPStatus.OK,
+            b'shutting down MITM',
+            {'Content-Type': 'text/plain'}
+        )
         ctx.master.shutdown()
 
 async def response(flow: http.HTTPFlow) -> None:
+    '''
+    capture and modify http.Response object
+    '''
     logging.debug('response received: %s', flow.request.url)
     directory, filename = split(flow.request.path.lstrip(sep))
-    if filename.endswith('.png'):
+    if directory == 'mitm' and filename.endswith('.png'):
         delay = int(flow.request.query.get('delay', '0').rstrip('s'))
         logging.debug('delaying response for %s by %d seconds', filename, delay)
         time.sleep(delay)

@@ -123,7 +123,7 @@ $(dir $(MITMDUMP))mitmdump:
 	 pip3 install --user -U --break-system-packages mitmproxy
 async.proxy: async.log
 async.proxy.stop:
-	wget --verbose http://example.com//mitm/shutdown
+	wget --verbose --output-document=- http://example.com//mitm/shutdown
 %.log: %.py %.html .FORCE | $(dir $(MITMDUMP))mitmdump
 	$| --anticache \
 	 --anticomp \
@@ -131,7 +131,8 @@ async.proxy.stop:
 	 --listen-port $(PROXYPORT) \
 	 --scripts $< \
 	 --flow-detail 3 2>&1 | tee $@ &
-	wget http://example.com/mitm/$*.html
+	sleep 3  # allow mitmproxy to start up
+	wget --output-document=- http://example.com/mitm/$*.html
 mitmdump.log: | $(dir $(MITMDUMP))mitmdump
 	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
 	if [ "$$pid" ]; then \
