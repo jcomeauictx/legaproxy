@@ -65,6 +65,7 @@ else  # export what's needed for envsubst and for python scripts
 endif
 all: proxy
 test: run
+async-test: async.log
 $(APPNAME): | Dockerfile
 	if [ -f "$@" ]; then \
 	 echo $@ already exists >&2; \
@@ -120,7 +121,7 @@ $(dir $(MITMDUMP))mitmdump:
 	@echo mitmdump not found, installing it now... >&2
 	pip3 install --user -U mitmproxy || \
 	 pip3 install --user -U --break-system-packages mitmproxy
-%.log: %.py | $(dir $(MITMDUMP)mitmdump
+%.log: %.py | $(dir $(MITMDUMP))mitmdump
 	$| --anticache \
 	 --anticomp \
 	 --listen-host $(PROXYHOST) \
