@@ -38,6 +38,7 @@ BROWSE := $(MITMBROWSER)
 # don't use `localhost`, many Debian installs have both 127.0.0.1 and ::1
 PROXYHOST := 127.0.0.1
 PROXYPORT := 8080
+ASYNCPORT := 8081
 PROXY := $(PROXYHOST):$(PROXYPORT)
 ifeq ($(MITMBROWSER),$(CHROME))
 #BROWSE += --temp-profile  # forces new chromium instance
@@ -65,7 +66,9 @@ else  # export what's needed for envsubst and for python scripts
 endif
 all: proxy
 test: run
-async-test: async.log
+async.proxy: async.log
+async.proxy.stop:
+	curl --proxy $(PROXYHOST):$(ASYNCPORT) /mitm/shutdown
 $(APPNAME): | Dockerfile
 	if [ -f "$@" ]; then \
 	 echo $@ already exists >&2; \
@@ -125,7 +128,7 @@ $(dir $(MITMDUMP))mitmdump:
 	$| --anticache \
 	 --anticomp \
 	 --listen-host $(PROXYHOST) \
-	 --listen-port $(TESTPORT) \
+	 --listen-port $(ASYNCPORT) \
 	 --scripts $< \
 	 --flow-detail 3 2>&1 | tee $@
 mitmdump.log: | $(dir $(MITMDUMP))mitmdump
