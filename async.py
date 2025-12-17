@@ -18,13 +18,13 @@ def request(flow: http.HTTPFlow) -> None:
     '''
     capture and modify http.Request object
     '''
-    logging.debug('request received: %s', flow.request.url)
+    logging.info('request received: %s', flow.request.url)
     directory, filename = split(flow.request.path.lstrip(sep))
     if flow.request.host.endswith('gvt1.com'):
-        logging.debug('dropping google spyware')
+        logging.info('dropping google spyware')
         flow.kill()
     elif directory == 'mitm' and os.path.exists(filename):
-        logging.debug('serving file %s', filename)
+        logging.info('serving file %s', filename)
         mimetype = MIMETYPES.get(os.path.splitext(filename)[1], 'text/plain')
         flow.response = http.Response.make(
             HTTPStatus.OK,
@@ -47,11 +47,11 @@ async def response(flow: http.HTTPFlow) -> None:
     '''
     capture and modify http.Response object
     '''
-    logging.debug('response received: %s', flow.request.url)
+    logging.info('response received: %s', flow.request.url)
     directory, filename = split(flow.request.path.lstrip(sep))
     if directory == 'mitm' and filename.endswith('.png'):
         delay = int(flow.request.query.get('delay', '0').rstrip('s'))
-        logging.debug('delaying response for %s by %d seconds', filename, delay)
+        logging.info('delaying response for %s by %d seconds', filename, delay)
         time.sleep(delay)
 
 def read(filename):
