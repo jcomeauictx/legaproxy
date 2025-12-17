@@ -23,6 +23,8 @@ def request(flow: http.HTTPFlow) -> None:
     if flow.request.host.endswith('gvt1.com'):
         logging.info('dropping google spyware')
         flow.kill()
+    elif directory == '' and filename in ('', 'index.html'):
+        logging.info('passing request on to server, will overwrite response')
     elif directory == 'mitm' and os.path.exists(filename):
         logging.info('serving file %s', filename)
         mimetype = MIMETYPES.get(os.path.splitext(filename)[1], 'text/plain')
@@ -53,6 +55,9 @@ async def response(flow: http.HTTPFlow) -> None:
         delay = int(flow.request.query.get('delay', '0').rstrip('s'))
         logging.info('delaying response for %s by %d seconds', filename, delay)
         time.sleep(delay)
+    elif directory == '' and filename in ('', 'index.html'):
+        logging.info('filter: %s', ctx.options.intercept)
+        flow.response.body = read(ctx.options.intercept)
 
 def read(filename):
     '''
