@@ -132,7 +132,9 @@ async.proxy.stop:
 	 --scripts $< \
 	 --flow-detail 3 2>&1 | tee $@ &
 	sleep 3  # allow mitmproxy to start up
-	wget --output-document=- http://example.com/mitm/$*.html
+	$(BROWSE) http://example.com/mitm/$*.html
+	# on closing browser window, the following should run
+	$(MAKE) $*.proxy.stop
 mitmdump.log: | $(dir $(MITMDUMP))mitmdump
 	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
 	if [ "$$pid" ]; then \
