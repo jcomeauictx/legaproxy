@@ -38,7 +38,6 @@ BROWSE := $(MITMBROWSER)
 # don't use `localhost`, many Debian installs have both 127.0.0.1 and ::1
 PROXYHOST := 127.0.0.1
 PROXYPORT := 8080
-ASYNCPORT := 8081
 PROXY := $(PROXYHOST):$(PROXYPORT)
 ifeq ($(MITMBROWSER),$(CHROME))
 #BROWSE += --temp-profile  # forces new chromium instance
@@ -62,13 +61,11 @@ SWC := $(word 1, $(shell which swc false))
 ifneq ($(SHOWENV),)
  export
 else  # export what's needed for envsubst and for python scripts
- export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH
+ export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH \
+        https_proxy http_proxy
 endif
 all: proxy
 test: run
-async.proxy: async.log
-async.proxy.stop:
-	curl --proxy $(PROXYHOST):$(ASYNCPORT) /mitm/shutdown
 $(APPNAME): | Dockerfile
 	if [ -f "$@" ]; then \
 	 echo $@ already exists >&2; \
@@ -124,13 +121,17 @@ $(dir $(MITMDUMP))mitmdump:
 	@echo mitmdump not found, installing it now... >&2
 	pip3 install --user -U mitmproxy || \
 	 pip3 install --user -U --break-system-packages mitmproxy
-%.log: %.py | $(dir $(MITMDUMP))mitmdump
+async.proxy: async.log
+async.proxy.stop:
+	wget --verbose http://example.com//mitm/shutdown
+%.log: %.py %.html .FORCE | $(dir $(MITMDUMP))mitmdump
 	$| --anticache \
 	 --anticomp \
 	 --listen-host $(PROXYHOST) \
-	 --listen-port $(ASYNCPORT) \
+	 --listen-port $(PROXYPORT) \
 	 --scripts $< \
-	 --flow-detail 3 2>&1 | tee $@
+	 --flow-detail 3 2>&1 | tee $@ &
+	wget http://example.com/mitm/$*.html
 mitmdump.log: | $(dir $(MITMDUMP))mitmdump
 	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
 	if [ "$$pid" ]; then \
@@ -207,3 +208,4 @@ pixel.png:
 	convert -size 1x1 xc:none $@
 push:
 	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)
+.FORCE:
