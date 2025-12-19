@@ -23,8 +23,10 @@ def request(flow: http.HTTPFlow) -> None:
     if flow.request.host.endswith('gvt1.com'):
         logging.info('dropping google spyware')
         flow.kill()
-    elif directory == '' and filename in ('', 'index.html'):
-        logging.info('passing request on to server, will overwrite response')
+    elif flow.request.host == 'mitm.it':
+        logging.info('passing on request to mitm.it')
+    elif directory == '' and filename in ('', 'index.html', 'favicon.ico'):
+        logging.info('passing request on to server')
     elif directory == 'mitm' and os.path.exists(filename):
         logging.info('serving file %s', filename)
         mimetype = MIMETYPES.get(os.path.splitext(filename)[1], 'text/plain')
@@ -51,13 +53,16 @@ async def response(flow: http.HTTPFlow) -> None:
     '''
     logging.info('response received: %s', flow.request.url)
     directory, filename = split(flow.request.path.lstrip(sep))
+    filename = filename.split('?')[0]  # make sure any querystring is gone
+    logging.debug('received request for directory %s, filename %s',
+                  directory, filename)
     if directory == 'mitm' and filename.endswith('.png'):
         delay = int(flow.request.query.get('delay', '0').rstrip('s'))
         logging.info('delaying response for %s by %d seconds', filename, delay)
         time.sleep(delay)
     elif directory == '' and filename in ('', 'index.html'):
-        logging.info('filter: %s', ctx.options.intercept)
-        flow.response.body = read(ctx.options.intercept)
+        logging.info('filter: %s', __file__)
+        flow.response.content = read(__file__.replace('.py', '.html'))
 
 def read(filename):
     '''

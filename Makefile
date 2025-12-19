@@ -40,7 +40,9 @@ PROXYHOST := 127.0.0.1
 PROXYPORT := 8080
 PROXY := $(PROXYHOST):$(PROXYPORT)
 ifeq ($(MITMBROWSER),$(CHROME))
-#BROWSE += --temp-profile  # forces new chromium instance
+#BROWSE += --temp-profile  # forces new chromium instance, disables cache
+# however, --temp-profile also presumably forgets the MITM cert between runs
+ BROWSE += --disable-cache
  BROWSE += --user-data-dir=$(DATADIR)
  BROWSE += --proxy-server=$(PROXY)  # add proxy to browser commandline
 endif
@@ -123,7 +125,7 @@ $(dir $(MITMDUMP))mitmdump:
 	 pip3 install --user -U --break-system-packages mitmproxy
 async: async.log
 async.stop:
-	wget --verbose --output-document=- http://example.com//mitm/shutdown
+	wget --verbose --output-document=- http://example.com/mitm/shutdown
 %.log: %.py %.html .FORCE | $(dir $(MITMDUMP))mitmdump
 	$| --anticache \
 	 --anticomp \
