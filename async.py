@@ -25,7 +25,7 @@ def request(flow: http.HTTPFlow) -> None:
     logging.info('request received: %s, components: %s',
                  flow.request.url, flow.request.path_components)
     path = sep.join(flow.request.path_components)
-    directory, filename = split(relative_path)
+    directory, filename = split(path)
     logging.info('path: %s, split: %s, exists: %s',
                  path, (directory, filename), os.path.exists(path))
     if flow.request.host.endswith('gvt1.com'):
@@ -35,12 +35,12 @@ def request(flow: http.HTTPFlow) -> None:
         logging.info('passing on request to mitm.it')
     elif directory == '' and filename in ('', 'index.html', 'favicon.ico'):
         logging.info('passing request on to server')
-    elif directory == 'mitm' and os.path.exists(filename):
-        logging.info('serving file %s', filename)
+    elif directory == 'mitm' and os.path.exists(path):
+        logging.info('serving file %s', path)
         mimetype = MIMETYPES.get(os.path.splitext(filename)[1], 'text/plain')
         flow.response = http.Response.make(
             HTTPStatus.OK,
-            read(filename),
+            read(path),
             {'Content-Type': mimetype}
         )
     elif directory == 'mitm' and filename == 'shutdown':
@@ -69,7 +69,8 @@ async def response(flow: http.HTTPFlow) -> None:
         time.sleep(delay)
     elif directory == '' and filename in ('', 'index.html'):
         logging.info('filter: %s', __file__)
-        flow.response.content = read(__file__.replace('.py', '.html'))
+        filepath = os.path.join('mitm', __file__.replace('.py', '.html'))
+        flow.response.content = read(filepath)
 
 def read(filename):
     '''

@@ -9,9 +9,10 @@ DATADIR := $(HOME)/.legaproxy/chrome
 BRANCH := $(shell git branch --show-current)
 REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
-BROWSER ?= $(shell which firefox open 2>/dev/null | head -n 1)
-MITMDUMP = $(shell which mitmdump 2>/dev/null | head -n 1)
-PYTHON ?= $(shell which python3 2>/dev/null | head -n 1)
+BROWSER ?= $(word 1, $(shell which firefox w3m open false))
+MITMDUMP = $(word 1, $(shell which mitmdump false))
+PYTHON ?= $(word 1, $(shell which python3 false))
+PYLINT ?= $(word 1, $(shell which pylint3 pylint true))
 APPNAME ?= npx
 TESTFILE := sarge/capabilities.html
 DOCKERRUN ?= docker run --interactive --rm
@@ -24,6 +25,7 @@ IPHONE6 += AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2
 IPHONE6 += Mobile/15E148
 CHROME := $(shell which chromium chromium-browser 2>/dev/null | head -n 1)
 WEBSITE ?= redwoodcu.org
+PYTHON_SCRIPTS := $(wildcard *.py)
 # leave HOSTSUFFIX blank to capture everything
 HOSTSUFFIX=
 INDEXPAGE ?=
@@ -126,7 +128,7 @@ $(dir $(MITMDUMP))mitmdump:
 async: async.log
 async.stop:
 	wget --verbose --output-document=- http://example.com/mitm/shutdown
-%.log: %.py %.html .FORCE | $(dir $(MITMDUMP))mitmdump
+%.log: %.py mitm/%.html mitm/pixel.png .FORCE | $(dir $(MITMDUMP))mitmdump
 	$| --anticache \
 	 --anticomp \
 	 --listen-host $(PROXYHOST) \
@@ -213,5 +215,8 @@ mitm/pixel.png:
 	convert -size 1x1 xc:none $@
 push:
 	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)
+%.pylint: %.py
+	$(PYLINT) $<
+pylint: $(PYTHON_SCRIPTS:.py=.pylint)
 .FORCE:
 .PRECIOUS: %.log
