@@ -65,12 +65,19 @@ async def response(flow: http.HTTPFlow) -> None:
                   directory, filename)
     if directory == 'mitm' and filename.endswith('.png'):
         delay = int(flow.request.query.get('delay', '0').rstrip('s'))
-        logging.info('delaying response for %s by %d seconds', filename, delay)
-        time.sleep(delay)
+        swc(delay)
     elif directory == '' and filename in ('', 'index.html'):
         logging.info('filter: %s', __file__)
         filepath = os.path.join('mitm', __file__.replace('.py', '.html'))
         flow.response.content = read(filepath)
+
+def swc(delay):
+    '''
+    simulate swc processing of javascript by delaying a fixed amount of time
+    '''
+    logging.info('delaying response by %d seconds', delay)
+    time.sleep(delay)
+    logging.info('done delaying response by %d seconds', delay)
 
 def read(filename):
     '''
