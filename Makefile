@@ -209,7 +209,7 @@ shell:
 	 --config-file $(patsubst .%,%,$(suffix $(basename $@))).swcrc \
 	 --out-file $@ \
 	 $<
-pixel.png:
+mitm/pixel.png:
 	convert -size 1x1 xc:none $@
 push:
 	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)

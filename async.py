@@ -17,9 +17,17 @@ logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
 def request(flow: http.HTTPFlow) -> None:
     '''
     capture and modify http.Request object
+
+    flow.request.path contains any querystring that may have been appended
+    flow.request.path_components does not, but it can be a empty tuple,
+    a singleton, or of indefinite length.
     '''
-    logging.info('request received: %s', flow.request.url)
-    directory, filename = split(flow.request.path.lstrip(sep))
+    logging.info('request received: %s, components: %s',
+                 flow.request.url, flow.request.path_components)
+    path = sep.join(flow.request.path_components)
+    directory, filename = split(relative_path)
+    logging.info('path: %s, split: %s, exists: %s',
+                 path, (directory, filename), os.path.exists(path))
     if flow.request.host.endswith('gvt1.com'):
         logging.info('dropping google spyware')
         flow.kill()
@@ -52,8 +60,7 @@ async def response(flow: http.HTTPFlow) -> None:
     capture and modify http.Response object
     '''
     logging.info('response received: %s', flow.request.url)
-    directory, filename = split(flow.request.path.lstrip(sep))
-    filename = filename.split('?')[0]  # make sure any querystring is gone
+    directory, filename = split(sep.join(flow.request.path_components))
     logging.debug('received request for directory %s, filename %s',
                   directory, filename)
     if directory == 'mitm' and filename.endswith('.png'):
