@@ -110,6 +110,7 @@ def fixup(text, path):
     '''
     convert modern javascript to legacy code
     '''
+    logging.info('starting conversion of %s to es3', path)
     with Popen([
             'swc', 'compile',
             '--config-file', 'es3.swcrc',
@@ -117,20 +118,9 @@ def fixup(text, path):
             stdin=PIPE, stdout=PIPE, stderr=PIPE,
             encoding='utf-8') as command:
         stdout, stderr = command.communicate(text)
+        logging.info('ending conversion of %s to es3', path)
     if stderr:
         logging.error('"swc convert" %s to ES3 problems: %s',
-                      path, ', '.join(stderr))
-    if stdout:
-        return stdout
-    with Popen([
-            'swc', 'compile',
-            '--config-file', 'es5.swcrc',
-            '--file-name', path],
-            stdin=PIPE, stdout=PIPE, stderr=PIPE,
-            encoding='utf-8') as command:
-        stdout, stderr = command.communicate(text)
-    if stderr:
-        logging.error('"swc convert" %s to ES5 problems: %s',
                       path, ', '.join(stderr))
     if stdout:
         return stdout
