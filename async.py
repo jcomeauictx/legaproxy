@@ -5,6 +5,7 @@ mitmdump filter to test delayed responses
 import os, logging, time  # pylint: disable=multiple-imports
 from http import HTTPStatus
 from posixpath import split, sep
+from threading import Thread
 from mitmproxy import http, ctx
 
 MIMETYPES = {
@@ -65,7 +66,8 @@ async def response(flow: http.HTTPFlow) -> None:
                   directory, filename)
     if directory == 'mitm' and filename.endswith('.png'):
         delay = int(flow.request.query.get('delay', '0').rstrip('s'))
-        swc(delay)
+        threadname = f'thread-{delay}'
+        Thread(target=swc, args=(delay,), name=threadname).start()
     elif directory == '' and filename in ('', 'index.html'):
         logging.info('filter: %s', __file__)
         filepath = os.path.join('mitm', __file__.replace('.py', '.html'))
