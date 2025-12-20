@@ -91,7 +91,7 @@ async def response(flow: http.HTTPFlow) -> None:
         logging.debug('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
         logging.debug('processing %s file', mimetype)
-        fixed = await fixup(text, flow.request.path)
+        fixed = await asyncio.to_thread(fixup(text, flow.request.path))
         if fixed != text:
             logging.debug('fixup modified webpage, saving to %s', MODIFIED)
             savefile(os.path.join(
@@ -116,7 +116,7 @@ def fixup(text, path):
             '--file-name', path],
             stdin=PIPE, stdout=PIPE, stderr=PIPE,
             encoding='utf-8') as command:
-        stdout, stderr = communicate(text)
+        stdout, stderr = command.communicate(text)
     if stderr:
         logging.error('"swc convert" %s to ES3 problems: %s',
                       path, ', '.join(stderr))
@@ -128,14 +128,13 @@ def fixup(text, path):
             '--file-name', path],
             stdin=PIPE, stdout=PIPE, stderr=PIPE,
             encoding='utf-8') as command:
-        stdout, stderr = communicate(text)
+        stdout, stderr = command.communicate(text)
     if stderr:
         logging.error('"swc convert" %s to ES5 problems: %s',
                       path, ', '.join(stderr))
     if stdout:
         return stdout
-    else:
-        logging.error('swc could not convert %s, returning original', path)
+    logging.error('swc could not convert %s, returning original', path)
     return text
 
 def md5sum(string, base64encode=True):
@@ -157,8 +156,10 @@ def md5sum(string, base64encode=True):
         digest = hashed.hexdigest()
     return digest
 
-def savefile(path, contents,  # pylint: disable=too-many-arguments
-             mimetype=None, binary=False, overwrite=False, retry_ok=True):
+def savefile( # pylint: disable=too-many-arguments,too-many-positional-arguments
+        path, contents, mimetype=None, binary=False,
+        overwrite=False, retry_ok=True
+    ):
     '''
     write contents to disk under given path
     '''
