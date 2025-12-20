@@ -91,7 +91,7 @@ async def response(flow: http.HTTPFlow) -> None:
         logging.debug('processing any script tags in html')
     elif mimetype.endswith('/javascript'):
         logging.debug('processing %s file', mimetype)
-        fixed = await asyncio.to_thread(fixup(text, flow.request.path))
+        fixed = await asyncio.to_thread(fixup, text, flow.request.path)
         if fixed != text:
             logging.debug('fixup modified webpage, saving to %s', MODIFIED)
             savefile(os.path.join(
