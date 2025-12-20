@@ -114,14 +114,14 @@ def fixup(text, path):
     with Popen([
             'swc', 'compile',
             '--config-file', 'es3.swcrc',
-            '--file-name', path],
+            '--filename', path],
             stdin=PIPE, stdout=PIPE, stderr=PIPE,
             encoding='utf-8') as command:
         stdout, stderr = command.communicate(text)
         logging.info('ending conversion of %s to es3', path)
     if stderr:
         logging.error('"swc convert" %s to ES3 problems: %s',
-                      path, ', '.join(stderr))
+                      path, stderr.encode())
     if stdout:
         return stdout
     logging.error('swc could not convert %s, returning original', path)
