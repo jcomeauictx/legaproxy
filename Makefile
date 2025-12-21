@@ -6,6 +6,7 @@ SHELL := /bin/bash
 PATH := $(HOME)/.local/bin:$(PATH)
 HOST ?= 127.0.0.1
 DATADIR := $(HOME)/.legaproxy/chrome
+CACHE := $(DATADIR)/Cache "$(DATADIR)/Code Cache"
 BRANCH := $(shell git branch --show-current)
 REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
@@ -44,7 +45,9 @@ PROXY := $(PROXYHOST):$(PROXYPORT)
 ifeq ($(MITMBROWSER),$(CHROME))
 #BROWSE += --temp-profile  # forces new chromium instance, disables cache
 # however, --temp-profile also presumably forgets the MITM cert between runs
- BROWSE += --disable-cache
+# --disable-cache, suggested by claude.ai, has no discernable effect
+# (added `rm -rf $(CACHE)` to relevant recipes instead)
+#BROWSE += --disable-cache
  BROWSE += --user-data-dir=$(DATADIR)
  BROWSE += --proxy-server=$(PROXY)  # add proxy to browser commandline
 endif
@@ -136,6 +139,7 @@ async.stop:
 	 --scripts $< \
 	 --flow-detail 3 2>&1 | tee $@ &
 	sleep 3  # allow mitmproxy to start up
+	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) http://example.com/
 	# on closing browser window, the following should run
 	$(MAKE) $*.stop
@@ -154,6 +158,7 @@ mitmdump.log: | $(dir $(MITMDUMP))mitmdump
 	  --save-stream-file mitmproxy.log &>$@ & \
 	fi
 proxy: mitmdump.log $(DATADIR)
+	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
 	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
