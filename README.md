@@ -68,6 +68,7 @@ the certificate into "Trusted Certificates".
   order with a state machine, making a multi-level list, then flatten it when
   done. And probably better to move it from the lexer into the parser, but
   not sure about that.
-* Use "module: UMD" in .swcrc files. Using CommonJS will emit
+* Don't use "module: commonjs" in .swcrc files. Using CommonJS will emit
   "Object.defineProperty(exports, ...)" which (exports) is undefined and
-  causes the whole file to be ignored.
+  causes the whole file to be ignored. Better yet, remove the "module"
+  section altogether (?)

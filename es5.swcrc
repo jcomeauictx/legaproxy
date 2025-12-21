@@ -7,7 +7,4 @@
     "target": "es5",
     "externalHelpers": false
   },
-  "module": {
-    "type": "UMD"
-  }
 }
