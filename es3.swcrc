@@ -8,6 +8,6 @@
     "externalHelpers": false
   },
   "module": {
-    "type": "commonjs"
+    "type": "UMD"
   }
 }
