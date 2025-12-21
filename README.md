@@ -24,6 +24,17 @@ type `chrome://certificate-manager` into the address bar, select
 "Local certificates", "Custom", "Installed by you", and import
 the certificate into "Trusted Certificates".
 
+## Problems with swc as transpiler
+
+* without "module" statement in .swcrc, or with "module: es6", error
+  "Uncaught SyntaxError: Cannot use import outside a module"
+* with "module: systemjs", error
+  "Uncaught ReferenceError: System is not defined"
+* other options, "commonjs", "amd", and "umd" give other errors
+
+Will need to parse HTML to see if "type=module" in `script` tags, and
+use that information at transpile time?
+
 ## Developer notes
 
 * You will need to `usermod -a -G docker $USER`.
