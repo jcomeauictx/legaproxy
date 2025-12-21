@@ -98,7 +98,7 @@ async def response(flow: http.HTTPFlow) -> None:
                 MODIFIED, hostname, uahash, TIMESTAMP,
                 *flow.request.path_components
                 ),
-                fixed.encode(), mimetype
+                fixed.encode(), mimetype, overwrite=True
             )
             flow.response.content = encode(fixed)
         else:

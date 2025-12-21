@@ -7,4 +7,7 @@
     "target": "es3",
     "externalHelpers": false
   },
+  "module": {
+    "type": "systemjs"
+  }
 }
