@@ -1,10 +1,11 @@
 {
  "jsc":{
   "parser":{"syntax":"ecmascript"},
-  "target":"es5"
+  "target":"es5",
+  "externalHelpers": false,
  },
  "module":{
-  "type":"commonjs",
+  "type":"es6",
   "noInterop":true
  },
  "isModule":false
