@@ -217,9 +217,13 @@ push:
 	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)
 %.pylint: %.py
 	$(PYLINT) $<
-%.indented.js: %.js
-	cat $< |
-	swc compile --config-json '{"jsc":{"target":"esnext"},"minify":false}' \
+%.indented.js: %.js indented.swcrc
+	cat $< | \
+	swc compile --config-file $(word 2, $+) \
+	> $@
+%.disarrowed.js : %.js disarrowed.swcrc
+	cat $< | \
+	swc compile --config-file $(word 2, $+) \
 	> $@
 pylint: $(PYTHON_SCRIPTS:.py=.pylint)
 .FORCE:
