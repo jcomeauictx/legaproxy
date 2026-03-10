@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""legaproxy - degrade modern web for old browsers
+'''legaproxy - degrade modern web for old browsers
 
 Minimal MITM proxy that intercepts HTTP/HTTPS traffic and transforms
 modern HTML/CSS/JS into something older browsers can render.
 
 Dependencies: Python 3.6+, openssl CLI (apk add openssl on Alpine/iSH)
 No pip packages required — stdlib only.
-"""
+'''
 
 import socket
 import ssl
@@ -25,7 +25,7 @@ PROXY_PORT = 8080
 
 
 def setup_ca():
-    """Generate CA cert if it doesn't exist (one-time setup)."""
+    '''Generate CA cert if it doesn't exist (one-time setup).'''
     os.makedirs(CERT_CACHE, exist_ok=True)
     if not os.path.exists(CA_KEY):
         subprocess.run([
@@ -39,7 +39,7 @@ def setup_ca():
 
 
 def get_cert_for_host(hostname):
-    """Generate and cache a cert for a hostname, signed by our CA."""
+    '''Generate and cache a cert for a hostname, signed by our CA.'''
     cert_path = os.path.join(CERT_CACHE, f"{hostname}.pem")
     key_path = os.path.join(CERT_CACHE, f"{hostname}.key")
     if not os.path.exists(cert_path):
@@ -70,7 +70,7 @@ def get_cert_for_host(hostname):
 # --- Content transformation ---
 
 def degrade_html(html, content_type=""):
-    """Rewrite modern HTML/CSS/JS to something older browsers can handle."""
+    '''Rewrite modern HTML/CSS/JS to something older browsers can handle.'''
     text = html
     if isinstance(text, bytes):
         encoding = "utf-8"
@@ -159,7 +159,7 @@ def degrade_html(html, content_type=""):
 class ProxyHandler(BaseHTTPRequestHandler):
 
     def do_CONNECT(self):
-        """Handle HTTPS CONNECT tunneling with MITM."""
+        '''Handle HTTPS CONNECT tunneling with MITM.'''
         host, port = self.path.split(":")
         port = int(port)
 
@@ -183,7 +183,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
         self._handle_mitm(client_ssl, host, port)
 
     def _handle_mitm(self, client_sock, host, port):
-        """Read request from MITM'd connection, fetch upstream, transform."""
+        '''Read request from MITM'd connection, fetch upstream, transform.'''
         try:
             data = client_sock.recv(65536)
             if not data:
@@ -235,14 +235,14 @@ class ProxyHandler(BaseHTTPRequestHandler):
             client_sock.close()
 
     def do_GET(self):
-        """Handle plain HTTP proxy requests."""
+        '''Handle plain HTTP proxy requests.'''
         self._proxy_request("GET")
 
     def do_POST(self):
         self._proxy_request("POST")
 
     def _proxy_request(self, method):
-        """Fetch upstream HTTP, transform, return."""
+        '''Fetch upstream HTTP, transform, return.'''
         url = urlparse(self.path)
         try:
             upstream = socket.create_connection((url.hostname, url.port or 80))
