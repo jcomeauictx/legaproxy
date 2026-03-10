@@ -83,3 +83,6 @@ use that information at transpile time?
   "Object.defineProperty(exports, ...)" which (exports) is undefined and
   causes the whole file to be ignored. Better yet, remove the "module"
   section altogether (?)
+* For installing mitmproxy on older iPhones running iSH with python3.9.16:
+  use `pip install mitmproxy==9.0.1`. You will need multiple packages
+  installed first, include python3-dev and libffi-dev (`sudo apk add` those).
