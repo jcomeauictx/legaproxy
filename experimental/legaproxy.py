@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-'''legaproxy - degrade modern web for old browsers
+'''
+legaproxy - degrade modern web for old browsers
 
 Minimal MITM proxy that intercepts HTTP/HTTPS traffic and transforms
 modern HTML/CSS/JS into something older browsers can render.
