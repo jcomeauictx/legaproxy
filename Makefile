@@ -2,11 +2,8 @@
 SHELL := /bin/bash
 # keep track of dependencies
 INSTALLED := .installed
-# make sure we can find executables installed in $HOME/.local/bin
-PATH := $(PATH):$(HOME)/.local/bin
-# prefer pip-installed mitmdump over Debian package
-# as of Trixie, it still attempts to import blinker._saferef, which hasn't
-# existed for years.
+# make sure we can find executables installed in $HOME/*/bin
+PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin
 WHICH := type -p
 INSTALL := $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf 2>/dev/null))
 ifeq ($(INSTALL),apk)
@@ -37,12 +34,6 @@ PIP_INSTALL := $(PIP) install -U
 else
 PIP_INSTALL := $(PIP) install --user -U --break-system-packages
 endif
-$(INSTALLED)/mitmdump: $(INSTALLED)
-	# version 9.0.1 should work on iSH python3.9.16
-	if [ -z "$(WHICH) $(@F))" ]; then \
-	 $(PIP_INSTALL) mitmproxy==9.0.1; \
-	fi
-	touch $@
 PATH := $(HOME)/.local/bin:$(PATH)
 HOST ?= 127.0.0.1
 DATADIR := $(HOME)/.legaproxy/chrome
@@ -51,7 +42,6 @@ BRANCH := $(shell git branch --show-current)
 REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
 BROWSER ?= $(word 1, $(shell which firefox w3m open false))
-MITMDUMP = $(word 1, $(shell which mitmdump false))
 APPNAME ?= npx
 TESTFILE := sarge/capabilities.html
 DOCKERRUN ?= docker run --interactive --rm
@@ -101,16 +91,23 @@ PARSER ?= JAVASCRIPT
 TARGET ?= PYTHON3
 PYTHONPATH += $(PWD)/$($(PARSER))/$($(TARGET))
 FIXUP ?= arrow,var
-CARGO := $(word 1, $(shell which cargo false))
-SWC := $(word 1, $(shell which swc false))
 ifneq ($(SHOWENV),)
  export
 else  # export what's needed for envsubst and for python scripts
  export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH \
         https_proxy http_proxy
 endif
-all: proxy
+default: proxy
 test: run
+# prefer pip-installed mitmdump over Debian package
+# as of Trixie, it still attempts to import blinker._saferef, which hasn't
+# existed for years.
+$(INSTALLED)/mitmdump: $(INSTALLED) .FORCE
+	# version 9.0.1 should work on iSH python3.9.16
+	if [ -z "$$($(WHICH) $(@F))" ]; then \
+	 $(PIP_INSTALL) mitmproxy==9.0.1; \
+	fi
+	touch $@
 $(APPNAME): | Dockerfile
 	if [ -f "$@" ]; then \
 	 echo $@ already exists >&2; \
@@ -162,15 +159,11 @@ stop:
 	   docker wait $$container; \
 	 done; \
 	fi
-$(dir $(MITMDUMP))mitmdump:
-	@echo mitmdump not found, installing it now... >&2
-	pip3 install --user -U mitmproxy || \
-	 pip3 install --user -U --break-system-packages mitmproxy
 async: async.log
 async.stop:
 	wget --verbose --output-document=- http://example.com/mitm/shutdown
-%.log: %.py mitm/%.html mitm/pixel.png .FORCE | $(dir $(MITMDUMP))mitmdump
-	$| --anticache \
+%.log: %.py mitm/%.html mitm/pixel.png .FORCE | $(INSTALLED)/%
+	mitmdump --anticache \
 	 --anticomp \
 	 --listen-host $(PROXYHOST) \
 	 --listen-port $(PROXYPORT) \
@@ -181,13 +174,13 @@ async.stop:
 	$(BROWSE) http://example.com/
 	# on closing browser window, the following should run
 	$(MAKE) $*.stop
-mitmdump.log: | $(dir $(MITMDUMP))mitmdump
+%.log: | $(INSTALLED)/%
 	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
 	if [ "$$pid" ]; then \
 	 echo mitmdump is already running >&2; \
 	else \
 	 : "creating an empty logfile" > $@; \
-	 $| --anticache \
+	 $* --anticache \
 	  --anticomp \
 	  --listen-host $(PROXYHOST) \
 	  --listen-port $(PROXYPORT) \
@@ -195,7 +188,7 @@ mitmdump.log: | $(dir $(MITMDUMP))mitmdump
 	  --flow-detail 3 \
 	  --save-stream-file mitmproxy.log &>$@ & \
 	fi
-proxy: mitmdump.log $(DATADIR)
+proxy: mitmdump.log $(DATADIR) $(INSTALLED)/mitmdump
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
@@ -237,20 +230,10 @@ diff:
 	 do original=storage/files/$${modified##storage/modified/}; \
 	 colordiff $$original $$modified; \
 	done
-swc.is_installed:
-	if [ "$(notdir $(SWC))" = "false" ]; then \
-	 echo 'Must install swc: `cargo install swc_cli`' >&2; \
-	 echo 'Then add $(HOME)/.cargo/bin to your PATH' >&2; \
-	fi
-cargo.is_installed:
-	if [ "(notdir $(CARGO))" = "false" ]; then \
-	 echo 'Must install cargo: e.g. `sudo apt install rustup`' >&2; \
-	 echo 'Then `rustup toolchain install stable` >&2; \
-	fi
 shell:
 	$(PYTHON)
-%.es5.js %.es3.js: %.js swc.is_installed
-	$(SWC) compile \
+%.es5.js %.es3.js: %.js $(INSTALLED)/swc
+	swc compile \
 	 --config-file $(patsubst .%,%,$(suffix $(basename $@))).swcrc \
 	 --out-file $@ \
 	 $<
@@ -268,9 +251,24 @@ install_cert: $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem $(INSTALLED)/certutil
 	 -t "C,," \
 	 -n "mitmproxy" \
 	 -i ~/.mitmproxy/mitmproxy-ca-cert.pem
-$(INSTALLED)/certutil: $(INSTALLED)
-	sudo $(INSTALL) $(YES) libnss3-tools
-	touch $@
+$(INSTALLED)/certutil: $(INSTALLED) .FORCE
+	if [ -z "$$($(WHICH) $(@F))" ]; then \
+	 sudo $(INSTALL) $(YES) libnss3-tools
+	 touch $@
+	fi
+$(INSTALLED)/swc: $(INSTALLED)/cargo .FORCE
+	if [ -z "$$($(WHICH) $(@F))" ]; then \
+	 cargo install swc_cli
+	 touch $@
+	fi
+$(INSTALLED)/cargo: $(INSTALLED) .FORCE
+	if [ -z "$$($(WHICH) $(@F))" ]; then \
+	 if ! sudo $(INSTALL) $(YES) cargo; then \
+	  sudo apt install rustup; \
+	  rustup toolchain install stable; \
+	 fi; \
+	 touch $@; \
+	fi
 $(INSTALLED):
 	mkdir -p $@
 .FORCE:
