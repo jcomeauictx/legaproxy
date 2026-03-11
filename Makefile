@@ -5,15 +5,16 @@ INSTALLED := .installed
 # make sure we can find executables installed in $HOME/*/bin
 PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin
 WHICH := type -p
-INSTALL := $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf 2>/dev/null))
-ifeq ($(INSTALL),apk)
+INSTALLER := $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf 2>/dev/null))
+ifeq ($(INSTALLER),apk)
 YES :=
 else
 YES := -y
 endif
+INSTALL := sudo $(INSTALLER) install $(YES)
 PYTHON ?= $(word 1, $(shell $(WHICH) python3 python 2>/dev/null))
 ifeq ($(PYTHON),)
-	sudo $(INSTALL) $(YES) python3
+	$(INSTALL) python3
 PYTHON ?= $(word 1, $(shell $(WHICH) python3 python 2>/dev/null))
 endif
 PYLINT ?= $(word 1, $(shell $(WHICH) pylint3 pylint true 2>/dev/null))
@@ -21,9 +22,9 @@ ifeq ($(PYLINT),true)
 	$(warning ***NOTE*** no pylint installed, scripts unlinted)
 endif
 PIP ?= $(word 1, $(shell $(WHICH) pip3 pip 2>/dev/null))
-PIP_GET := sudo $(INSTALL) $(YES) python3-pip
-ifeq ($(INSTALL),apk)
-PIP_GET := sudo $(INSTALL) $(YES) py3-pip
+PIP_GET := $(INSTALL) python3-pip
+ifeq ($(INSTALLER),apk)
+PIP_GET := $(INSTALL) py3-pip
 # assume apk means iSH, alpine 3.14.3, with Python3.9.16
 MITM_PKG := mitmproxy==9.0.1
 else
@@ -192,7 +193,7 @@ async.stop:
 	  --flow-detail 3 \
 	  --save-stream-file mitmproxy.log &>$@ & \
 	fi
-proxy: mitmdump.log $(DATADIR) $(INSTALLED)/mitmdump
+proxy: mitmdump.log $(INSTALLED)/cert | $(DATADIR) $(INSTALLED)/mitmdump
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
@@ -202,7 +203,7 @@ proxy.stop:
 	else \
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
-	mv mitmdump.log /var/tmp/mitmdump.$$(date +%Y%m%d%H%M%S).log
+	mv mitmdump.log /var/tmp/mitmdump.$$(date +%Y%m%d%H%M%S).log || true
 clean:
 	$(MAKE) stop
 	-for container in $$(<$(APPNAME)); do docker rm $$container; done
@@ -248,26 +249,29 @@ push:
 %.pylint: %.py
 	$(PYLINT) $<
 pylint: $(PYTHON_SCRIPTS:.py=.pylint)
-install_cert: $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem $(INSTALLED)/certutil
+$(INSTALLED)/cert: \
+ $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem | $(INSTALLED)/certutil
 	certutil \
 	 -d sql:$(HOME)/.pki/nssdb \
 	 -A \
 	 -t "C,," \
 	 -n "mitmproxy" \
 	 -i ~/.mitmproxy/mitmproxy-ca-cert.pem
+	touch $@
+# force reinstall of executables that may have been removed
 $(INSTALLED)/certutil: $(INSTALLED) .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 sudo $(INSTALL) $(YES) libnss3-tools
-	 touch $@
+	 $(INSTALL) libnss3-tools; \
+	 touch $@; \
 	fi
 $(INSTALLED)/swc: $(INSTALLED)/cargo .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 cargo install swc_cli
-	 touch $@
+	 cargo install swc_cli; \
+	 touch $@; \
 	fi
 $(INSTALLED)/cargo: $(INSTALLED) .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 if ! sudo $(INSTALL) $(YES) cargo; then \
+	 if ! $(INSTALL) cargo; then \
 	  sudo apt install rustup; \
 	  rustup toolchain install stable; \
 	 fi; \
