@@ -97,6 +97,10 @@ PYTHON3 := Python3
 PARSER ?= JAVASCRIPT
 TARGET ?= PYTHON3
 PYTHONPATH += $(PWD)/$($(PARSER))/$($(TARGET))
+NSSDB ?= $(HOME)/.pki/nssdb
+SQLDB := sql:$(NSSDB)
+CERTNICK := mitmproxy
+CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem
 FIXUP ?= arrow,var
 ifneq ($(SHOWENV),)
  export
@@ -249,16 +253,17 @@ push:
 %.pylint: %.py
 	$(PYLINT) $<
 pylint: $(PYTHON_SCRIPTS:.py=.pylint)
-$(INSTALLED)/cert: \
- $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem | $(INSTALLED)/certutil
-	certutil \
-	 -d sql:$(HOME)/.pki/nssdb \
-	 -A \
-	 -t "C,," \
-	 -n "mitmproxy" \
-	 -a \
-	 -i ~/.mitmproxy/mitmproxy-ca-cert.pem
-	touch $@
+$(INSTALLED)/cert: $(CERTFILE) $(NSSDB)/cert9.db \
+ | $(HOME)/.pki/nssdb/cert9.db $(INSTALLED)/certutil
+	if certutil -d $(SQLDB) -L -n "$(CERTNICK)"; then \
+	 echo $(CERTNICK) already installed; \
+	else \
+	 certutil -d $(SQLDB) -A -t "C,," -n "$(CERTNICK)" -a -i $<; \
+	 touch $@; \
+	fi
+$(NSSDB)/cert9.db:
+	mkdir -p $(@D)
+	certutil -d $(@D) -N --empty-password
 # force reinstall of executables that may have been removed
 $(INSTALLED)/certutil: $(INSTALLED) .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
