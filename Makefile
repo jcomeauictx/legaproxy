@@ -9,7 +9,7 @@ PATH := $(PATH):$(HOME)/.local/bin
 # existed for years.
 WHICH := type -p
 INSTALL := $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf 2>/dev/null))
-ifeq $($(INSTALL),apk)
+ifeq ($(INSTALL),apk)
 YES :=
 else
 YES := -y
@@ -32,10 +32,17 @@ ifeq ($(PIP),)
 	$(PIP_GET)
 PIP ?= $(word 1, $(shell $(WHICH) pip3 pip 2>/dev/null))
 endif
-$(INSTALLED)/mitmdump:
-	if [ "$$(WHICH $(@F))" ]; then ln -s $(WHICH $(@F)) $@; fi
-	pip install --user -U mitmproxy==9.0.1  # safe for python3.9 on iSH
-	ln -s $$(WHICH $(@F)) $@
+ifeq ($(PIP_GET),py3-pip)
+PIP_INSTALL := $(PIP) install -U
+else
+PIP_INSTALL := $(PIP) install --user -U --break-system-packages
+endif
+$(INSTALLED)/mitmdump: $(INSTALLED)
+	# version 9.0.1 should work on iSH python3.9.16
+	if [ -z "$(WHICH) $(@F))" ]; then \
+	 $(PIP_INSTALL) mitmproxy==9.0.1; \
+	fi
+	touch $@
 PATH := $(HOME)/.local/bin:$(PATH)
 HOST ?= 127.0.0.1
 DATADIR := $(HOME)/.legaproxy/chrome
@@ -254,5 +261,17 @@ push:
 %.pylint: %.py
 	$(PYLINT) $<
 pylint: $(PYTHON_SCRIPTS:.py=.pylint)
+install_cert: $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem $(INSTALLED)/certutil
+	certutil \
+	 -d sql:$(HOME)/.pki/nssdb \
+	 -A \
+	 -t "C,," \
+	 -n "mitmproxy" \
+	 -i ~/.mitmproxy/mitmproxy-ca-cert.pem
+$(INSTALLED)/certutil: $(INSTALLED)
+	sudo $(INSTALL) $(YES) libnss3-tools
+	touch $@
+$(INSTALLED):
+	mkdir -p $@
 .FORCE:
 .PRECIOUS: %.log
