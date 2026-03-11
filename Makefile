@@ -1,8 +1,41 @@
 # allow Bashisms
 SHELL := /bin/bash
+# keep track of dependencies
+INSTALLED := .installed
+# make sure we can find executables installed in $HOME/.local/bin
+PATH := $(PATH):$(HOME)/.local/bin
 # prefer pip-installed mitmdump over Debian package
 # as of Trixie, it still attempts to import blinker._saferef, which hasn't
 # existed for years.
+WHICH := type -p
+INSTALL := $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf 2>/dev/null))
+ifeq $($(INSTALL),apk)
+YES :=
+else
+YES := -y
+endif
+PYTHON ?= $(word 1, $(shell $(WHICH) python3 python 2>/dev/null))
+ifeq ($(PYTHON),)
+	sudo $(INSTALL) $(YES) python3
+PYTHON ?= $(word 1, $(shell $(WHICH) python3 python 2>/dev/null))
+endif
+PYLINT ?= $(word 1, $(shell $(WHICH) pylint3 pylint true 2>/dev/null))
+ifeq ($(PYLINT),true)
+	$(warning ***NOTE*** no pylint installed, scripts unlinted)
+endif
+PIP ?= $(word 1, $(shell $(WHICH) pip3 pip 2>/dev/null))
+PIP_GET := sudo $(INSTALL) $(YES) python3-pip
+ifeq ($(INSTALL),apk)
+PIP_GET := sudo $(INSTALL) $(YES) py3-pip
+endif
+ifeq ($(PIP),)
+	$(PIP_GET)
+PIP ?= $(word 1, $(shell $(WHICH) pip3 pip 2>/dev/null))
+endif
+$(INSTALLED)/mitmdump:
+	if [ "$$(WHICH $(@F))" ]; then ln -s $(WHICH $(@F)) $@; fi
+	pip install --user -U mitmproxy==9.0.1  # safe for python3.9 on iSH
+	ln -s $$(WHICH $(@F)) $@
 PATH := $(HOME)/.local/bin:$(PATH)
 HOST ?= 127.0.0.1
 DATADIR := $(HOME)/.legaproxy/chrome
@@ -12,8 +45,6 @@ REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
 BROWSER ?= $(word 1, $(shell which firefox w3m open false))
 MITMDUMP = $(word 1, $(shell which mitmdump false))
-PYTHON ?= $(word 1, $(shell which python3 false))
-PYLINT ?= $(word 1, $(shell which pylint3 pylint true))
 APPNAME ?= npx
 TESTFILE := sarge/capabilities.html
 DOCKERRUN ?= docker run --interactive --rm
