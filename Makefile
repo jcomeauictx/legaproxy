@@ -256,6 +256,7 @@ $(INSTALLED)/cert: \
 	 -A \
 	 -t "C,," \
 	 -n "mitmproxy" \
+	 -a \
 	 -i ~/.mitmproxy/mitmproxy-ca-cert.pem
 	touch $@
 # force reinstall of executables that may have been removed
