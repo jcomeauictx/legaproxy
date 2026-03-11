@@ -24,6 +24,10 @@ PIP ?= $(word 1, $(shell $(WHICH) pip3 pip 2>/dev/null))
 PIP_GET := sudo $(INSTALL) $(YES) python3-pip
 ifeq ($(INSTALL),apk)
 PIP_GET := sudo $(INSTALL) $(YES) py3-pip
+# assume apk means iSH, alpine 3.14.3, with Python3.9.16
+MITM_PKG := mitmproxy==9.0.1
+else
+MITM_PKG := mitmproxy
 endif
 ifeq ($(PIP),)
 	$(PIP_GET)
@@ -80,9 +84,11 @@ ifeq ($(MITMBROWSER),$(CHROME))
  BROWSE += --proxy-server=$(PROXY)  # add proxy to browser commandline
 endif
 # proxy envvars lowercase, for testing with wget
-https_proxy=http://$(PROXY)
-http_proxy=http://$(PROXY)
+# WARNING: setting these at install time breaks pip! set them when needed!
+#https_proxy=http://$(PROXY)
+#http_proxy=http://$(PROXY)
 # copied from python-antlr-example Makefile
+WGET ?= https_proxy=http://$(PROXY) http_proxy=http://$(PROXY) wget
 GRAMMARS := https://raw.githubusercontent.com/antlr/grammars-v4/master
 JAVASCRIPT := JavaScript
 CPP := Cpp
@@ -94,18 +100,16 @@ FIXUP ?= arrow,var
 ifneq ($(SHOWENV),)
  export
 else  # export what's needed for envsubst and for python scripts
- export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH \
-        https_proxy http_proxy
+ export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH
 endif
-default: proxy
+default: proxy.stop proxy
 test: run
 # prefer pip-installed mitmdump over Debian package
 # as of Trixie, it still attempts to import blinker._saferef, which hasn't
 # existed for years.
 $(INSTALLED)/mitmdump: $(INSTALLED) .FORCE
-	# version 9.0.1 should work on iSH python3.9.16
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 $(PIP_INSTALL) mitmproxy==9.0.1; \
+	 $(PIP_INSTALL) $(MITM_PKG); \
 	fi
 	touch $@
 $(APPNAME): | Dockerfile
@@ -161,7 +165,7 @@ stop:
 	fi
 async: async.log
 async.stop:
-	wget --verbose --output-document=- http://example.com/mitm/shutdown
+	$(WGET) --verbose --output-document=- http://example.com/mitm/shutdown
 %.log: %.py mitm/%.html mitm/pixel.png .FORCE | $(INSTALLED)/%
 	mitmdump --anticache \
 	 --anticomp \
