@@ -263,7 +263,7 @@ $(INSTALLED)/cert: $(CERTFILE) $(NSSDB)/cert9.db \
 	fi
 $(NSSDB)/cert9.db:
 	mkdir -p $(@D)
-	certutil -d $(@D) -N --empty-password
+	certutil -d $(SQLDB) -N --empty-password
 # force reinstall of executables that may have been removed
 $(INSTALLED)/certutil: $(INSTALLED) .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
