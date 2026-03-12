@@ -28,16 +28,16 @@ PIP_GET := $(INSTALL) py3-pip
 # assume apk means iSH, alpine 3.14.3, with Python3.9.16
 MITM_PKG := mitmproxy==9.0.1
 else
-MITM_PKG := mitmproxy==9.0.1
+MITM_PKG := mitmproxy
 endif
 ifeq ($(PIP),)
 	$(PIP_GET)
 PIP ?= $(word 1, $(shell $(WHICH) pip3 pip 2>/dev/null))
 endif
-ifeq ($(PIP_GET),py3-pip)
-PIP_INSTALL := $(PIP) install -U
-else
-PIP_INSTALL := $(PIP) install --user -U --break-system-packages --exists-action i
+PIP_INSTALL := $(PIP) install --user --upgrade --exists-action i
+# on non-iSH (non-alpine) systems, use --break-system-packages
+ifneq ($(INSTALLER),apk)
+PIP_INSTALL += --break-system-packages
 endif
 PATH := $(HOME)/.local/bin:$(PATH)
 HOST ?= 127.0.0.1
@@ -117,6 +117,8 @@ test: run
 # existed for years.
 # BUT: pip installs version 12, which doesn't come with a premade cert,
 # version 11 has the same problem, and version 10 is similar.
+# and trixie no longer has distutils, so we might need setuptools instead,
+# depending on what version of mitmproxy we attempt to install.
 $(INSTALLED)/mitmdump: $(INSTALLED)/setuptools .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(PIP_INSTALL) $(MITM_PKG); \
