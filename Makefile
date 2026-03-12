@@ -100,9 +100,9 @@ PYTHONPATH += $(PWD)/$($(PARSER))/$($(TARGET))
 NSSDB ?= $(HOME)/.pki/nssdb
 SQLDB := sql:$(NSSDB)
 CERTNICK := mitmproxy
-$(warning the following fails on mitmproxy12.2.1, this is a dir, not a file)
-$(warning CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem)
-$(warning on 10.4.2, nothing exists but a dir, mitmproxy-ca.pem)
+#$(warning the following fails on mitmproxy12.2.1, this is a dir, not a file)
+#$(warning CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem)
+#$(warning on 10.4.2, nothing exists but a dir, mitmproxy-ca.pem)
 CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem
 FIXUP ?= arrow,var
 ifneq ($(SHOWENV),)
@@ -187,7 +187,7 @@ async.stop:
 # (later) nope, not true, but maybe needs a delay. so this should still help
 certs:
 	$(WGET) -O- http://mitm.it/ | grep mitmproxy-ca-cert
-%.log: %.py mitm/%.html mitm/pixel.png .FORCE | $(INSTALLED)/%
+%.log: %.py mitm/%.html mitm/pixel.png .FORCE
 	mitmdump --anticache \
 	 --anticomp \
 	 --listen-host $(PROXYHOST) \
