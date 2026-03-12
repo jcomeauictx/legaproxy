@@ -100,7 +100,9 @@ PYTHONPATH += $(PWD)/$($(PARSER))/$($(TARGET))
 NSSDB ?= $(HOME)/.pki/nssdb
 SQLDB := sql:$(NSSDB)
 CERTNICK := mitmproxy
-CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem
+$(warning the following fails on mitmproxy12.2.1, this is a dir, not a file)
+$(warning CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem)
+CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca.pem
 FIXUP ?= arrow,var
 ifneq ($(SHOWENV),)
  export
