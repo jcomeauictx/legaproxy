@@ -34,7 +34,7 @@ ifeq ($(PIP),)
 	$(PIP_GET)
 PIP ?= $(word 1, $(shell $(WHICH) pip3 pip 2>/dev/null))
 endif
-PIP_INSTALL := $(PIP) install --user --upgrade --exists-action i
+PIP_INSTALL := $(PIP) install --verbose --user --upgrade --exists-action i
 # on non-iSH (non-alpine) systems, use --break-system-packages
 ifneq ($(INSTALLER),apk)
 PIP_INSTALL += --break-system-packages
