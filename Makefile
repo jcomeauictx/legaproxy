@@ -5,7 +5,8 @@ INSTALLED := .installed
 # make sure we can find executables installed in $HOME/*/bin
 PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin
 WHICH := type -p
-INSTALLER := $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf 2>/dev/null))
+INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf \
+ 2>/dev/null)))
 ifeq ($(INSTALLER),apk)
 INSTALL := sudo $(INSTALLER) add
 else
