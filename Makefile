@@ -28,7 +28,7 @@ PIP_GET := $(INSTALL) py3-pip
 # assume apk means iSH, alpine 3.14.3, with Python3.9.16
 MITM_PKG := mitmproxy==9.0.1
 else
-MITM_PKG := mitmproxy
+MITM_PKG := mitmproxy==9.0.1
 endif
 ifeq ($(PIP),)
 	$(PIP_GET)
@@ -37,7 +37,7 @@ endif
 ifeq ($(PIP_GET),py3-pip)
 PIP_INSTALL := $(PIP) install -U
 else
-PIP_INSTALL := $(PIP) install --user -U --break-system-packages
+PIP_INSTALL := $(PIP) install --user -U --break-system-packages --exists-action i
 endif
 PATH := $(HOME)/.local/bin:$(PATH)
 HOST ?= 127.0.0.1
@@ -102,7 +102,8 @@ SQLDB := sql:$(NSSDB)
 CERTNICK := mitmproxy
 $(warning the following fails on mitmproxy12.2.1, this is a dir, not a file)
 $(warning CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem)
-CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca.pem
+$(warning on 10.4.2, nothing exists but a dir, mitmproxy-ca.pem)
+CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem
 FIXUP ?= arrow,var
 ifneq ($(SHOWENV),)
  export
@@ -114,9 +115,16 @@ test: run
 # prefer pip-installed mitmdump over Debian package
 # as of Trixie, it still attempts to import blinker._saferef, which hasn't
 # existed for years.
-$(INSTALLED)/mitmdump: $(INSTALLED) .FORCE
+# BUT: pip installs version 12, which doesn't come with a premade cert,
+# version 11 has the same problem, and version 10 is similar.
+$(INSTALLED)/mitmdump: $(INSTALLED)/setuptools .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(PIP_INSTALL) $(MITM_PKG); \
+	fi
+	touch $@
+$(INSTALLED)/setuptools: $(INSTALLED) .FORCE
+	if [ -z "$$($(WHICH) $(@F))" ]; then \
+	 $(PIP_INSTALL) $(@F); \
 	fi
 	touch $@
 $(APPNAME): | Dockerfile
