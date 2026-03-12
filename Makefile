@@ -125,7 +125,7 @@ $(INSTALLED)/mitmdump: $(INSTALLED)/setuptools .FORCE
 	fi
 	touch $@
 $(INSTALLED)/setuptools: $(INSTALLED) .FORCE
-	if [ -z "$$($(WHICH) $(@F))" ]; then \
+	if ! $(PYTHON) -c 'import distutils'; then \
 	 $(PIP_INSTALL) $(@F); \
 	fi
 	touch $@
