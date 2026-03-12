@@ -100,9 +100,6 @@ PYTHONPATH += $(PWD)/$($(PARSER))/$($(TARGET))
 NSSDB ?= $(HOME)/.pki/nssdb
 SQLDB := sql:$(NSSDB)
 CERTNICK := mitmproxy
-#$(warning the following fails on mitmproxy12.2.1, this is a dir, not a file)
-#$(warning CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem)
-#$(warning on 10.4.2, nothing exists but a dir, mitmproxy-ca.pem)
 CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem
 FIXUP ?= arrow,var
 ifneq ($(SHOWENV),)
@@ -119,7 +116,7 @@ test: run
 # version 11 has the same problem, and version 10 is similar.
 # and trixie no longer has distutils, so we might need setuptools instead,
 # depending on what version of mitmproxy we attempt to install.
-$(INSTALLED)/mitmdump: $(INSTALLED)/setuptools .FORCE
+$(INSTALLED)/mitmdump: $(INSTALLED)/setuptools $(INSTALLED)/cargo .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(PIP_INSTALL) $(MITM_PKG); \
 	fi
