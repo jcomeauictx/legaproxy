@@ -86,3 +86,5 @@ use that information at transpile time?
 * For installing mitmproxy on older iPhones running iSH with python3.9.16:
   use `pip install mitmproxy==9.0.1`. You will need multiple packages
   installed first, include python3-dev and libffi-dev (`sudo apk add` those).
+* On iPhone8, `make` hangs during pip build of `maturin`, right after
+  "Updating crates.io index"
