@@ -256,10 +256,15 @@ pylint: $(PYTHON_SCRIPTS:.py=.pylint)
 $(INSTALLED)/cert: $(CERTFILE) $(NSSDB)/cert9.db \
  | $(HOME)/.pki/nssdb/cert9.db $(INSTALLED)/certutil
 	if certutil -d $(SQLDB) -L -n "$(CERTNICK)"; then \
-	 echo $(CERTNICK) already installed; \
+	 echo $(CERTNICK) already installed >&2; \
 	else \
+	 echo installing $<... >&2; \
 	 certutil -d $(SQLDB) -A -t "C,," -n "$(CERTNICK)" -a -i $<; \
-	 touch $@; \
+	 if [ "$$?" = "0" ]; then \
+	  touch $@; \
+	 else \
+	  echo "certutil failed adding $<, status $$?" >&2; \
+	 fi; \
 	fi
 $(NSSDB)/cert9.db:
 	mkdir -p $(@D)
