@@ -183,6 +183,10 @@ stop:
 async: async.log
 async.stop:
 	$(WGET) --verbose --output-document=- http://example.com/mitm/shutdown
+# have to fetch certs to create them? seems that way.
+# (later) nope, not true, but maybe needs a delay. so this should still help
+certs:
+	$(WGET) -O- http://mitm.it/ | grep mitmproxy-ca-cert
 %.log: %.py mitm/%.html mitm/pixel.png .FORCE | $(INSTALLED)/%
 	mitmdump --anticache \
 	 --anticomp \
@@ -208,8 +212,9 @@ async.stop:
 	  --scripts filter.py \
 	  --flow-detail 3 \
 	  --save-stream-file mitmproxy.log &>$@ & \
+	 sleep 3; \
 	fi
-proxy: mitmdump.log $(INSTALLED)/cert | $(DATADIR) $(INSTALLED)/mitmdump
+proxy: mitmdump.log certs $(INSTALLED)/cert | $(DATADIR) $(INSTALLED)/mitmdump
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
