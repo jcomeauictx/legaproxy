@@ -21,7 +21,7 @@ PYLINT ?= $(word 1, $(shell $(WHICH) pylint3 pylint true 2>/dev/null))
 ifeq ($(PYLINT),true)
 	$(warning ***NOTE*** no pylint installed, scripts unlinted)
 endif
-PIP ?= $(word 1, $(shell $(WHICH) pip3 pip 2>/dev/null))
+PIP = $(word 1, $(shell $(WHICH) pip3 pip 2>/dev/null))
 PIP_GET := $(INSTALL) python3-pip
 ifeq ($(INSTALLER),apk)
 PIP_GET := $(INSTALL) py3-pip
@@ -29,10 +29,6 @@ PIP_GET := $(INSTALL) py3-pip
 MITM_PKG := mitmproxy==9.0.1
 else
 MITM_PKG := mitmproxy
-endif
-ifeq ($(PIP),)
-	$(PIP_GET)
-PIP ?= $(word 1, $(shell $(WHICH) pip3 pip 2>/dev/null))
 endif
 PIP_INSTALL := $(PIP) install --verbose --user --upgrade --exists-action i
 # on non-iSH (non-alpine) systems, use --break-system-packages
@@ -112,18 +108,21 @@ test: run
 # prefer pip-installed mitmdump over Debian package
 # as of Trixie, it still attempts to import blinker._saferef, which hasn't
 # existed for years.
-# BUT: pip installs version 12, which doesn't come with a premade cert,
-# version 11 has the same problem, and version 10 is similar.
-# and trixie no longer has distutils, so we might need setuptools instead,
+# but Trixie no longer has distutils, so we might need setuptools instead,
 # depending on what version of mitmproxy we attempt to install.
 $(INSTALLED)/mitmdump: $(INSTALLED)/setuptools $(INSTALLED)/cargo .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(PIP_INSTALL) $(MITM_PKG); \
 	fi
 	touch $@
-$(INSTALLED)/setuptools: $(INSTALLED) .FORCE
+$(INSTALLED)/setuptools: $(INSTALLED)/pip .FORCE
 	if ! $(PYTHON) -c 'import distutils'; then \
 	 $(PIP_INSTALL) $(@F); \
+	fi
+	touch $@
+$(INSTALLED)/pip: $(INSTALLED) .FORCE
+	if [ -z "$$($(WHICH) $(@F))" ]; then \
+	 $(PIP_GET); \
 	fi
 	touch $@
 $(APPNAME): | Dockerfile
