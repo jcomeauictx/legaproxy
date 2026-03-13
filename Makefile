@@ -301,6 +301,9 @@ $(INSTALLED)/cargo: $(INSTALLED) .FORCE
 	 fi; \
 	 touch $@; \
 	fi
+# libraries and headers required for pip install
+$(INSTALLED)/libffi-dev: $(INSTALLED)
+$(INSTALLED)/python3-dev: $(INSTALLED)
 $(INSTALLED):
 	mkdir -p $@
 .FORCE:
