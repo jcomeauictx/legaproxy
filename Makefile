@@ -30,7 +30,7 @@ MITM_PKG := mitmproxy==9.0.1
 else
 MITM_PKG := mitmproxy
 endif
-PIP_INSTALL := $(PIP) install --verbose --user --upgrade --exists-action i
+PIP_INSTALL = $(PIP) install --verbose --user --upgrade --exists-action i
 # on non-iSH (non-alpine) systems, use --break-system-packages
 ifneq ($(INSTALLER),apk)
 PIP_INSTALL += --break-system-packages
