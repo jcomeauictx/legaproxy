@@ -103,7 +103,7 @@ ifneq ($(SHOWENV),)
 else  # export what's needed for envsubst and for python scripts
  export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH
 endif
-default: timestamp proxy.stop proxy
+default: make.log
 make.log: Makefile
 	$(MAKE) timestamp proxy.stop proxy 2>&1 | tee -a $@
 timestamp:
@@ -214,8 +214,9 @@ certs:
 	  --save-stream-file mitmproxy.log &>$@ & \
 	 sleep 3; \
 	fi
-proxy: mitmdump.log certs $(INSTALLED)/cert | $(DATADIR) \
- $(INSTALLED)/swc $(INSTALLED)/mitmdump
+proxy: mitmdump.log certs $(INSTALLED)/cert \
+ $(INSTALLED)/mitmdump | \
+ $(DATADIR)
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
@@ -298,11 +299,15 @@ $(INSTALLED)/swc: $(INSTALLED)/cargo .FORCE
 	 cargo install swc_cli; \
 	 touch $@; \
 	fi
-$(INSTALLED)/cargo: $(INSTALLED) .FORCE
-	# don't bother installing Debian stable cargo, always too old.
+$(INSTALLED)/rustup: $(INSTALLED) .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(INSTALL) rustup; \
-	 rustup toolchain install stable; \
+	 touch $@; \
+	fi
+$(INSTALLED)/cargo: $(INSTALLED)/rustup .FORCE
+	# don't bother installing Debian stable cargo, always too old.
+	if [ -z "$$($(WHICH) $(@F))" ]; then \
+	 $@ --version || rustup toolchain install stable; \
 	 touch $@; \
 	fi
 # libraries and headers required for pip install
