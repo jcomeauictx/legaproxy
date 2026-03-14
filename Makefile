@@ -100,6 +100,8 @@ CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem
 FIXUP ?= arrow,var
 # archive for running wheezy32firefox (for testing)
 ARCHIVE := https://archive.debian.org/debian
+# for fetching sibling repos
+GITPREFIX := $(dir $(shell git remote get-url origin))
 ifneq ($(SHOWENV),)
  export
 else  # export what's needed for envsubst and for python scripts
@@ -243,6 +245,10 @@ distclean: clean
 	rm -f dummy $(DOWNLOADED)
 useragent:
 	@echo '$(IPHONE6)'
+smokesignal: ../smokesignal
+	make PORT=8888 -C $< wsgi &
+	-$(BROWSER) http://localhost:8888/
+	kill $$(lsof -t -itcp@127.0.0.1:8888 -s tcp:listen)
 localserver: | $(TESTFILE)
 	@echo testing $< on local computer
 	# don't fail launching browser if server launched previously
@@ -334,5 +340,7 @@ $(INSTALLED)/debian-release-7.gpg:
 	 --keyring=$< \
 	 wheezy $@.tmp $(ARCHIVE)
 	sudo mv $@.tmp $@
+../smokesignal:
+	cd .. && git clone $(GITPREFIX)/smokesignal
 .FORCE:
 .PRECIOUS: %.log
