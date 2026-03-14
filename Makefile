@@ -3,7 +3,7 @@ SHELL := /bin/bash
 # keep track of dependencies
 INSTALLED := .installed
 # make sure we can find executables installed in $HOME/*/bin
-PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin
+PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin:.
 WHICH := type -p
 INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf \
  2>/dev/null)))
@@ -42,7 +42,7 @@ CACHE := $(DATADIR)/Cache "$(DATADIR)/Code Cache"
 BRANCH := $(shell git branch --show-current)
 REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
-BROWSER ?= $(word 1, $(shell which firefox w3m open false))
+BROWSER ?= $(word 1, $(shell which wheezy32firefox w3m))
 APPNAME ?= npx
 TESTFILE := sarge/capabilities.html
 DOCKERRUN ?= docker run --interactive --rm
@@ -248,7 +248,10 @@ localserver: | $(TESTFILE)
 	# don't fail launching browser if server launched previously
 	-python3 -m http.server --bind 127.0.0.1 8888 &
 	@echo waiting a few seconds to launch the browser
-	sleep 5 && $(BROWSER) http://localhost:8888/$|
+	sleep 3
+	-$(BROWSER) http://localhost:8888/$| \
+	 >/var/tmp/legaproxy.log 2>&1
+	kill $$(lsof -t -itcp@127.0.0.1:8888 -s tcp:listen)
 env:
 ifneq ($(SHOWENV),)
 	env
