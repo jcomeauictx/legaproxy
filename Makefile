@@ -103,7 +103,11 @@ ifneq ($(SHOWENV),)
 else  # export what's needed for envsubst and for python scripts
  export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH
 endif
-default: proxy.stop proxy
+default: timestamp proxy.stop proxy
+make.log: Makefile
+	$(MAKE) timestamp proxy.stop proxy 2&>1 | tee -a $@
+timestamp:
+	@echo starting run at $$(date -u) >&2
 test: run
 # prefer pip-installed mitmdump over Debian package
 # as of Trixie, it still attempts to import blinker._saferef, which hasn't
@@ -295,11 +299,10 @@ $(INSTALLED)/swc: $(INSTALLED)/cargo .FORCE
 	 touch $@; \
 	fi
 $(INSTALLED)/cargo: $(INSTALLED) .FORCE
+	# don't bother installing Debian stable cargo, always too old.
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 if ! $(INSTALL) cargo; then \
-	  $(INSTALL) rustup; \
-	  rustup toolchain install stable; \
-	 fi; \
+	 $(INSTALL) rustup; \
+	 rustup toolchain install stable; \
 	 touch $@; \
 	fi
 # libraries and headers required for pip install
