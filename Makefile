@@ -105,7 +105,7 @@ else  # export what's needed for envsubst and for python scripts
 endif
 default: timestamp proxy.stop proxy
 make.log: Makefile
-	$(MAKE) timestamp proxy.stop proxy 2&>1 | tee -a $@
+	$(MAKE) timestamp proxy.stop proxy 2>&1 | tee -a $@
 timestamp:
 	@echo starting run at $$(date -u) >&2
 test: run
