@@ -98,6 +98,8 @@ SQLDB := sql:$(NSSDB)
 CERTNICK := mitmproxy
 CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem
 FIXUP ?= arrow,var
+# archive for running wheezy32firefox (for testing)
+ARCHIVE := https://archive.debian.org/debian
 ifneq ($(SHOWENV),)
  export
 else  # export what's needed for envsubst and for python scripts
@@ -299,9 +301,10 @@ $(INSTALLED)/swc: $(INSTALLED)/cargo .FORCE
 	 cargo install swc_cli; \
 	 touch $@; \
 	fi
-$(INSTALLED)/rustup: $(INSTALLED) .FORCE
+# default install is to use apt, apk, dnf, etc.
+$(INSTALLED)/%: $(INSTALLED) .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 $(INSTALL) rustup; \
+	 $(INSTALL) $*; \
 	 touch $@; \
 	fi
 $(INSTALLED)/cargo: $(INSTALLED)/rustup .FORCE
@@ -315,5 +318,12 @@ $(INSTALLED)/libffi-dev: $(INSTALLED)
 $(INSTALLED)/python3-dev: $(INSTALLED)
 $(INSTALLED):
 	mkdir -p $@
+/opt/wheezy32: $(INSTALLED)/debootstrap
+	sudo mkdir -p $@.tmp
+	sudo debootstrap \
+	 --arch=i386 \
+	 --include=firefox,chromium \
+	 wheezy $@.tmp $(ARCHIVE)
+	mv $@.tmp $@
 .FORCE:
 .PRECIOUS: %.log
