@@ -85,7 +85,8 @@ endif
 #https_proxy=http://$(PROXY)
 #http_proxy=http://$(PROXY)
 # copied from python-antlr-example Makefile
-WGET ?= https_proxy=http://$(PROXY) http_proxy=http://$(PROXY) wget
+PROXY_SETTINGS := https_proxy=http://$(PROXY) http_proxy=http://$(PROXY)
+WGET ?= $(PROXY_SETTINGS) wget
 GRAMMARS := https://raw.githubusercontent.com/antlr/grammars-v4/master
 JAVASCRIPT := JavaScript
 CPP := Cpp
@@ -247,7 +248,7 @@ useragent:
 	@echo '$(IPHONE6)'
 smokesignal: ../smokesignal
 	make PORT=8888 -C $< wsgi &
-	-$(BROWSER) http://localhost:8888/
+	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
 	kill $$(lsof -t -itcp@127.0.0.1:8888 -s tcp:listen)
 localserver: | $(TESTFILE)
 	@echo testing $< on local computer
