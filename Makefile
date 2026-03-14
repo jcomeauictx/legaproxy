@@ -3,7 +3,8 @@ SHELL := /bin/bash
 # keep track of dependencies
 INSTALLED := .installed
 # make sure we can find executables installed in $HOME/*/bin
-PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin:.
+# and prefer anything under $(INSTALLED) to those anywhere else
+PATH := $(PWD)/$(INSTALLED):$(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin:.
 WHICH := type -p
 INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf \
  2>/dev/null)))
@@ -110,7 +111,7 @@ else  # export what's needed for envsubst and for python scripts
 endif
 default: make.log
 make.log: Makefile
-	$(MAKE) timestamp proxy.stop proxy 2>&1 | tee -a $@
+	$(MAKE) timestamp proxy.stop testproxy 2>&1 | tee -a $@
 timestamp:
 	@echo starting run at $$(date -u) >&2
 test: run
@@ -219,7 +220,7 @@ certs:
 	  --save-stream-file mitmproxy.log &>$@ & \
 	 sleep 3; \
 	fi
-proxy: mitmdump.log certs $(INSTALLED)/cert \
+testproxy: mitmdump.log certs $(INSTALLED)/cert \
  $(INSTALLED)/mitmdump | \
  $(DATADIR)
 	rm -rf $(CACHE)  # delete browser cache
@@ -246,7 +247,7 @@ distclean: clean
 	rm -f dummy $(DOWNLOADED)
 useragent:
 	@echo '$(IPHONE6)'
-smokesignal: ../smokesignal
+smokesignal: ../smokesignal $(INSTALLED)/swc proxy.stop mitmdump.log
 	make PORT=8888 -C $< wsgi &
 	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
 	kill $$(lsof -t -itcp@127.0.0.1:8888 -s tcp:listen)
@@ -306,10 +307,17 @@ $(INSTALLED)/certutil: $(INSTALLED) .FORCE
 	 $(INSTALL) libnss3-tools; \
 	 touch $@; \
 	fi
-$(INSTALLED)/swc: $(INSTALLED)/cargo .FORCE
-	if [ -z "$$($(WHICH) $(@F))" ]; then \
+# the cargo installed swc doesn't inline helpers, we need to build our own
+$(INSTALLED)/swc.fetched: $(INSTALLED)/cargo .FORCE
+	if [ -z "$$($(WHICH) $(@F:.fetched=))" ]; then \
 	 cargo install swc_cli; \
 	 touch $@; \
+	fi
+# my clone of swc
+$(INSTALLED)/swc: ../swc | $(INSTALLED)/cargo
+	if [ -z "$$($(WHICH) $(@F))" ]; then \
+	 (cd $< && cargo build); \
+	 ln -sf $$(readlink -f $</target/debug/$(@F)) $@; \
 	fi
 # default install is to use apt, apk, dnf, etc.
 $(INSTALLED)/%: $(INSTALLED) .FORCE
@@ -343,5 +351,7 @@ $(INSTALLED)/debian-release-7.gpg:
 	sudo mv $@.tmp $@
 ../smokesignal:
 	cd .. && git clone $(GITPREFIX)/smokesignal
+swcversion: $(INSTALLED)/swc
+	swc --version
 .FORCE:
 .PRECIOUS: %.log
