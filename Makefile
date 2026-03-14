@@ -322,13 +322,14 @@ $(INSTALLED)/debian-release-7.gpg:
 	# https://serverfault.com/a/984605/58945
 	wget https://ftp-master.debian.org/keys/release-7.asc -qO- | \
 	 gpg --import --no-default-keyring --keyring $@
-/opt/wheezy32: $(INSTALLED)/debian-release-7.gpg $(INSTALLED)/debootstrap
+/opt/wheezy32/usr/bin/iceweasel: \
+ | $(INSTALLED)/debian-release-7.gpg $(INSTALLED)/debootstrap
 	sudo mkdir -p $@.tmp
 	sudo debootstrap \
 	 --arch=i386 \
 	 --include=iceweasel,chromium \
 	 --keyring=$< \
 	 wheezy $@.tmp $(ARCHIVE)
-	mv $@.tmp $@
+	sudo mv $@.tmp $@
 .FORCE:
 .PRECIOUS: %.log
