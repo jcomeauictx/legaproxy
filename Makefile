@@ -114,7 +114,7 @@ test: run
 # existed for years.
 # but Trixie no longer has distutils, so we might need setuptools instead,
 # depending on what version of mitmproxy we attempt to install.
-$(INSTALLED)/mitmdump: $(INSTALLED)/setuptools $(INSTALLED)/cargo .FORCE
+$(INSTALLED)/mitmdump: $(INSTALLED)/setuptools $(INSTALLED)/swc .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(PIP_INSTALL) $(MITM_PKG); \
 	fi
