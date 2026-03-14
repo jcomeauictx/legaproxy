@@ -306,8 +306,8 @@ $(INSTALLED)/rustup: $(INSTALLED) .FORCE
 	fi
 $(INSTALLED)/cargo: $(INSTALLED)/rustup .FORCE
 	# don't bother installing Debian stable cargo, always too old.
-	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 $@ --version || rustup toolchain install stable; \
+	if [ -z "$$($(WHICH) $(@F))" ] || ! $(@F) --version; then \
+	 rustup toolchain install stable; \
 	 touch $@; \
 	fi
 # libraries and headers required for pip install
