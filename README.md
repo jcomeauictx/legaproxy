@@ -24,20 +24,14 @@ type `chrome://certificate-manager` into the address bar, select
 "Local certificates", "Custom", "Installed by you", and import
 the certificate into "Trusted Certificates".
 
-## Problems with swc as transpiler
-
-* without "module" statement in .swcrc, or with "module: es6", error
-  "Uncaught SyntaxError: Cannot use import outside a module"
-* with "module: systemjs", error
-  "Uncaught ReferenceError: System is not defined"
-* other options, "commonjs", "amd", and "umd" give other errors
-
-Will need to parse HTML to see if "type=module" in `script` tags, and
-use that information at transpile time?
+Alternatively, the Makefile attempts to install the certificate by utilizing
+the `certutil` program. It works on Debian trixie chromium as of 2026-03.
 
 ## Developer notes
 
-* You will need to `usermod -a -G docker $USER`.
+* You will need to `usermod -a -G docker $USER`. Do this as root before
+  logging in as a user and starting xwindows or you will likely have all
+  kinds of random frustrations.
 * [Installing sshd](https://www.cyberciti.biz/faq/how-to-install-openssh-server-on-alpine-linux-including-docker/) and [also](https://wiki.alpinelinux.org/wiki/Setting_up_a_SSH_server)
 * <https://github.com/gliderlabs/docker-alpine/issues/437#issuecomment-494200575>
 * <https://dev.to/kazemmdev/building-cross-browser-compatible-web-apps-with-babel-a-step-by-step-guide-5c5h>
@@ -88,3 +82,5 @@ use that information at transpile time?
   installed first, include python3-dev and libffi-dev (`sudo apk add` those).
 * On iPhone8, `make` hangs during pip build of `maturin`, right after
   "Updating crates.io index"
+* Older versions of swc silently ignore `"externalHelpers": false` in .swcrc
+  files. Must clone swc from github and build. version SWC 58.0.0 works.
