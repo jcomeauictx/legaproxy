@@ -210,7 +210,8 @@ certs:
 	  --save-stream-file mitmproxy.log &>$@ & \
 	 sleep 3; \
 	fi
-proxy: mitmdump.log certs $(INSTALLED)/cert | $(DATADIR) $(INSTALLED)/mitmdump
+proxy: mitmdump.log certs $(INSTALLED)/cert | $(DATADIR) \
+ $(INSTALLED)/swc $(INSTALLED)/mitmdump
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
