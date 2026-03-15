@@ -34,6 +34,22 @@ class ShimmerParser(HTMLParser):
         self.tags.pop(-1)
         self.parts.append('</' + tag + '>')
 
+    def handle_startendtag(self, tag, attrs):
+        '''
+        handle xml <tag/>
+        '''
+        logging.debug('handling start end tag %s', tag)
+        self.parts.append('<' + tag + '/>')
+
+    def handle_other(self, other):
+        '''
+        handle other stuff like data, comment, charref
+        '''
+        self.parts.append(other)
+
+    handle_charref = handle_comment = handle_data = handle_decl \
+        = handle_entityref = handle_pi = handle_other
+
 def shim(filename=None):
     '''
     add shim code to file or stdin
