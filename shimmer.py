@@ -14,7 +14,7 @@ class ShimmerParser(HTMLParser):
     '''
     parts = []
     tags = []
-    shim = '<script src="/mitm/shim.js"></script>'
+    shim = '<script src="/mitm/shims.js"></script>'
     shimmed = False
 
     def handle_starttag(self, tag, attrs):
