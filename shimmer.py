@@ -59,6 +59,27 @@ class ShimmerParser(HTMLParser):
         logging.debug('handling comment %s', comment)
         self.parts.append('<!-- ' + comment + '-->')
 
+    def handle_charref(self, charref):
+        '''
+        handle character reference
+        '''
+        logging.debug('handling charref %r', charref)
+        self.parts.append(charref)
+
+    def handle_entityref(self, entityref):
+        '''
+        handle html entity
+        '''
+        logging.debug('handling entityref %r', entityref)
+        self.parts.append('&' + entityref + ';')
+
+    def handle_decl(self, decl):
+        '''
+        handle html declaration
+        '''
+        logging.debug('handling decl %r', decl)
+        self.parts.append('<!' + decl + '>')
+
     def handle_other(self, other):
         '''
         handle other stuff like data, comment, charref
@@ -66,8 +87,7 @@ class ShimmerParser(HTMLParser):
         logging.debug('self: %s, other: %r', vars(self), other)
         self.parts.append(other)
 
-    handle_charref = handle_data = handle_decl \
-        = handle_entityref = handle_pi = handle_other
+    handle_data = handle_pi = handle_other
 
 def shim(filename=None):
     '''
@@ -80,6 +100,7 @@ def shim(filename=None):
         for line in infile:
             parser.feed(line)
         logging.debug('final parser.tags: %s', parser.tags)
+        parser.close()
         print(''.join(parser.parts))
 
 def expand_attrs(attrs):
