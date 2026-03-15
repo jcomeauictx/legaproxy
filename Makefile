@@ -248,7 +248,7 @@ distclean: clean
 useragent:
 	@echo '$(IPHONE6)'
 smokesignal: ../smokesignal $(INSTALLED)/swc proxy.stop mitmdump.log
-	make PORT=8888 -C $< wsgi &
+	-make PORT=8888 -C $< wsgi &
 	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
 	kill $$(lsof -t -itcp@127.0.0.1:8888 -s tcp:listen)
 localserver: | $(TESTFILE)

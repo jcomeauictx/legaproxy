@@ -17,7 +17,7 @@ try:
     from mitmproxy import http
 except (ImportError, ModuleNotFoundError):  # for doctests
     http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
-from shimmer import shim
+from shimmer import shimtext
 
 # set up our own logger separate from mitmproxy's, with level information
 logger = logging.getLogger('legaproxy')
@@ -92,7 +92,7 @@ async def response(  # pylint: disable=too-many-branches
     if mimetype == 'text/html':
         logging.debug('adding shims and processing scripts in html')
         try:
-            fixed = await asyncio.to_thread(shim, flow.request.path)
+            fixed = await asyncio.to_thread(shimtext, text)
         except (ValueError, IndexError) as problem:
             logging.error('call to shim failed: %s', problem)
         if fixed and fixed != text:

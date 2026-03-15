@@ -110,6 +110,15 @@ def shim(filename=None):
         parser.close()
         print(''.join(parser.parts))
 
+def shimtext(text):
+    '''
+    shim already-read html text
+    '''
+    parser = ShimmerParser(convert_charrefs=False)
+    parser.feed(text)
+    parser.close()
+    print(''.join(parser.parts))
+
 def expand_attrs(attrs):
     '''
     expand tag attributes
