@@ -14,6 +14,8 @@ class ShimmerParser(HTMLParser):
     '''
     parts = []
     tags = []
+    shim = '<script src="/mitm/shim.js"></script>'
+    shimmed = False
     
     def handle_starttag(self, tag, attrs):
         '''
@@ -21,7 +23,16 @@ class ShimmerParser(HTMLParser):
         '''
         logging.debug('handling start tag %s', tag)
         self.tags.append(tag)
-        self.parts.append('<' + tag + expand_attrs(attrs) + '>')
+        before = after = ''
+        if not self.shimmed:
+            if tag == 'head':
+                after = self.shim
+                self.shimmed = True
+            elif tag in ('body', 'div', 'p'):
+                before = self.shim
+                self.shimmed = True
+        self.parts.append(before + '<' + tag + expand_attrs(attrs) +
+                          '>' + after)
 
     def handle_endtag(self, tag):
         '''
