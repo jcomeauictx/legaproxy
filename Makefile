@@ -179,7 +179,7 @@ ssh login: $(APPNAME)
 	 -oStrictHostKeyChecking=no \
 	 -oUserKnownHostsFile=/dev/null \
 	 root@localhost
-stop:
+stop: smokesignal.stop proxy.stop
 	-if [ -s "$(APPNAME)" ]; then \
 	  for container in $$(<$(APPNAME)); do \
 	   docker stop $$container; \
@@ -248,9 +248,11 @@ distclean: clean
 useragent:
 	@echo '$(IPHONE6)'
 smokesignal: ../smokesignal $(INSTALLED)/swc proxy.stop mitmdump.log
-	-make PORT=8888 -C $< wsgi &
+	-$(MAKE) PORT=8888 -C $< wsgi &
 	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
-	kill $$(lsof -t -itcp@127.0.0.1:8888 -s tcp:listen)
+smokesignal.stop:
+	pid=$$(lsof -t -itcp@127.0.0.1:8888 -s tcp:listen); \
+	if [ "$$pid" ]; then kill $$pid; fi
 localserver: | $(TESTFILE)
 	@echo testing $< on local computer
 	# don't fail launching browser if server launched previously
