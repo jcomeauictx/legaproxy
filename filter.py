@@ -42,7 +42,24 @@ def request(flow: http.HTTPFlow):
     '''
     filter requests
     '''
-    if flow.request.host.endswith('gvt1.com'):
+    path = None
+    if flow.request.path.startswith('/mitm/'):
+        logging.debug('MITM intercepting request for %s', flow.request.path)
+        path = flow.request.path.lstrip('/')
+        if os.path.isfile(path):
+            with open(path, 'rb') as infile:
+                flow.response = http.Response.make(
+                    200,
+                    infile.read(),
+                    {'Content-Type': 'text/html'}  # ASSUMPTION
+                )
+        else:
+            flow.response = http.Response.make(
+                404,
+                b'404 File not found',
+                {'Content-Type': 'text/html'}
+            )
+    elif flow.request.host.endswith('gvt1.com'):
         logging.debug('dropping spyware(?) junk from gvt1.com')
         flow.kill()
     logging.debug('request: %s', vars(flow.request))

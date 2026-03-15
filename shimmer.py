@@ -117,7 +117,7 @@ def shimtext(text):
     parser = ShimmerParser(convert_charrefs=False)
     parser.feed(text)
     parser.close()
-    print(''.join(parser.parts))
+    return ''.join(parser.parts)
 
 def expand_attrs(attrs):
     '''
