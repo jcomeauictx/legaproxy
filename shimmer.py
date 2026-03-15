@@ -21,7 +21,7 @@ class ShimmerParser(HTMLParser):
         '''
         logging.debug('handling start tag %s', tag)
         self.tags.append(tag)
-        self.parts.append('<' + tag + '>')
+        self.parts.append('<' + tag + expand_attrs(attrs) + '>')
 
     def handle_endtag(self, tag):
         '''
@@ -39,12 +39,15 @@ class ShimmerParser(HTMLParser):
         handle xml <tag/>
         '''
         logging.debug('handling start end tag %s', tag)
-        self.parts.append('<' + tag + '/>')
+        self.parts.append('<' + tag + expand_attrs(attrs) + '/>')
 
     def handle_other(self, other):
         '''
         handle other stuff like data, comment, charref
         '''
+        logging.debug('handling %s',  __name__[len('handle_'):])
+        if __name__ == 'handle_comment':
+            other = '<!-- ' + other + '-->'
         self.parts.append(other)
 
     handle_charref = handle_comment = handle_data = handle_decl \
@@ -62,6 +65,18 @@ def shim(filename=None):
             parser.feed(line)
         logging.debug('final parser.tags: %s', parser.tags)
         print(''.join(parser.parts))
+
+def expand_attrs(attrs):
+    '''
+    expand tag attributes
+
+    >>> expand_attrs({'class': 'bleah', 'id': 'blargh', 'spam': 'spam spam'})
+    'class="bleah" id="blargh" spam="spam spam"'
+    '''
+    result = ''
+    for key, value in attrs:
+        result += key + '="' + value + '"'
+    return ' ' + result if result else result
 
 if __name__ == '__main__':
     shim(*sys.argv[1:])
