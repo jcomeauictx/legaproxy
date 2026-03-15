@@ -47,13 +47,15 @@ def request(flow: http.HTTPFlow):
         logging.debug('MITM intercepting request for %s', flow.request.path)
         path = flow.request.path.lstrip('/')
         if os.path.isfile(path):
+            logging.debug('MITM returning local file %s', path)
             with open(path, 'rb') as infile:
                 flow.response = http.Response.make(
                     200,
                     infile.read(),
-                    {'Content-Type': 'text/html'}  # ASSUMPTION
+                    {'Content-Type': 'application/javascript'}  # FIXME
                 )
         else:
+            logging.debug('MITM could not find local file %s', path)
             flow.response = http.Response.make(
                 404,
                 b'404 File not found',
