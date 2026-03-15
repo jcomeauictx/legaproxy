@@ -5,7 +5,7 @@ insert shim code into webpage
 proof of concept which may turn out to be production code
 '''
 from html.parser import HTMLParser
-import sys, os, fileinput, logging  # pylint: disable=multiple-imports
+import sys, logging  # pylint: disable=multiple-imports
 logging.basicConfig(level=logging.DEBUG if __debug__ else logging.INFO)
 
 class ShimmerParser(HTMLParser):
@@ -16,7 +16,7 @@ class ShimmerParser(HTMLParser):
     tags = []
     shim = '<script src="/mitm/shim.js"></script>'
     shimmed = False
-    
+
     def handle_starttag(self, tag, attrs):
         '''
         handle start tag
@@ -52,26 +52,26 @@ class ShimmerParser(HTMLParser):
         logging.debug('handling start end tag %s', tag)
         self.parts.append('<' + tag + expand_attrs(attrs) + '/>')
 
-    def handle_comment(self, comment):
+    def handle_comment(self, data):
         '''
         handle html comment
         '''
-        logging.debug('handling comment %s', comment)
-        self.parts.append('<!-- ' + comment + '-->')
+        logging.debug('handling comment %s', data)
+        self.parts.append('<!-- ' + data + '-->')
 
-    def handle_charref(self, charref):
+    def handle_charref(self, name):
         '''
         handle character reference
         '''
-        logging.debug('handling charref %r', charref)
-        self.parts.append(charref)
+        logging.debug('handling charref %r', name)
+        self.parts.append(name)
 
-    def handle_entityref(self, entityref):
+    def handle_entityref(self, name):
         '''
         handle html entity
         '''
-        logging.debug('handling entityref %r', entityref)
-        self.parts.append('&' + entityref + ';')
+        logging.debug('handling entityref %r', name)
+        self.parts.append('&' + name + ';')
 
     def handle_decl(self, decl):
         '''
@@ -80,14 +80,21 @@ class ShimmerParser(HTMLParser):
         logging.debug('handling decl %r', decl)
         self.parts.append('<!' + decl + '>')
 
-    def handle_other(self, other):
+    def handle_data(self, data):
         '''
-        handle other stuff like data, comment, charref
+        handle data
         '''
-        logging.debug('self: %s, other: %r', vars(self), other)
-        self.parts.append(other)
+        logging.debug('self: %s, data: %r', vars(self), data)
+        self.parts.append(data)
 
-    handle_data = handle_pi = handle_other
+    def handle_pi(self, data):
+        '''
+        handle processing instruction
+
+        (I don't know what this is... guess I'll find out eventually--jc)
+        '''
+        logging.debug('self: %s, pi: %r', vars(self), data)
+        self.parts.append(data)
 
 def shim(filename=None):
     '''

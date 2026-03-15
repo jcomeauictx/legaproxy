@@ -17,6 +17,7 @@ try:
     from mitmproxy import http
 except (ImportError, ModuleNotFoundError):  # for doctests
     http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
+from shimmer import shim
 
 # set up our own logger separate from mitmproxy's, with level information
 logger = logging.getLogger('legaproxy')
@@ -50,7 +51,8 @@ def request(flow: http.HTTPFlow):
     for header, value in flow.request.headers.items():
         logging.debug('header "%s": "%s"', header, value)
 
-async def response(flow: http.HTTPFlow) -> None:
+async def response(  # pylint: disable=too-many-branches
+        flow: http.HTTPFlow) -> None:
     '''
     filter responses
     '''
@@ -88,12 +90,13 @@ async def response(flow: http.HTTPFlow) -> None:
     else:
         logging.debug('not saving %s', flow.request.path)
     if mimetype == 'text/html':
-        logging.debug('processing any script tags in html')
-    elif mimetype.endswith('/javascript'):
-        logging.debug('processing %s file', mimetype)
-        fixed = await asyncio.to_thread(fixup, text, flow.request.path)
-        if fixed != text:
-            logging.debug('fixup modified webpage, saving to %s', MODIFIED)
+        logging.debug('adding shims and processing scripts in html')
+        try:
+            fixed = await asyncio.to_thread(shim, flow.request.path)
+        except (ValueError, IndexError) as problem:
+            logging.error('call to shim failed: %s', problem)
+        if fixed and fixed != text:
+            logging.debug('shim modified html, saving to %s', MODIFIED)
             savefile(os.path.join(
                 MODIFIED, hostname, uahash, TIMESTAMP,
                 *flow.request.path_components
@@ -102,7 +105,21 @@ async def response(flow: http.HTTPFlow) -> None:
             )
             flow.response.content = encode(fixed)
         else:
-            logging.debug("fixup didn't change content of webpage")
+            logging.debug("shim didn't change content of html")
+    elif mimetype.endswith('/javascript'):
+        logging.debug('processing %s file', mimetype)
+        fixed = await asyncio.to_thread(fixup, text, flow.request.path)
+        if fixed != text:
+            logging.debug('fixup modified script, saving to %s', MODIFIED)
+            savefile(os.path.join(
+                MODIFIED, hostname, uahash, TIMESTAMP,
+                *flow.request.path_components
+                ),
+                fixed.encode(), mimetype, overwrite=True
+            )
+            flow.response.content = encode(fixed)
+        else:
+            logging.debug("fixup didn't change content of script")
     else:
         logging.debug('passing mime-type %s through unprocessed', mimetype)
 
