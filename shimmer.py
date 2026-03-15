@@ -16,23 +16,36 @@ class ShimmerParser(HTMLParser):
     tags = []
     
     def handle_starttag(self, tag, attrs):
+        '''
+        handle start tag
+        '''
+        logging.debug('handling start tag %s', tag)
         self.tags.append(tag)
-        self.parts.append(tag)
+        self.parts.append('<' + tag + '>')
 
     def handle_endtag(self, tag):
+        '''
+        handle end tag
+        '''
+        logging.debug('handling end tag %s', tag)
         while self.tags[-1] != tag:
-            logging.debug('popping unexpected tag %s', self.tags.pop(-1))
+            popped = self.tags.pop(-1)
+            logging.debug('popped unexpected tag %s', popped)
         self.tags.pop(-1)
+        self.parts.append('</' + tag + '>')
 
-def shim():
+def shim(filename=None):
     '''
     add shim code to file or stdin
     '''
-    parser = ShimmerParser()
-    for line in fileinput.input(encoding='utf-8'):
-        parser.feed(line)
-    logging.debug('parser.tags: %s', parser.tags)
-    print(''.join(parser.parts))
+    with open(filename, 'r', encoding='utf-8') \
+            if filename not in [None, '-'] \
+            else sys.stdin as infile:
+        parser = ShimmerParser()
+        for line in infile:
+            parser.feed(line)
+        logging.debug('final parser.tags: %s', parser.tags)
+        print(''.join(parser.parts))
 
 if __name__ == '__main__':
-    shim()
+    shim(*sys.argv[1:])
