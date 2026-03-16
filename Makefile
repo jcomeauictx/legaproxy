@@ -225,7 +225,7 @@ testproxy: mitmdump.log certs $(INSTALLED)/cert \
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
-	pid=$$(cat mitmdump.pid 2>/dev/null); \
+	-pid=$$(cat mitmdump.pid 2>/dev/null); \
 	if [ "$$pid" ]; then \
 	 kill $$pid; \
 	else \
@@ -252,7 +252,7 @@ smokesignal: ../smokesignal $(INSTALLED)/swc proxy.stop mitmdump.log
 	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
 smokesignal.stop:
 	pid=$$(cat smokesignal.pid 2>/dev/null); \
-	if [ "$$pid" ]; then kill $$pid; fi
+	-if [ "$$pid" ]; then kill $$pid; fi
 	rm -f smokesignal.pid
 localserver: | $(TESTFILE)
 	@echo testing $< on local computer
@@ -263,7 +263,8 @@ localserver: | $(TESTFILE)
 	sleep 3
 	-$(BROWSER) http://localhost:8888/$| \
 	 >/var/tmp/legaproxy.log 2>&1
-	kill $*.pid
+	-kill $*.pid
+	rm -f *.pid
 env:
 ifneq ($(SHOWENV),)
 	env
