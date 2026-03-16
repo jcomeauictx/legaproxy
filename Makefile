@@ -231,6 +231,7 @@ proxy.stop:
 	else \
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
+	rm -f mitmdump.pid
 	mv mitmdump.log /var/tmp/mitmdump.$$(date +%Y%m%d%H%M%S).log || true
 clean:
 	$(MAKE) stop
@@ -252,6 +253,7 @@ smokesignal: ../smokesignal $(INSTALLED)/swc proxy.stop mitmdump.log
 smokesignal.stop:
 	pid=$$(cat smokesignal.pid 2>/dev/null); \
 	if [ "$$pid" ]; then kill $$pid; fi
+	rm -f smokesignal.pid
 localserver: | $(TESTFILE)
 	@echo testing $< on local computer
 	# don't fail launching browser if server launched previously
@@ -261,7 +263,7 @@ localserver: | $(TESTFILE)
 	sleep 3
 	-$(BROWSER) http://localhost:8888/$| \
 	 >/var/tmp/legaproxy.log 2>&1
-	kill $$(cat $(*:.stop=.pid))
+	kill $*.pid
 env:
 ifneq ($(SHOWENV),)
 	env
@@ -352,7 +354,7 @@ $(INSTALLED)/debian-release-7.gpg:
 	 wheezy $@.tmp $(ARCHIVE)
 	sudo mv $@.tmp $@
 ../smokesignal ../swc:
-	cd .. && git clone $(GITPREFIX)$(@F)
+	cd .. && git clone --quiet $(GITPREFIX)$(@F)
 swcversion: $(INSTALLED)/swc
 	swc --version
 .FORCE:
