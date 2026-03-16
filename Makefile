@@ -238,6 +238,7 @@ clean:
 	$(MAKE) stop
 	-for container in $$(<$(APPNAME)); do docker rm $$container; done
 	rm -rf dummy $(GENERATED) __pycache__
+	rm make.log
 distclean: clean
 	-if [ -f "$(APPNAME)" ]; then docker rmi $(APPNAME); fi
 	rm -f $(APPNAME)
