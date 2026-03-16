@@ -118,8 +118,6 @@ test: run
 # prefer pip-installed mitmdump over Debian package
 # as of Trixie, it still attempts to import blinker._saferef, which hasn't
 # existed for years.
-# but Trixie no longer has distutils, so we might need setuptools instead,
-# depending on what version of mitmproxy we attempt to install.
 $(INSTALLED)/mitmdump: $(INSTALLED)/setuptools $(INSTALLED)/swc .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(PIP_INSTALL) $(MITM_PKG); \
@@ -206,9 +204,9 @@ certs:
 	# on closing browser window, the following should run
 	$(MAKE) $*.stop
 %.log: | $(INSTALLED)/%
-	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
+	pid=$$(cat $*.pid 2>/dev/null); \
 	if [ "$$pid" ]; then \
-	 echo mitmdump is already running >&2; \
+	 echo $* is already running >&2; \
 	else \
 	 : "creating an empty logfile" > $@; \
 	 $* --anticache \
@@ -218,6 +216,7 @@ certs:
 	  --scripts filter.py \
 	  --flow-detail 3 \
 	  --save-stream-file mitmproxy.log &>$@ & \
+	  echo $$! >$*.pid; \
 	 sleep 3; \
 	fi
 testproxy: mitmdump.log certs $(INSTALLED)/cert \
@@ -226,7 +225,7 @@ testproxy: mitmdump.log certs $(INSTALLED)/cert \
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 proxy.stop:
-	pid=$$(lsof -t -itcp@$(PROXYHOST):$(PROXYPORT) -s tcp:listen); \
+	pid=$$(cat mitmdump.pid 2>/dev/null); \
 	if [ "$$pid" ]; then \
 	 kill $$pid; \
 	else \
@@ -251,17 +250,18 @@ smokesignal: ../smokesignal $(INSTALLED)/swc proxy.stop mitmdump.log
 	-$(MAKE) PORT=8888 -C $< wsgi &
 	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
 smokesignal.stop:
-	pid=$$(lsof -t -itcp@127.0.0.1:8888 -s tcp:listen); \
+	pid=$$(cat smokesignal.pid 2>/dev/null); \
 	if [ "$$pid" ]; then kill $$pid; fi
 localserver: | $(TESTFILE)
 	@echo testing $< on local computer
 	# don't fail launching browser if server launched previously
 	-python3 -m http.server --bind 127.0.0.1 8888 &
+	echo $$! >$*.pid
 	@echo waiting a few seconds to launch the browser
 	sleep 3
 	-$(BROWSER) http://localhost:8888/$| \
 	 >/var/tmp/legaproxy.log 2>&1
-	kill $$(lsof -t -itcp@127.0.0.1:8888 -s tcp:listen)
+	kill $$(cat $(*:.stop=.pid))
 env:
 ifneq ($(SHOWENV),)
 	env
