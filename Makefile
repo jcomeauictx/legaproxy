@@ -104,6 +104,15 @@ FIXUP ?= arrow,var
 ARCHIVE := https://archive.debian.org/debian
 # for fetching sibling repos
 GITPREFIX := $(dir $(shell git remote get-url origin))
+MITM_OPTIONS := --anticache
+ifeq ($(INSTALLER),apk)
+MITM_OPTIONS += -z -b $(PROXYHOST) -p $(PROXYPORT) -s
+MITM_SAVE := -w
+else
+MITM_OPTIONS += --anticomp --flow-detail 3 \
+ --listen-host $(PROXYHOST) --listen-port $(PROXYPORT) --scripts
+MITM_SAVE := --save-stream-file
+endif
 ifneq ($(SHOWENV),)
  export
 else  # export what's needed for envsubst and for python scripts
@@ -192,12 +201,7 @@ async.stop:
 certs:
 	$(WGET) -O- http://mitm.it/ | grep mitmproxy-ca-cert
 %.log: %.py mitm/%.html mitm/pixel.png .FORCE
-	mitmdump --anticache \
-	 --anticomp \
-	 --listen-host $(PROXYHOST) \
-	 --listen-port $(PROXYPORT) \
-	 --scripts $< \
-	 --flow-detail 3 2>&1 | tee $@ &
+	mitmdump $(MITM_OPTIONS) $< 2>&1 | tee $@ &
 	sleep 3  # allow mitmproxy to start up
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) http://example.com/
@@ -209,13 +213,8 @@ certs:
 	 echo $* is already running >&2; \
 	else \
 	 : "creating an empty logfile" > $@; \
-	 $* --anticache \
-	  --anticomp \
-	  --listen-host $(PROXYHOST) \
-	  --listen-port $(PROXYPORT) \
-	  --scripts filter.py \
-	  --flow-detail 3 \
-	  --save-stream-file mitmproxy.log &>$@ & \
+	 $* $(MITM_OPTIONS) filter.py \
+	  $(MITM_SAVE) mitmproxy.log &>$@ & \
 	  echo $$! >$*.pid; \
 	 sleep 3; \
 	fi
