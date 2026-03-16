@@ -351,8 +351,8 @@ $(INSTALLED)/debian-release-7.gpg:
 	 --keyring=$< \
 	 wheezy $@.tmp $(ARCHIVE)
 	sudo mv $@.tmp $@
-../smokesignal:
-	cd .. && git clone $(GITPREFIX)/smokesignal
+../smokesignal ../swc:
+	cd .. && git clone $(GITPREFIX)$(@F)
 swcversion: $(INSTALLED)/swc
 	swc --version
 .FORCE:
