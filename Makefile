@@ -201,7 +201,7 @@ certs:
 	sleep 3  # allow mitmproxy to start up
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) http://example.com/
-	# on closing browser window, the following should run
+	read -p "<enter> to terminate..."
 	$(MAKE) $*.stop
 %.log: | $(INSTALLED)/%
 	pid=$$(cat $*.pid 2>/dev/null); \
@@ -224,6 +224,8 @@ testproxy: mitmdump.log certs $(INSTALLED)/cert \
  $(DATADIR)
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
+	read -p "<enter> to terminate..."
+	$(MAKE) proxy.stop
 proxy.stop:
 	-pid=$$(cat mitmdump.pid 2>/dev/null); \
 	if [ "$$pid" ]; then \
@@ -251,19 +253,19 @@ smokesignal: ../smokesignal $(INSTALLED)/swc proxy.stop mitmdump.log
 	-$(MAKE) PORT=8888 -C $< wsgi &
 	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
 smokesignal.stop:
-	pid=$$(cat smokesignal.pid 2>/dev/null); \
-	-if [ "$$pid" ]; then kill $$pid; fi
+	-pid=$$(cat smokesignal.pid 2>/dev/null); \
+	if [ "$$pid" ]; then kill $$pid; fi
 	rm -f smokesignal.pid
 localserver: | $(TESTFILE)
 	@echo testing $< on local computer
 	# don't fail launching browser if server launched previously
-	-python3 -m http.server --bind 127.0.0.1 8888 &
+	-python3 -m http.server --bind 127.0.0.1 8888 & \
 	echo $$! >$*.pid
 	@echo waiting a few seconds to launch the browser
 	sleep 3
 	-$(BROWSER) http://localhost:8888/$| \
 	 >/var/tmp/legaproxy.log 2>&1
-	-kill $*.pid
+	-kill $$(cat $*.pid)
 	rm -f *.pid
 env:
 ifneq ($(SHOWENV),)
