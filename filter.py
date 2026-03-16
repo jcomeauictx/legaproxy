@@ -17,7 +17,11 @@ try:
     from mitmproxy import http
 except (ImportError, ModuleNotFoundError):  # for doctests
     http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
-from shimmer import shimtext
+try:
+    from shimmer import shimtext
+except ImportError as problem:
+    logging.error('cannot load shimmer from %s: %s', os.listdir('.'), problem)
+    raise problem
 
 # set up our own logger separate from mitmproxy's, with level information
 logger = logging.getLogger('legaproxy')

@@ -213,7 +213,7 @@ certs:
 	 echo $* is already running >&2; \
 	else \
 	 : "creating an empty logfile" > $@; \
-	 $* $(MITM_OPTIONS) filter.py \
+	 $* $(MITM_OPTIONS) $(PWD)/filter.py \
 	  $(MITM_SAVE) mitmproxy.log &>$@ & \
 	  echo $$! >$*.pid; \
 	 sleep 3; \
