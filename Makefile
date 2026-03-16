@@ -27,7 +27,7 @@ PIP_GET := $(INSTALL) python3-pip
 ifeq ($(INSTALLER),apk)
 PIP_GET := $(INSTALL) py3-pip
 # assume apk means iSH, alpine 3.14.3, with Python3.9.16
-MITM_PKG := mitmproxy==9.0.1
+MITM_PKG := git+https://github.com/jcomeauictx/mitmproxy@alpine-ish
 else
 MITM_PKG := mitmproxy
 endif
