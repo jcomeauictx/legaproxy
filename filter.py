@@ -19,7 +19,7 @@ except (ImportError, ModuleNotFoundError):  # for doctests
     http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
 try:
     sys.path.append(os.getcwd())
-    import shimmer
+    from shimmer import shimtext
 except ImportError as problem:
     logging.error('cannot load shimmer from %s: %s', os.listdir('.'), problem)
     raise problem
@@ -116,7 +116,7 @@ async def response(  # pylint: disable=too-many-branches
     if mimetype == 'text/html':
         logging.debug('adding shims and processing scripts in html')
         try:
-            fixed = await asyncio.to_thread(shimmer.shimtext, text)
+            fixed = await asyncio.to_thread(shimtext, text)
         except (ValueError, IndexError) as problem:
             logging.error('call to shim failed: %s', problem)
         if fixed and fixed != text:
