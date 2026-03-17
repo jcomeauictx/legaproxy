@@ -8,7 +8,7 @@ https://docs.mitmproxy.org/stable/addons-examples/
 This will allow old computers/operating systems, smartphones, tablets,
 iPod Touch, and many other legacy devices to access the modern Web.
 '''
-import os, logging, base64, hashlib  # pylint: disable=multiple-imports
+import sys, os, logging, base64, hashlib  # pylint: disable=multiple-imports
 import asyncio  # pylint: disable=multiple-imports
 from time import strftime
 from hashlib import sha256
@@ -18,7 +18,8 @@ try:
 except (ImportError, ModuleNotFoundError):  # for doctests
     http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
 try:
-    from shimmer import shimtext
+    sys.path.append(os.getcwd())
+    import shimmer
 except ImportError as problem:
     logging.error('cannot load shimmer from %s: %s', os.listdir('.'), problem)
     raise problem
@@ -115,7 +116,7 @@ async def response(  # pylint: disable=too-many-branches
     if mimetype == 'text/html':
         logging.debug('adding shims and processing scripts in html')
         try:
-            fixed = await asyncio.to_thread(shimtext, text)
+            fixed = await asyncio.to_thread(shimmer.shimtext, text)
         except (ValueError, IndexError) as problem:
             logging.error('call to shim failed: %s', problem)
         if fixed and fixed != text:
