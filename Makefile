@@ -361,8 +361,16 @@ $(INSTALLED)/debian-release-7.gpg:
 	cd .. && git clone --quiet $(GITPREFIX)$(@F)
 swcversion: $(INSTALLED)/swc
 	swc --version
-tests pull status diff: .FORCE | $(wildcard ../netlib ../mitmproxy)
+tests pull status diff commit: .FORCE | $(wildcard ../netlib ../mitmproxy)
 	@for dir in $|; do $(MAKE) -C $$dir $@; done
-	if [ "$@" != "tests" ]; then git $@; fi
+	if [ "$@" != "tests" ]; then \
+	 if [ "$@" != "commit" ]; then \
+	  git $@; \
+	 else \
+	  git $@ -a; \
+	 fi; \
+	fi
+rebuild reinstall: | $(wildcard ../mitmproxy)
+	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
 .FORCE:
 .PRECIOUS: %.log
