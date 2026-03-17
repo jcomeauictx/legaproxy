@@ -361,7 +361,7 @@ $(INSTALLED)/debian-release-7.gpg:
 swcversion: $(INSTALLED)/swc
 	swc --version
 tests pull status diff: .FORCE | $(wildcard ../netlib ../mitmproxy)
-	$(foreach dir, $|, $(shell $(MAKE) -C $(dir) $@))
+	@for dir in $|; do $(MAKE) -C $$dir $@; done
 	if [ "$@" != "tests" ]; then git $@; fi
 .FORCE:
 .PRECIOUS: %.log
