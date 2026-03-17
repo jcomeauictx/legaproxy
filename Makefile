@@ -289,7 +289,7 @@ mitm/pixel.png:
 	convert -size 1x1 xc:none $@
 push: | $(wildcard ../netlib ../mitmproxy)
 	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)
-	$(foreach dir, $|, $(shell $(MAKE) -C $(dir) $@))
+	@for dir in $|; do $(MAKE) -C $$dir $@; done
 %.pylint: %.py
 	$(PYLINT) $<
 pylint: $(PYTHON_SCRIPTS:.py=.pylint)
