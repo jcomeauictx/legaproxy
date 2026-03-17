@@ -273,7 +273,7 @@ ifneq ($(SHOWENV),)
 else
 	$(MAKE) SHOWENV=1 $@
 endif
-diff:
+storagediff:
 	for modified in $$(find storage/modified/ -type f); \
 	 do original=storage/files/$${modified##storage/modified/}; \
 	 colordiff $$original $$modified; \
