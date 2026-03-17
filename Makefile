@@ -360,8 +360,8 @@ $(INSTALLED)/debian-release-7.gpg:
 	cd .. && git clone --quiet $(GITPREFIX)$(@F)
 swcversion: $(INSTALLED)/swc
 	swc --version
-tests push pull status: .FORCE | $(wildcard ../netlib ../mitmproxy)
-	-$(foreach dir, $|, $(shell $(MAKE) -C $(dir) $@))
+tests pull status: .FORCE | $(wildcard ../netlib ../mitmproxy)
+	$(foreach dir, $|, $(shell $(MAKE) -C $(dir) $@))
 	if [ "$@" != "tests" ]; then git $@; fi
 .FORCE:
 .PRECIOUS: %.log
