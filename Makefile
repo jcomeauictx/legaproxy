@@ -360,5 +360,7 @@ $(INSTALLED)/debian-release-7.gpg:
 	cd .. && git clone --quiet $(GITPREFIX)$(@F)
 swcversion: $(INSTALLED)/swc
 	swc --version
+tests: .FORCE | $(wildcard ../netlib ../mitmproxy)
+	$(foreach dir, $|, $(shell $(MAKE) -C $(dir) $@))
 .FORCE:
 .PRECIOUS: %.log
