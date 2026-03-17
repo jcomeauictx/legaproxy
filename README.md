@@ -84,3 +84,8 @@ the `certutil` program. It works on Debian trixie chromium as of 2026-03.
   "Updating crates.io index"
 * Older versions of swc silently ignore `"externalHelpers": false` in .swcrc
   files. Must clone swc from github and build. version SWC 58.0.0 works.
+* There are 3 flavors of `which` I know of: `which` itself, `type -p`, a
+  shell builtin, and `command -v`. Usually they all work the same, but on
+  alpine:3.14.3, inside a Makefile, `type -p` sends output to stderr,
+  making a very confusing situation where you see the result but it doesn't
+  get assigned to a variable.
