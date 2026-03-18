@@ -372,5 +372,7 @@ tests pull status diff commit: .FORCE | $(wildcard ../netlib ../mitmproxy)
 	fi
 rebuild reinstall: | $(wildcard ../mitmproxy)
 	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
+debug: reinstall clean default
+	tail -n 30 mitmdump.log
 .FORCE:
 .PRECIOUS: %.log
