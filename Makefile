@@ -289,7 +289,7 @@ mitm/pixel.png:
 	convert -size 1x1 xc:none $@
 push: ../netlib ../mitmproxy
 	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)
-	@for dir in $|; do $(MAKE) -C $$dir $@; done
+	@for dir in $+; do $(MAKE) -C $$dir $@; done
 %.pylint: %.py
 	$(PYLINT) $<
 pylint: $(PYTHON_SCRIPTS:.py=.pylint)
@@ -362,7 +362,7 @@ $(INSTALLED)/debian-release-7.gpg:
 swcversion: $(INSTALLED)/swc
 	swc --version
 tests pull status diff commit: .FORCE | ../netlib ../mitmproxy
-	@for dir in $|; do $(MAKE) -C $$dir $@; done
+	-for dir in $|; do $(MAKE) -C $$dir $@; done
 	if [ "$@" != "tests" ]; then \
 	 if [ "$@" != "commit" ]; then \
 	  git $@; \
