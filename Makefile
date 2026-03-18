@@ -287,7 +287,7 @@ shell:
 	 $<
 mitm/pixel.png:
 	convert -size 1x1 xc:none $@
-push: | $(wildcard ../netlib ../mitmproxy)
+push: ../netlib ../mitmproxy
 	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)
 	@for dir in $|; do $(MAKE) -C $$dir $@; done
 %.pylint: %.py
@@ -357,11 +357,11 @@ $(INSTALLED)/debian-release-7.gpg:
 	 --keyring=$< \
 	 wheezy $@.tmp $(ARCHIVE)
 	sudo mv $@.tmp $@
-../smokesignal ../swc:
+../smokesignal ../swc ../netlib ../mitmproxy:
 	cd .. && git clone --quiet $(GITPREFIX)$(@F)
 swcversion: $(INSTALLED)/swc
 	swc --version
-tests pull status diff commit: .FORCE | $(wildcard ../netlib ../mitmproxy)
+tests pull status diff commit: .FORCE | ../netlib ../mitmproxy
 	@for dir in $|; do $(MAKE) -C $$dir $@; done
 	if [ "$@" != "tests" ]; then \
 	 if [ "$@" != "commit" ]; then \
