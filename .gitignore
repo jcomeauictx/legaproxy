@@ -13,3 +13,4 @@ JavaScriptLexer*
 pathological*.js
 pixel.png
 .installed
+mitmdump.pid
