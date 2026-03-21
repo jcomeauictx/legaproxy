@@ -338,7 +338,7 @@ $(INSTALLED)/debian-release-7.gpg: $(INSTALLED)
 	wget https://ftp-master.debian.org/keys/release-7.asc -qO- | \
 	 gpg --import --no-default-keyring --keyring $@
 $(INSTALLED)/swcserver: $(INSTALLED)
-	@if [ -z "$$(getent -s files hosts $(@F)" ]; then \
+	@if [ -z "$$(getent hosts $(@F)" ]; then \
 	 echo alpine/iSH cannot run a suitable version of swc >&2; \
 	 echo you must put an entry for $(@F) in /etc/hosts >&2; \
 	 false; \
