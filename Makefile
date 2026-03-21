@@ -282,11 +282,6 @@ storagediff:
 	done
 shell:
 	$(PYTHON)
-%.es5.js %.es3.js: %.js $(INSTALLED)/swc
-	swc compile \
-	 --config-file $(patsubst .%,%,$(suffix $(basename $@))).swcrc \
-	 --out-file $@ \
-	 $<
 mitm/pixel.png:
 	convert -size 1x1 xc:none $@
 push: ../netlib ../mitmproxy
@@ -317,7 +312,8 @@ $(INSTALLED)/certutil: $(INSTALLED) .FORCE
 	 $(INSTALL) libnss3-tools; \
 	 touch $@; \
 	fi
-# the cargo installed swc doesn't inline helpers, we need to build our own
+# the cargo installed swc doesn't inline helpers, and alpine/iSH can't
+# compile it, so we need to use a remote executable for now.
 $(INSTALLED)/swc.fetched: $(INSTALLED)/cargo .FORCE
 	if [ -z "$$($(WHICH) $(@F:.fetched=))" ]; then \
 	 cargo install swc_cli; \
