@@ -5,7 +5,11 @@ mitmdump filter to test delayed responses
 import os, logging, time, asyncio  # pylint: disable=multiple-imports
 from http import HTTPStatus
 from posixpath import split, sep
-from mitmproxy import http, ctx
+try:
+    from mitmproxy import http, ctx
+except ImportError:
+    from libmproxy.flow import Response
+    from libmproxy.controller import should_exit
 
 MIMETYPES = {
     '.html': 'text/html',
