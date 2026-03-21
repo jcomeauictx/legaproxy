@@ -3,8 +3,7 @@ SHELL := /bin/bash
 # keep track of dependencies
 INSTALLED := .installed
 # make sure we can find executables installed in $HOME/*/bin
-# and prefer anything under $(INSTALLED) to those anywhere else
-PATH := $(PWD)/$(INSTALLED):$(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin:.
+PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin:.
 WHICH := type -p
 INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf \
  2>/dev/null)))
@@ -327,20 +326,20 @@ $(INSTALLED)/swc.fetched: $(INSTALLED)/cargo .FORCE
 # my clone of swc
 $(INSTALLED)/swc: ../swc | $(INSTALLED)/cargo
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 (cd $< && cargo build); \
-	 ln -sf $$(readlink -f $</target/debug/$(@F)) $@; \
+	 (cd $< && cargo build) && \
+	 ln -sf $$(readlink -f $</target/debug/$(@F)) $@ || rm -f $@; \
 	fi
 # default install is to use apt, apk, dnf, etc.
 $(INSTALLED)/%: $(INSTALLED) .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 $(INSTALL) $*; \
-	 touch $@; \
+	 $(INSTALL) $* && \
+	 touch $@ || rm -f $@; \
 	fi
 $(INSTALLED)/cargo: $(INSTALLED)/rustup .FORCE
 	# don't bother installing Debian stable cargo, always too old.
 	if [ -z "$$($(WHICH) $(@F))" ] || ! $(@F) --version; then \
-	 rustup toolchain install stable; \
-	 touch $@; \
+	 rustup toolchain install stable && \
+	 touch $@ ||rm -f $@; \
 	fi
 # libraries and headers required for pip install
 $(INSTALLED)/libffi-dev: $(INSTALLED)
