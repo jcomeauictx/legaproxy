@@ -35,7 +35,6 @@ PIP_INSTALL = $(PIP) install --verbose --user --upgrade --exists-action i
 ifneq ($(INSTALLER),apk)
 PIP_INSTALL += --break-system-packages
 endif
-PATH := $(HOME)/.local/bin:$(PATH)
 HOST ?= 127.0.0.1
 DATADIR := $(HOME)/.legaproxy/chrome
 CACHE := $(DATADIR)/Cache "$(DATADIR)/Code Cache"
@@ -314,17 +313,9 @@ $(INSTALLED)/certutil: $(INSTALLED) .FORCE
 	fi
 # the cargo installed swc doesn't inline helpers, and alpine/iSH can't
 # compile it, so we need to use a remote executable for now.
-$(INSTALLED)/swc.fetched: $(INSTALLED)/cargo .FORCE
-	if [ -z "$$($(WHICH) $(@F:.fetched=))" ]; then \
-	 cargo install swc_cli; \
-	 touch $@; \
-	fi
-# my clone of swc
-$(INSTALLED)/swc: ../swc | $(INSTALLED)/cargo
-	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 (cd $< && cargo build) && \
-	 ln -sf $$(readlink -f $</target/debug/$(@F)) $@ || rm -f $@; \
-	fi
+$(INSTALLED)/swc: $(INSTALLED)/swcserver
+	ln -s $(PWD)/remoteswc $(HOME)/.local/bin/$(@F)
+	touch $@
 # default install is to use apt, apk, dnf, etc.
 $(INSTALLED)/%: $(INSTALLED) .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
@@ -342,10 +333,17 @@ $(INSTALLED)/libffi-dev: $(INSTALLED)
 $(INSTALLED)/python3-dev: $(INSTALLED)
 $(INSTALLED):
 	mkdir -p $@
-$(INSTALLED)/debian-release-7.gpg:
+$(INSTALLED)/debian-release-7.gpg: $(INSTALLED)
 	# https://serverfault.com/a/984605/58945
 	wget https://ftp-master.debian.org/keys/release-7.asc -qO- | \
 	 gpg --import --no-default-keyring --keyring $@
+$(INSTALLED)/swcserver: $(INSTALLED)
+	@if [ -z "$$(getent -s files hosts $(@F)" ]; then \
+	 echo alpine/iSH cannot run a suitable version of swc >&2; \
+	 echo you must put an entry for $(@F) in /etc/hosts >&2; \
+	 false; \
+	fi
+	touch $@
 /opt/wheezy32/usr/bin/iceweasel: \
  | $(INSTALLED)/debian-release-7.gpg $(INSTALLED)/debootstrap
 	sudo mkdir -p $@.tmp
