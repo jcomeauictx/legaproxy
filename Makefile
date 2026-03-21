@@ -108,10 +108,13 @@ MITM_OPTIONS := --anticache
 ifeq ($(INSTALLER),apk)
 MITM_OPTIONS += -z -b $(PROXYHOST) -p $(PROXYPORT) -s
 MITM_SAVE := -w
+# slow startup if running under iSH
+SLEEP ?= 10
 else
 MITM_OPTIONS += --anticomp --flow-detail 3 \
  --listen-host $(PROXYHOST) --listen-port $(PROXYPORT) --scripts
 MITM_SAVE := --save-stream-file
+SLEEP ?= 3
 endif
 ifneq ($(SHOWENV),)
  export
@@ -202,7 +205,7 @@ certs:
 	$(WGET) -O- http://mitm.it/ | grep mitmproxy-ca-cert
 %.log: %.py mitm/%.html mitm/pixel.png .FORCE
 	mitmdump $(MITM_OPTIONS) $< 2>&1 | tee $@ &
-	sleep 3  # allow mitmproxy to start up
+	sleep $(SLEEP)  # allow mitmproxy to start up
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) http://example.com/
 	read -p "<enter> to terminate..."
@@ -216,7 +219,7 @@ certs:
 	 $* $(MITM_OPTIONS) $(PWD)/filter.py \
 	  $(MITM_SAVE) mitmproxy.log &>$@ & \
 	  echo $$! >$*.pid; \
-	 sleep 3; \
+	 sleep $(SLEEP); \
 	fi
 testproxy: mitmdump.log certs $(INSTALLED)/cert \
  $(INSTALLED)/mitmdump | \
@@ -262,7 +265,7 @@ localserver: | $(TESTFILE)
 	-python3 -m http.server --bind 127.0.0.1 8888 & \
 	echo $$! >$*.pid
 	@echo waiting a few seconds to launch the browser
-	sleep 3
+	sleep $(SLEEP)
 	-$(BROWSER) http://localhost:8888/$| \
 	 >/var/tmp/legaproxy.log 2>&1
 	-kill $$(cat $*.pid)
