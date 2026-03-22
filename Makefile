@@ -194,9 +194,9 @@ stop: smokesignal.stop proxy.stop
 	   docker wait $$container; \
 	 done; \
 	fi
-async: async.log
+async: async.log | $(INSTALLED)/w3m
 async.stop:
-	$(WGET) --verbose --output-document=- http://example.com/mitm/shutdown
+	$(WGET) -O- http://example.com/mitm/shutdown
 # have to fetch certs to create them? seems that way.
 # (later) nope, not true, but maybe needs a delay. so this should still help
 certs:
@@ -331,6 +331,9 @@ $(INSTALLED)/cargo: $(INSTALLED)/rustup .FORCE
 # libraries and headers required for pip install
 $(INSTALLED)/libffi-dev: $(INSTALLED)
 $(INSTALLED)/python3-dev: $(INSTALLED)
+$(INSTALLED)/w3m: $(INSTALLED)
+	$(INSTALLER) $(INSTALL) $(@F)
+	touch $@
 $(INSTALLED):
 	mkdir -p $@
 $(INSTALLED)/debian-release-7.gpg: $(INSTALLED)
