@@ -283,7 +283,7 @@ shell:
 	$(PYTHON)
 mitm/pixel.png:
 	convert -size 1x1 xc:none $@
-push: ../netlib ../mitmproxy
+push: ../netlib ../mitmproxy ../pathod
 	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)
 	@for dir in $+; do $(MAKE) -C $$dir $@; done
 %.pylint: %.py
@@ -356,11 +356,11 @@ $(INSTALLED)/swcserver: $(INSTALLED)
 	 --keyring=$< \
 	 wheezy $@.tmp $(ARCHIVE)
 	sudo mv $@.tmp $@
-../smokesignal ../swc ../netlib ../mitmproxy:
+../smokesignal ../swc ../netlib ../mitmproxy ../pathod:
 	cd .. && git clone --quiet $(GITPREFIX)$(@F)
 swcversion: $(INSTALLED)/swc
 	swc --version
-tests pull status diff commit: .FORCE | ../netlib ../mitmproxy
+tests pull status diff commit: .FORCE | ../netlib ../mitmproxy ../pathod
 	-for dir in $|; do $(MAKE) -C $$dir $@; done
 	if [ "$@" != "tests" ]; then \
 	 if [ "$@" != "commit" ]; then \
@@ -369,7 +369,7 @@ tests pull status diff commit: .FORCE | ../netlib ../mitmproxy
 	  git $@ -a; \
 	 fi; \
 	fi
-rebuild reinstall: | $(wildcard ../netlib ../mitmproxy)
+rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
 	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
 debug: reinstall clean default
 	tail -n 30 mitmdump.log
