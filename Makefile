@@ -5,6 +5,7 @@ INSTALLED := .installed
 # make sure we can find executables installed in $HOME/*/bin
 PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin:.
 WHICH := type -p
+BRANCH := $(shell git branch --show-current)
 INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf \
  2>/dev/null)))
 ifeq ($(INSTALLER),apk)
@@ -289,7 +290,7 @@ shell:
 	 $<
 mitm/pixel.png:
 	convert -size 1x1 xc:none $@
-push: ../netlib ../mitmproxy
+push: ../netlib ../mitmproxy ../pathod
 	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)
 	@for dir in $+; do $(MAKE) -C $$dir $@; done
 %.pylint: %.py
@@ -359,11 +360,13 @@ $(INSTALLED)/debian-release-7.gpg:
 	 --keyring=$< \
 	 wheezy $@.tmp $(ARCHIVE)
 	sudo mv $@.tmp $@
-../smokesignal ../swc ../netlib ../mitmproxy:
-	cd .. && git clone --quiet $(GITPREFIX)$(@F)
+../smokesignal ../swc ../netlib ../mitmproxy ../pathod:
+	cd .. && \
+	 git clone --quiet $(GITPREFIX)$(@F) && \
+	 git checkout $(BRANCH)
 swcversion: $(INSTALLED)/swc
 	swc --version
-tests pull status diff commit: .FORCE | ../netlib ../mitmproxy
+tests pull status diff commit: .FORCE | ../netlib ../mitmproxy ../pathod
 	-for dir in $|; do $(MAKE) -C $$dir $@; done
 	if [ "$@" != "tests" ]; then \
 	 if [ "$@" != "commit" ]; then \
@@ -372,7 +375,7 @@ tests pull status diff commit: .FORCE | ../netlib ../mitmproxy
 	  git $@ -a; \
 	 fi; \
 	fi
-rebuild reinstall: | $(wildcard ../netlib ../mitmproxy)
+rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
 	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
 debug: reinstall clean default
 	tail -n 30 mitmdump.log
