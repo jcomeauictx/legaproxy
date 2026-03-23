@@ -359,6 +359,7 @@ $(INSTALLED)/swcserver: $(INSTALLED)
 	sudo mv $@.tmp $@
 ../smokesignal ../swc ../netlib ../mitmproxy ../pathod:
 	cd .. && git clone --quiet $(GITPREFIX)$(@F)
+	cd $@ && git checkout $(BRANCH) || true  # not all have alpine-ish
 swcversion: $(INSTALLED)/swc
 	swc --version
 tests pull status diff commit: .FORCE | ../netlib ../mitmproxy ../pathod
