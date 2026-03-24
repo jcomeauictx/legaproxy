@@ -12,6 +12,8 @@ INSTALL := sudo $(INSTALLER) add
 else
 INSTALL := sudo $(INSTALLER) install -y
 endif
+# python3 preferred, but you can attempt to run it under python2:
+# `make PYTHON=python2`
 PYTHON ?= $(word 1, $(shell $(WHICH) python3 python 2>/dev/null))
 ifeq ($(PYTHON),)
 	$(INSTALL) python3
