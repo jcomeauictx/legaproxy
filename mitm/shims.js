@@ -24,4 +24,14 @@ if (typeof String.prototype.padStart == "undefined") {
             self;
     }
 };
+if (typeof String.prototype.padEnd == "undefined") {
+    String.prototype.padStart = function(count, padding) {
+        padding = padding || " ";
+        var padLength = count - this.length;
+        var self = String(this);
+        return padLength > 0 ?
+            self + padding.repeat(padLength).slice(0, padLength):
+            self;
+    }
+};
 /* vim: set tabstop=8 shiftwidth=4 expandtab softtabstop=4: */
