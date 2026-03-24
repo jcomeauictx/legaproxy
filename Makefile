@@ -317,7 +317,7 @@ $(INSTALLED)/certutil: $(INSTALLED) .FORCE
 # the cargo installed swc doesn't inline helpers, and alpine/iSH can't
 # compile it, so we need to use a remote executable for now.
 $(INSTALLED)/swc: $(INSTALLED)/swcserver
-	ln -s $(PWD)/remoteswc $(HOME)/.local/bin/$(@F)
+	ln -sf $(PWD)/remoteswc $(HOME)/.local/bin/$(@F)
 	touch $@
 # default install is to use apt, apk, dnf, etc.
 $(INSTALLED)/%: $(INSTALLED) .FORCE
