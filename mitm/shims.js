@@ -25,7 +25,7 @@ if (typeof String.prototype.padStart == "undefined") {
     }
 };
 if (typeof String.prototype.padEnd == "undefined") {
-    String.prototype.padStart = function(count, padding) {
+    String.prototype.padEnd = function(count, padding) {
         padding = padding || " ";
         var padLength = count - this.length;
         var self = String(this);
