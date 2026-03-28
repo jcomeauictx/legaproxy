@@ -3,8 +3,8 @@ SHELL := /bin/bash
 # keep track of dependencies
 INSTALLED := .installed
 # make sure we can find executables installed in $HOME/*/bin
-PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin:.
-WHICH := type -p
+PATH := $(HOME)/.local/bin:$(PATH):$(HOME)/.cargo/bin:.
+WHICH := command -v
 BRANCH := $(shell git branch --show-current)
 INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf \
  2>/dev/null)))
@@ -36,7 +36,6 @@ PIP_INSTALL = $(PIP) install --verbose --user --upgrade --exists-action i
 ifneq ($(INSTALLER),apk)
 PIP_INSTALL += --break-system-packages
 endif
-PATH := $(HOME)/.local/bin:$(PATH)
 HOST ?= 127.0.0.1
 DATADIR := $(HOME)/.legaproxy/chrome
 CACHE := $(DATADIR)/Cache "$(DATADIR)/Code Cache"
