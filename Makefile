@@ -44,7 +44,7 @@ CACHE := $(DATADIR)/Cache "$(DATADIR)/Code Cache"
 BRANCH := $(shell git branch --show-current)
 REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
-BROWSER ?= $(word 1, $(shell which wheezy32firefox w3m))
+BROWSER ?= $(word 1, $(shell which wheezy32firefox))
 APPNAME ?= npx
 TESTFILE := sarge/capabilities.html
 DOCKERRUN ?= docker run --interactive --rm
@@ -63,7 +63,7 @@ HOSTSUFFIX=
 INDEXPAGE ?=
 # make sure browser isn't blank in case of no chromium
 ifeq ($(CHROME)$(MITMBROWSER),)
- MITMBROWSER := w3m
+ MITMBROWSER := wheezy32firefox
 else
  MITMBROWSER ?= $(CHROME)
 endif
