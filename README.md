@@ -89,3 +89,17 @@ the `certutil` program. It works on Debian trixie chromium as of 2026-03.
   alpine:3.14.3, inside a Makefile, `type -p` sends output to stderr,
   making a very confusing situation where you see the result but it doesn't
   get assigned to a variable.
+* Problem with alpine-ish branch:
+  ```
+  1dc0c19dd907:~/src/jcomeauictx/legaproxy$ make async
+  mitmdump --anticache -z -b 127.0.0.1 -p 8080 -s async.py 2>&1 | tee async.log &
+  sleep 10  # allow mitmproxy to start up
+  mitmdump: Traceback (most recent call last):
+    File "/home/ishuser/.local/lib/python3.9/site-packages/libmproxy/script.py", line 41, in load
+      execfile(path, ns, ns)
+    File "/home/ishuser/.local/lib/python3.9/site-packages/libmproxy/script.py", line 9, in execfile
+      exec(compile(infile.read(), filepath, 'exec'), _globals, _locals)
+    File "async.py", line 8, in <module>
+      from mitmproxy import http, ctx
+  ModuleNotFoundError: No module named 'mitmproxy'
+  ```
