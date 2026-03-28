@@ -4,7 +4,7 @@ SHELL := /bin/bash
 INSTALLED := .installed
 # make sure we can find executables installed in $HOME/*/bin
 PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin:.
-WHICH := type -p
+WHICH := command -v
 INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf \
  2>/dev/null)))
 ifeq ($(INSTALLER),apk)
@@ -255,6 +255,8 @@ useragent:
 	@echo '$(IPHONE6)'
 smokesignal: ../smokesignal $(INSTALLED)/swc proxy.stop mitmdump.log
 	-$(MAKE) PORT=8888 -C $< wsgi &
+	@echo BROWSER=$(BROWSER)
+	@echo attempting $(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/ >&2
 	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
 smokesignal.stop:
 	-pid=$$(cat smokesignal.pid 2>/dev/null); \
