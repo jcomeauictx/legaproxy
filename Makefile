@@ -95,18 +95,10 @@ endif
 # copied from python-antlr-example Makefile
 PROXY_SETTINGS := https_proxy=http://$(PROXY) http_proxy=http://$(PROXY)
 WGET ?= $(PROXY_SETTINGS) wget
-GRAMMARS := https://raw.githubusercontent.com/antlr/grammars-v4/master
-JAVASCRIPT := JavaScript
-CPP := Cpp
-PYTHON3 := Python3
-PARSER ?= JAVASCRIPT
-TARGET ?= PYTHON3
-PYTHONPATH += $(PWD)/$($(PARSER))/$($(TARGET))
 NSSDB ?= $(HOME)/.pki/nssdb
 SQLDB := sql:$(NSSDB)
 CERTNICK := mitmproxy
 CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem
-FIXUP ?= arrow,var
 # archive for running wheezy32firefox (for testing)
 ARCHIVE := https://archive.debian.org/debian
 # for fetching sibling repos
@@ -126,7 +118,7 @@ endif
 ifneq ($(SHOWENV),)
  export
 else  # export what's needed for envsubst and for python scripts
- export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH
+ export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
 endif
 default: $(BRANCH).branch debug
 make.log: Makefile
