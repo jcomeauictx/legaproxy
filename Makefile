@@ -46,9 +46,7 @@ REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
 BROWSER ?= $(word 1, $(shell $(WHICH) wheezy32firefox))
 $(warning BROWSER=$(BROWSER))
-APPNAME ?= npx
 TESTFILE := sarge/capabilities.html
-DOCKERRUN ?= docker run --interactive --rm
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
 USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
@@ -147,57 +145,22 @@ $(INSTALLED)/pip: $(INSTALLED) .FORCE
 	 $(PIP_GET); \
 	fi
 	touch $@
-$(APPNAME): | Dockerfile
-	if [ -f "$@" ]; then \
-	 echo $@ already exists >&2; \
-	 echo 'Maybe you want to `make distclean` first?' >&2; \
-	 false; \
-	fi
-	docker build -t $@ .
-	touch $@
-retouch:
-	touch Dockerfile $(APPNAME)
 %: %.template Makefile
 	envsubst < $< > $@
 $(HOME)/%:
 	mkdir --parents $@
 run:
 	$(MAKE) -C $(PYTHONPATH)
-check:  # run on container itself
-	$(MAKE) DOCKERRUN= run
 rerun:
 	$(MAKE) retouch
 	$(MAKE) run
-bind-run: | $(APPNAME)
-	docker run \
-	 --detach \
-	 --publish $(HOST):$(SSHPORT):$(SSHPORT) \
-	 --mount type=bind,src="$(PWD)",target=/app_src \
-	 --entrypoint /usr/sbin/sshd $| -D >> $|
 bind-rerun:
 	$(MAKE) retouch
 	$(MAKE) bind-run
 reconnect reattach:
 	$(MAKE) retouch
 	$(MAKE) connect
-connect attach: | $(APPNAME)
-	if [ -s "$|" ]; then \
-	 docker exec --interactive --tty $$(tail -n 1 $|) /bin/sh; \
-	else \
-	 echo 'No active containers; `make bind-run` first.' >&2; \
-	fi
-ssh login: $(APPNAME)
-	ssh -p $(SSHPORT) \
-	 -oStrictHostKeyChecking=no \
-	 -oUserKnownHostsFile=/dev/null \
-	 root@localhost
 stop: smokesignal.stop proxy.stop
-	-if [ -s "$(APPNAME)" ]; then \
-	  for container in $$(<$(APPNAME)); do \
-	   docker stop $$container; \
-	   docker wait $$container; \
-	 done; \
-	fi
 async: async.log | $(INSTALLED)/w3m
 async.stop:
 	$(WGET) -O- http://example.com/mitm/shutdown
@@ -241,14 +204,9 @@ proxy.stop:
 	mv mitmdump.log /var/tmp/mitmdump.$$(date +%Y%m%d%H%M%S).log || true
 clean:
 	$(MAKE) stop
-	-for container in $$(<$(APPNAME)); do docker rm $$container; done
 	rm -rf dummy $(GENERATED) __pycache__
 	rm -f make.log
 distclean: clean
-	-if [ -f "$(APPNAME)" ]; then docker rmi $(APPNAME); fi
-	rm -f $(APPNAME)
-	rm -f Dockerfile
-	if [ -d node_modules ]; then sudo rm -rf node_modules; fi
 	if [ -d fontconfig ]; then sudo rm -rf fontconfig; fi
 	if [ -d storage ]; then rm -rf storage; fi
 	rm -f dummy $(DOWNLOADED)
