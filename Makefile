@@ -128,7 +128,7 @@ ifneq ($(SHOWENV),)
 else  # export what's needed for envsubst and for python scripts
  export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH
 endif
-default: debug
+default: $(BRANCH).branch debug
 make.log: Makefile
 	$(MAKE) timestamp proxy.stop testproxy 2>&1 | tee -a $@
 timestamp:
@@ -256,6 +256,11 @@ shell:
 	$(PYTHON)
 mitm/pixel.png:
 	convert -size 1x1 xc:none $@
+%.branch: | ../netlib ../mitmproxy ../pathod
+	for dir in $|; do \
+	 (cd $$dir && git checkout $*); \
+	done
+	git checkout $*
 push: ../netlib ../mitmproxy ../pathod
 	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)
 	@for dir in $+; do $(MAKE) -C $$dir $@; done
