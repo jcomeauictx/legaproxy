@@ -129,7 +129,7 @@ test: run
 # prefer pip-installed mitmdump over Debian package
 # as of Trixie, it still attempts to import blinker._saferef, which hasn't
 # existed for years.
-$(INSTALLED)/mitmdump: $(INSTALLED)/setuptools $(INSTALLED)/swc .FORCE
+$(INSTALLED)/mitmdump: $(INSTALLED)/setuptools .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(PIP_INSTALL) $(MITM_PKG); \
 	fi
@@ -251,7 +251,7 @@ distclean: clean
 	rm -f dummy $(DOWNLOADED)
 useragent:
 	@echo '$(IPHONE6)'
-smokesignal: ../smokesignal $(INSTALLED)/swc proxy.stop mitmdump.log
+smokesignal: ../smokesignal proxy.stop mitmdump.log
 	-$(MAKE) PORT=8888 -C $< wsgi &
 	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
 smokesignal.stop:
@@ -282,8 +282,8 @@ storagediff:
 	done
 shell:
 	$(PYTHON)
-%.es5.js %.es3.js: %.js $(INSTALLED)/swc
-	swc compile \
+%.es5.js %.es3.js: %.js | remoteswc
+	$< compile \
 	 --config-file $(patsubst .%,%,$(suffix $(basename $@))).swcrc \
 	 --out-file $@ \
 	 $<
@@ -317,18 +317,6 @@ $(INSTALLED)/certutil: $(INSTALLED) .FORCE
 	 $(INSTALL) libnss3-tools; \
 	 touch $@; \
 	fi
-# the cargo installed swc doesn't inline helpers, we need to build our own
-$(INSTALLED)/swc.fetched: $(INSTALLED)/cargo .FORCE
-	if [ -z "$$($(WHICH) $(@F:.fetched=))" ]; then \
-	 cargo install swc_cli; \
-	 touch $@; \
-	fi
-# my clone of swc
-$(INSTALLED)/swc: ../swc | $(INSTALLED)/cargo
-	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 (cd $< && cargo build) && \
-	 ln -sf $$(readlink -f $</target/debug/$(@F)) $@ || rm -f $@; \
-	fi
 # default install is to use apt, apk, dnf, etc.
 $(INSTALLED)/%: $(INSTALLED) .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
@@ -359,12 +347,12 @@ $(INSTALLED)/debian-release-7.gpg:
 	 --keyring=$< \
 	 wheezy $@.tmp $(ARCHIVE)
 	sudo mv $@.tmp $@
-../smokesignal ../swc ../netlib ../mitmproxy ../pathod:
+../smokesignal ../netlib ../mitmproxy ../pathod:
 	cd .. && \
 	 git clone --quiet $(GITPREFIX)$(@F) && \
 	 git checkout $(BRANCH)
-swcversion: $(INSTALLED)/swc
-	swc --version
+swcversion: remoteswc
+	$< --version
 tests pull status diff commit: .FORCE | ../netlib ../mitmproxy ../pathod
 	-for dir in $|; do $(MAKE) -C $$dir $@; done
 	if [ "$@" != "tests" ]; then \
