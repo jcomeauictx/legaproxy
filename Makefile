@@ -128,7 +128,7 @@ ifneq ($(SHOWENV),)
 else  # export what's needed for envsubst and for python scripts
  export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH
 endif
-default: rebuild clean make.log
+default: debug
 make.log: Makefile
 	$(MAKE) timestamp proxy.stop testproxy 2>&1 | tee -a $@
 timestamp:
@@ -345,7 +345,7 @@ tests pull status diff commit: .FORCE | ../netlib ../mitmproxy ../pathod
 	fi
 rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
 	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
-debug: reinstall clean default
+debug: reinstall clean make.log
 	tail -n 30 mitmdump.log
 .FORCE:
 .PRECIOUS: %.log
