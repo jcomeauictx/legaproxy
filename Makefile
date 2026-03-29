@@ -167,6 +167,8 @@ async.stop:
 # (later) nope, not true, but maybe needs a delay. so this should still help
 certs:
 	$(WGET) -O- http://mitm.it/ | grep mitmproxy-ca-cert
+%.grep: | . ../mitmproxy ../netlib ../pathod
+	grep -r '$*' $|
 %.log: %.py mitm/%.html mitm/pixel.png .FORCE
 	mitmdump $(MITM_OPTIONS) $< 2>&1 | tee $@ &
 	sleep $(SLEEP)  # allow mitmproxy to start up
