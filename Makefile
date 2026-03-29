@@ -44,7 +44,20 @@ CACHE := $(DATADIR)/Cache "$(DATADIR)/Code Cache"
 BRANCH := $(shell git branch --show-current)
 REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
-BROWSER ?= $(word 1, $(shell $(WHICH) wheezy32firefox))
+# testing on tk-ish-dev docker image, firefox and w3m are available
+# testing on Debian trixie, chromium, firefox, wheezy32firefox, and w3m are.
+# on iPhone, only safari and other iOS browsers are likely suitable, even
+# with Mocha-X11 installed.
+# just set BROWSER if you have a preference, but it either has to
+# honor http_proxy and https_proxy, or have options setting up the proxy
+# added to this Makefile
+CHROME := $(word 1, $(shell $(WHICH) chromium chromium-browser))
+$(warning CHROME=$(CHROME))
+WHEEZY32FF := $(shell $(WHICH) /opt/wheezy32/usr/lib/iceweasel/iceweasel)
+# wheezy32firefox only usable when iceweasel exists
+W32FIREFOX := $(word 2, $(WHEEZY32FF) wheezy32firefox)
+FIREFOX := $(word 1, $(shell $(WHICH) firefox) $(W32FIREFOX))
+BROWSER ?= $(word 1, $(CHROME) $(FIREFOX) $(shell $(WHICH) w3m))
 $(warning BROWSER=$(BROWSER))
 TESTFILE := sarge/capabilities.html
 SSHDCONF := /etc/ssh/sshd_config
@@ -54,25 +67,19 @@ USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
 IPHONE6 := Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X)
 IPHONE6 += AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2
 IPHONE6 += Mobile/15E148
-CHROME := $(shell $(WHICH) chromium chromium-browser 2>/dev/null | head -n 1)
 WEBSITE ?= redwoodcu.org
+TESTSITE ?= example.com
 PYTHON_SCRIPTS := $(wildcard *.py)
 # leave HOSTSUFFIX blank to capture everything
 HOSTSUFFIX=
 INDEXPAGE ?=
-# make sure browser isn't blank in case of no chromium
-ifeq ($(CHROME)$(MITMBROWSER),)
- MITMBROWSER := wheezy32firefox
-else
- MITMBROWSER ?= $(CHROME)
-endif
-LOGGING := &>$(HOME)/$(notdir $(word 1, $(MITMBROWSER))).log &
-BROWSE := $(MITMBROWSER)
+LOGGING := &>$(HOME)/$(notdir $(BROWSER)).log &
+BROWSE := $(BROWSER)
 # don't use `localhost`, many Debian installs have both 127.0.0.1 and ::1
 PROXYHOST := 127.0.0.1
 PROXYPORT := 8080
 PROXY := $(PROXYHOST):$(PROXYPORT)
-ifeq ($(MITMBROWSER),$(CHROME))
+ifeq ($(BROWSER),$(CHROME))
 #BROWSE += --temp-profile  # forces new chromium instance, disables cache
 # however, --temp-profile also presumably forgets the MITM cert between runs
 # --disable-cache, suggested by claude.ai, has no discernable effect
@@ -121,7 +128,7 @@ ifneq ($(SHOWENV),)
 else  # export what's needed for envsubst and for python scripts
  export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB FIXUP PYTHONPATH
 endif
-default: make.log
+default: rebuild clean make.log
 make.log: Makefile
 	$(MAKE) timestamp proxy.stop testproxy 2>&1 | tee -a $@
 timestamp:
@@ -232,6 +239,8 @@ localserver: | $(TESTFILE)
 	 >/var/tmp/legaproxy.log 2>&1
 	-kill $$(cat $*.pid)
 	rm -f *.pid
+browse:
+	$(BROWSE) https://$(TESTSITE)/
 env:
 ifneq ($(SHOWENV),)
 	env
