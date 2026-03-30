@@ -169,6 +169,8 @@ certs:
 	$(WGET) -O- http://mitm.it/ | grep mitmproxy-ca-cert
 %.grep: | . ../mitmproxy ../netlib ../pathod
 	grep -r '$*' $|
+%.grepl: | . ../mitmproxy ../netlib ../pathod
+	grep -rl '$*' $|
 %.log: %.py mitm/%.html mitm/pixel.png .FORCE
 	mitmdump $(MITM_OPTIONS) $< 2>&1 | tee $@ &
 	sleep $(SLEEP)  # allow mitmproxy to start up
