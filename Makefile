@@ -333,18 +333,19 @@ $(INSTALLED)/swcserver: $(INSTALLED)
 	cd $@ && git checkout $(BRANCH) || true  # not all have alpine-ish
 swcversion: $(INSTALLED)/swc
 	swc --version
-tests pull status diff commit: .FORCE | ../netlib ../mitmproxy ../pathod
+tests: tests.log
+tests.log: .FORCE | ../netlib ../mitmproxy ../pathod
+	-for dir in $|; do $(MAKE) -C $$dir tests; done 2>&1 | tee $(PWD)/$@
+pull status diff commit: .FORCE | ../netlib ../mitmproxy ../pathod
 	-for dir in $|; do $(MAKE) -C $$dir $@; done
-	if [ "$@" != "tests" ]; then \
-	 if [ "$@" != "commit" ]; then \
-	  git $@; \
-	 else \
-	  git $@ -a; \
-	 fi; \
+	if [ "$@" != "commit" ]; then \
+	 git $@; \
+	else \
+	 git $@ -a; \
 	fi
 rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
 	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
 debug: reinstall clean make.log
 	tail -n 30 mitmdump.log
 .FORCE:
-.PRECIOUS: %.log
+.PRECIOUS: %.log tests.log
