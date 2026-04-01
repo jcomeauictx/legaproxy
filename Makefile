@@ -22,7 +22,7 @@ endif
 PY_VER := $(shell $(PYTHON) -c "import sys; print('.'.join(map(str, sys.version_info[:2])))")
 PYLINT ?= $(word 1, $(shell $(WHICH) pylint3 pylint true 2>/dev/null))
 ifeq ($(PYLINT),true)
-	$(warning ***NOTE*** no pylint installed, scripts unlinted)
+$(warning ***NOTE*** no pylint installed, scripts unlinted)
 endif
 PIP = $(word 1, $(shell $(WHICH) pip3 pip 2>/dev/null))
 PIP_GET := $(INSTALL) python3-pip
@@ -348,6 +348,6 @@ pull status diff commit: .FORCE | ../netlib ../mitmproxy ../pathod
 rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
 	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
 debug: reinstall clean make.log
-	tail -n 30 mitmdump.log
+	-tail -n 30 mitmdump.log
 .FORCE:
 .PRECIOUS: %.log tests.log
