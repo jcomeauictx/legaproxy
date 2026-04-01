@@ -16,8 +16,8 @@ endif
 # `make PYTHON=python2`
 PYTHON ?= $(word 1, $(shell $(WHICH) python3 python 2>/dev/null))
 ifeq ($(PYTHON),)
-	$(INSTALL) python3
-PYTHON ?= $(word 1, $(shell $(WHICH) python3 python 2>/dev/null))
+$(shell $(INSTALL) python3)
+PYTHON := $(word 1, $(shell $(WHICH) python3 python 2>/dev/null))
 endif
 PY_VER := $(shell $(PYTHON) -c "import sys; print('.'.join(map(str, sys.version_info[:2])))")
 PYLINT ?= $(word 1, $(shell $(WHICH) pylint3 pylint true 2>/dev/null))
