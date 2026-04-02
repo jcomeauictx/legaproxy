@@ -106,3 +106,8 @@ the `certutil` program. It works on Debian trixie chromium as of 2026-03.
  * for Python2, `pip2 install pyasn1==0.1.3`, `pip2 install flask==0.5.2`,
    which latter requires werkzeug==0.6.1. there may be newer versions that
    will install but those worked for me on alpine-ish.
+   also, `sudo apk install python2-dev` before attempting
+   `pip2 install urwid==1.1`; `pip2 install pillow==2.5.3`;
+   `pip2 install lxml==3.8.0` worked on a beefy desktop under the
+   alpine-ish-dev container, but I'll maybe need a much older version for
+   the iphone under iSH.

@@ -43,7 +43,7 @@ USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '
              'Version/12.1.2 Mobile/15E148'
 )
 
-def request(flow: http.HTTPFlow):
+def request(flow):
     '''
     filter requests
     '''
@@ -76,7 +76,7 @@ def request(flow: http.HTTPFlow):
         logging.debug('header "%s": "%s"', header, value)
 
 async def response(  # pylint: disable=too-many-branches
-        flow: http.HTTPFlow) -> None:
+        flow):
     '''
     filter responses
     '''
