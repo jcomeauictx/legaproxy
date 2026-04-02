@@ -78,7 +78,7 @@ def request(flow):
     for header, value in flow.request.headers.items():
         logging.debug('header "%s": "%s"', header, value)
 
-def response(flow):  # pylint: disable=too-many-branches
+async def response(flow):  # pylint: disable=too-many-branches
     '''
     filter responses
     '''
@@ -118,6 +118,8 @@ def response(flow):  # pylint: disable=too-many-branches
     if mimetype == 'text/html':
         logging.debug('adding shims and processing scripts in html')
         try:
+            fixed = await asyncio.to_thread(shimtext, text)
+        except SyntaxError:
             fixed = shimtext(text)
         except (ValueError, IndexError) as problem:
             logging.error('call to shim failed: %s', problem)
@@ -134,7 +136,10 @@ def response(flow):  # pylint: disable=too-many-branches
             logging.debug("shim didn't change content of html")
     elif mimetype.endswith('/javascript'):
         logging.debug('processing %s file', mimetype)
-        fixed = fixup(text, flow.request.path)
+        if 'asyncio' in sys.modules:
+            fixed = await asyncio.to_thread(fixup, text, flow.request.path)
+        else:
+            fixed = fixup(text, flow.request.path)
         if fixed != text:
             logging.debug('fixup modified script, saving to %s', MODIFIED)
             savefile(os.path.join(
