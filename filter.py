@@ -9,6 +9,10 @@ This will allow old computers/operating systems, smartphones, tablets,
 iPod Touch, and many other legacy devices to access the modern Web.
 '''
 import sys, os, logging, base64, hashlib  # pylint: disable=multiple-imports
+try:
+    import asyncio
+except ImportError:  # python2
+    pass
 from time import strftime
 from hashlib import sha256
 from subprocess import Popen, PIPE

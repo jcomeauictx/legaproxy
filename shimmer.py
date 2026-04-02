@@ -5,7 +5,7 @@ insert shim code into webpage
 proof of concept which may turn out to be production code
 '''
 try:
-    import HTMLParser
+    from HTMLParser import HTMLParser
 except ImportError:
     from html.parser import HTMLParser
 import sys, logging  # pylint: disable=multiple-imports
