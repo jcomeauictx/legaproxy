@@ -24,7 +24,7 @@ PYLINT ?= $(word 1, $(shell $(WHICH) pylint3 pylint true 2>/dev/null))
 ifeq ($(PYLINT),true)
 $(warning ***NOTE*** no pylint installed, scripts unlinted)
 endif
-PIP = $(word 1, $(shell $(WHICH) pip3 pip 2>/dev/null))
+PIP = $(PYTHON) -m pip
 PIP_GET := $(INSTALL) python3-pip
 ifeq ($(INSTALLER),apk)
 PIP_GET := $(INSTALL) py3-pip
