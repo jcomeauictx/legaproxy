@@ -111,3 +111,6 @@ the `certutil` program. It works on Debian trixie chromium as of 2026-03.
    `pip2 install lxml==3.8.0` worked on a beefy desktop under the
    alpine-ish-dev container, but I'll maybe need a much older version for
    the iphone under iSH.
+   `pip2 install mock==3.0.5`; `pip install six==1.7.3`, since 1.5.2 was
+   automatically installed by previous packages and it's not enough for
+   nosetests.
