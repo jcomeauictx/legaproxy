@@ -103,4 +103,6 @@ the `certutil` program. It works on Debian trixie chromium as of 2026-03.
       from mitmproxy import http, ctx
   ModuleNotFoundError: No module named 'mitmproxy'
   ```
- * for Python2, `pip2 install pyasn1==0.1.3`
+ * for Python2, `pip2 install pyasn1==0.1.3`, `pip2 install flask==0.5.2`,
+   which latter requires werkzeug==0.6.1. there may be newer versions that
+   will install but those worked for me on alpine-ish.
