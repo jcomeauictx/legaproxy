@@ -120,7 +120,7 @@ ifneq ($(SHOWENV),)
 else  # export what's needed for envsubst and for python scripts
  export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
 endif
-default: $(BRANCH).branch debug
+default: $(BRANCH).branch clean reinstall tests
 make.log: Makefile
 	$(MAKE) timestamp proxy.stop testproxy 2>&1 | tee -a $@
 timestamp:
