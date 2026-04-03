@@ -338,13 +338,15 @@ swcversion: $(INSTALLED)/swc
 tests: tests.log
 tests.log: .FORCE | ../netlib ../mitmproxy
 	-for dir in $|; do $(MAKE) -C $$dir tests; done 2>&1 | tee $(PWD)/$@
-pull status diff commit: .FORCE | ../netlib ../mitmproxy ../pathod
+pull status diff commit: | ../netlib ../mitmproxy ../pathod
 	-for dir in $|; do $(MAKE) -C $$dir $@; done
 	if [ "$@" != "commit" ]; then \
 	 git $@; \
 	else \
 	 git $@ -a; \
 	fi
+%.diff: | ../netlib ../mitmproxy ../pathod
+	for dir in $|; do $(MAKE) -C $$dir $@; done
 rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
 	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
 debug: reinstall clean make.log
