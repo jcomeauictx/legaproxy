@@ -337,7 +337,8 @@ swcversion: $(INSTALLED)/swc
 	swc --version
 tests: tests.log
 tests.log: .FORCE | ../netlib ../mitmproxy
-	-for dir in $|; do $(MAKE) -C $$dir tests; done 2>&1 | tee $(PWD)/$@
+	-for dir in $|; do \
+	 $(MAKE) PYTHON=$(PYTHON) -C $$dir tests; done 2>&1 | tee $(PWD)/$@
 pull status diff commit: | ../netlib ../mitmproxy ../pathod
 	-for dir in $|; do $(MAKE) -C $$dir $@; done
 	if [ "$@" != "commit" ]; then \
