@@ -114,6 +114,3 @@ the `certutil` program. It works on Debian trixie chromium as of 2026-03.
    `pip2 install mock==3.0.5`; `pip install six==1.7.3`, since 1.5.2 was
    automatically installed by previous packages and it's not enough for
    nosetests.
- * for Python3, the version of pyOpenSSL running on the tk-ish-dev docker
-   image is the apk package py3-openssl-20.0.1-r1. the package apparently
-   is not available in the iSH package repo.
