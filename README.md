@@ -114,3 +114,10 @@ the `certutil` program. It works on Debian trixie chromium as of 2026-03.
    `pip2 install mock==3.0.5`; `pip install six==1.7.3`, since 1.5.2 was
    automatically installed by previous packages and it's not enough for
    nosetests.
+ * `make PYTHON=python2` just now had the fllowing nosetests results
+   on the iphone 8, and it didn't lock up as it's been doing on
+   the iphone 6 and docker image on desktop. progress!
+    Ran 88 tests in 33.825s
+    FAILED (failures=7)
+    Ran 155 tests in 175.204s
+    FAILED (errors=11, failures=2)
