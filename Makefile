@@ -40,6 +40,8 @@ PIP_INSTALL += --break-system-packages
 endif
 HOST ?= 127.0.0.1
 DATADIR := $(HOME)/.legaproxy/chrome
+# limit `make log` to this many entries
+LOGLIMIT ?= 10000
 CACHE := $(DATADIR)/Cache "$(DATADIR)/Code Cache"
 BRANCH := $(shell git branch --show-current)
 REMOTES := $(filter-out original, $(shell git remote))
@@ -340,8 +342,8 @@ tests.log: .FORCE | ../netlib ../mitmproxy
 	-for dir in $|; do \
 	 $(MAKE) PYTHON=$(PYTHON) -C $$dir tests; done 2>&1 | tee $(PWD)/$@
 log: | ../netlib ../mitmproxy ../pathod
-	-for dir in $|; do $(MAKE) -C $$dir $@ | head; done
-	git $@ | head
+	-for dir in $|; do $(MAKE) LOGLIMIT=$(LOGLIMIT) -C $$dir $@; done
+	git $@ | head -n $(LOGLIMIT)
 pull status diff commit: | ../netlib ../mitmproxy ../pathod
 	-for dir in $|; do $(MAKE) -C $$dir $@; done
 	if [ "$@" != "commit" ]; then \
