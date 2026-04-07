@@ -121,3 +121,5 @@ the `certutil` program. It works on Debian trixie chromium as of 2026-03.
     FAILED (failures=7)
     Ran 155 tests in 175.204s
     FAILED (errors=11, failures=2)
+ * previous results were due to missing `urwid` and `requests` modules.
+   now installed, still hanging in tests after SSL handshake failed.
