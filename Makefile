@@ -370,5 +370,8 @@ rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
 	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
 debug: reinstall clean make.log
 	-tail -n 30 mitmdump.log
+%.results:
+	egrep '^(Ran|FAILED) ' $*.log
+results: tests.results
 .FORCE:
 .PRECIOUS: %.log tests.log
