@@ -364,6 +364,8 @@ pull status diff commit: | ../netlib ../mitmproxy ../pathod
 	fi
 %.diff: | ../netlib ../mitmproxy ../pathod
 	for dir in $|; do $(MAKE) -C $$dir $@; done
+tests.%.diff: | tests.log.%
+	diff -y <(grep -v '^DEBUG:' tests.log) <(grep -v '^DEBUG:' $|) | less
 rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
 	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
 debug: reinstall clean make.log
