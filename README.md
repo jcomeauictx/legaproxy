@@ -6,16 +6,6 @@ difficult to impossible to use many webapps and sites due to expired
 certificates and use of javascript features that my phones and other devices
 don't support.
 
-This application was based on the getting started guide at
-<https://docs.docker.com/get-started/>, tutorial at
-<https://github.com/docker/getting-started>, and sample app source at
-<https://github.com/docker/getting-started-app>, because originally I
-thought Babel was my best potential solution to the javascript problem,
-and, not wanting to pollute my dev machine with npm ever again, was going
-to run it in a Docker image. I'm glad I did, because I learned a lot about
-Docker, but decided to code my own JavaScript translator after finding the
-ANTLR4 parser project.
-
 ## Installing MITM certificate
 
 Chrome/Chromium ignores the CA certificate store whose instructions are
@@ -26,6 +16,21 @@ the certificate into "Trusted Certificates".
 
 Alternatively, the Makefile attempts to install the certificate by utilizing
 the `certutil` program. It works on Debian trixie chromium as of 2026-03.
+
+## Testing
+
+Since this is intended to run on the devices themselves, it should be
+tested on an Alpine image similar to that which runs under the iOS iSH app.
+Clone and cd to my `tk-ish-dev` repo, the `docker` subdirectory, and
+`make login`, fixing all problems that arise in the process, until you're
+sitting at a prompt under the Docker image. Then
+cd to ../../legaproxy and `make`. That installs the current `alpine-ish`
+branch of mitmproxy, netlib, and pathod to your python3.9 local library and
+runs the nosetest suite. Analyze the `tests.log` errors, edit the
+appropriate files, and `make` again to test your changes. If you saved
+the previous results as tests.log.1, you can compare using
+`diff -y <(grep -v '^DEBUG:' tests.log) <(grep -v '^DEBUG:' tests.log.1)`,
+expanding your xterm to full screen for easier viewing.
 
 ## Developer notes
 
