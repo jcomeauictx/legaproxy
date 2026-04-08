@@ -24,6 +24,7 @@ PYLINT ?= $(word 1, $(shell $(WHICH) pylint3 pylint true 2>/dev/null))
 ifeq ($(PYLINT),true)
 $(warning ***NOTE*** no pylint installed, scripts unlinted)
 endif
+PY := $(notdir $(PYTHON:.exe=))
 PIP = $(PYTHON) -m pip
 PIP_GET := $(INSTALL) python3-pip
 ifeq ($(INSTALLER),apk)
@@ -338,9 +339,19 @@ $(INSTALLED)/swcserver: $(INSTALLED)
 swcversion: $(INSTALLED)/swc
 	swc --version
 tests: tests.log
-tests.log: .FORCE | ../netlib ../mitmproxy
+tests.log: tests.log.rotate tests.$(PY).log.rotate .FORCE | \
+ ../netlib ../mitmproxy
 	-for dir in $|; do \
 	 $(MAKE) PYTHON=$(PYTHON) -C $$dir tests; done 2>&1 | tee $(PWD)/$@
+	cp $@ tests.$(PY).log
+%.rotate:
+	rm -f $*.???  # get rid of all files 100+
+	for i in $$(seq 1 99 | tac); do \
+	 if [ -e $*.$$i ]; then \
+	  mv -f $*.$$i $*.$$((i + 1)); \
+	 fi; \
+	done
+	[ -e "$*" ] && cp -f $* $*.1 || true
 log: | ../netlib ../mitmproxy ../pathod
 	-for dir in $|; do $(MAKE) LOGLIMIT=$(LOGLIMIT) -C $$dir $@; done
 	git $@ | head -n $(LOGLIMIT)
