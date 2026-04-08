@@ -123,3 +123,9 @@ the `certutil` program. It works on Debian trixie chromium as of 2026-03.
     FAILED (errors=11, failures=2)
  * previous results were due to missing `urwid` and `requests` modules.
    now installed, still hanging in tests after SSL handshake failed.
+ * two hanging tests on python3 were commented out, now 88 + 244 tests are
+   being run.
+ * hanging test on python2, `test_server.TestHTTPS.test_clientcert`, was
+   found to be using a PEM cert in `/tmp/tmp*/rep` that's identical to
+   ../mitmproxy/test/data/dercert, an old (2013 expiration) GitHub cert.
+   could that be why some of these tests fail or hang?
