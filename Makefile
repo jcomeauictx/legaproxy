@@ -345,12 +345,12 @@ tests.log: tests.log.rotate tests.$(PY).log.rotate .FORCE | \
 	 $(MAKE) PYTHON=$(PYTHON) -C $$dir tests; done 2>&1 | tee $(PWD)/$@
 	cp $@ tests.$(PY).log
 %.rotate:
-	rm -f $*.???  # get rid of all files 100+
-	for i in $$(seq 1 99 | tac); do \
+	for i in $$(seq 1 9 | tac); do \
 	 if [ -e $*.$$i ]; then \
 	  mv -f $*.$$i $*.$$((i + 1)); \
 	 fi; \
 	done
+	rm -f $*.??  # get rid of all files 10+
 	[ -e "$*" ] && cp -f $* $*.1 || true
 log: | ../netlib ../mitmproxy ../pathod
 	-for dir in $|; do $(MAKE) LOGLIMIT=$(LOGLIMIT) -C $$dir $@; done
