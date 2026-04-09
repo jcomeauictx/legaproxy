@@ -373,5 +373,12 @@ debug: reinstall clean make.log
 %.results:
 	egrep '^(Ran|FAILED) ' $*.log
 results: tests.results
+%.pem: %
+	openssl x509 -in $< -inform der -out $@ -outform pem
+%.text: %
+	openssl x509 -in $< -inform der -noout -text || \
+	 openssl x509 -in $< -inform pem --noout -text
+%.der: %.pem
+	openssl x509 -in $< -inform pem -out $@ -outform der
 .FORCE:
 .PRECIOUS: %.log tests.log
