@@ -129,3 +129,6 @@ the `certutil` program. It works on Debian trixie chromium as of 2026-03.
    found to be using a PEM cert in `/tmp/tmp*/rep` that's identical to
    ../mitmproxy/test/data/dercert, an old (2013 expiration) GitHub cert.
    could that be why some of these tests fail or hang?
+ * attempting to figure out handshake errors on python2, at the command line
+   `t = TestSNI()`, then `t.test_echo()`, getting
+   `TestSNI instance has no attribute port`
