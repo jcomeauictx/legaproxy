@@ -174,6 +174,12 @@ certs:
 	grep -r '$*' $|
 %.grepl: | . ../mitmproxy ../netlib ../pathod
 	grep -rl '$*' $|
+# these two rules only match full words
+# e.g. imp.grep will match imp but not import
+%.grepw: | . ../mitmproxy ../netlib ../pathod
+	grep -r '\<$*\>' $|
+%.grepwl: | . ../mitmproxy ../netlib ../pathod
+	grep -rl '\<$*\>' $|
 %.log: %.py mitm/%.html mitm/pixel.png .FORCE
 	mitmdump $(MITM_OPTIONS) $< 2>&1 | tee $@ &
 	sleep $(SLEEP)  # allow mitmproxy to start up
