@@ -174,6 +174,12 @@ certs:
 	grep -r '$*' $|
 %.grepl: | . ../mitmproxy ../netlib ../pathod
 	grep -rl '$*' $|
+# these two rules only match full words
+# e.g. imp.grep will match imp but not import
+%.grepw: | . ../mitmproxy ../netlib ../pathod
+	grep -r '\<$*\>' $|
+%.grepwl: | . ../mitmproxy ../netlib ../pathod
+	grep -rl '\<$*\>' $|
 %.log: %.py mitm/%.html mitm/pixel.png .FORCE
 	mitmdump $(MITM_OPTIONS) $< 2>&1 | tee $@ &
 	sleep $(SLEEP)  # allow mitmproxy to start up
@@ -345,12 +351,12 @@ tests.log: tests.log.rotate tests.$(PY).log.rotate .FORCE | \
 	 $(MAKE) PYTHON=$(PYTHON) -C $$dir tests; done 2>&1 | tee $(PWD)/$@
 	cp $@ tests.$(PY).log
 %.rotate:
-	rm -f $*.???  # get rid of all files 100+
-	for i in $$(seq 1 99 | tac); do \
+	for i in $$(seq 1 9 | tac); do \
 	 if [ -e $*.$$i ]; then \
 	  mv -f $*.$$i $*.$$((i + 1)); \
 	 fi; \
 	done
+	rm -f $*.??  # get rid of all files 10+
 	[ -e "$*" ] && cp -f $* $*.1 || true
 log: | ../netlib ../mitmproxy ../pathod
 	-for dir in $|; do $(MAKE) LOGLIMIT=$(LOGLIMIT) -C $$dir $@; done
@@ -373,5 +379,12 @@ debug: reinstall clean make.log
 %.results:
 	egrep '^(Ran|FAILED) ' $*.log
 results: tests.results
+%.pem: %
+	openssl x509 -in $< -inform der -out $@ -outform pem
+%.text: %
+	openssl x509 -in $< -inform der -noout -text || \
+	 openssl x509 -in $< -inform pem --noout -text
+%.der: %.pem
+	openssl x509 -in $< -inform pem -out $@ -outform der
 .FORCE:
 .PRECIOUS: %.log tests.log
