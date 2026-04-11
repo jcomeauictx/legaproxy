@@ -180,7 +180,7 @@ certs:
 	grep -r '\<$*\>' $|
 %.grepwl: | . ../mitmproxy ../netlib ../pathod
 	grep -rl '\<$*\>' $|
-%.log: %.py mitm/%.html mitm/pixel.png .FORCE
+%.log: %.py mitm/%.html mitm/pixel.png %.log.rotate .FORCE
 	mitmdump $(MITM_OPTIONS) $< 2>&1 | tee $@ &
 	sleep $(SLEEP)  # allow mitmproxy to start up
 	rm -rf $(CACHE)  # delete browser cache
