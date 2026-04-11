@@ -213,7 +213,7 @@ proxy.stop:
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
 	rm -f mitmdump.pid
-	mv mitmdump.log /var/tmp/mitmdump.$$(date +%Y%m%d%H%M%S).log || true
+	$(MAKE) mitmdump.log.rotate
 clean:
 	$(MAKE) stop
 	rm -rf dummy $(GENERATED) __pycache__
@@ -332,13 +332,13 @@ $(INSTALLED)/swcserver: $(INSTALLED)
 	touch $@
 /opt/wheezy32/usr/bin/iceweasel: \
  | $(INSTALLED)/debian-release-7.gpg $(INSTALLED)/debootstrap
-	sudo mkdir -p $@.tmp
+	sudo mkdir -p /opt/wheezy32.tmp
 	sudo debootstrap \
 	 --arch=i386 \
 	 --include=iceweasel,chromium \
 	 --keyring=$< \
-	 wheezy $@.tmp $(ARCHIVE)
-	sudo mv $@.tmp $@
+	 wheezy /opt/wheezy32.tmp $(ARCHIVE)
+	sudo mv /opt/wheezy32.tmp /opt/wheezy32
 ../smokesignal ../swc ../netlib ../mitmproxy ../pathod:
 	cd .. && git clone --quiet $(GITPREFIX)$(@F)
 	cd $@ && git checkout $(BRANCH) || true  # not all have alpine-ish
