@@ -128,12 +128,12 @@ else  # export what's needed for envsubst and for python scripts
  export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
 endif
 default: debug
-nosetests: clean reinstall tests tests.results
+retest: clean reinstall test tests.results
 make.log: Makefile
 	$(MAKE) timestamp proxy.stop testproxy 2>&1 | tee -a $@
 timestamp:
 	@echo starting run at $$(date -u) >&2
-test: run
+test: tests.log
 # prefer pip-installed mitmdump over Debian package
 # as of Trixie, it still attempts to import blinker._saferef, which hasn't
 # existed for years.
@@ -156,17 +156,6 @@ $(INSTALLED)/pip: $(INSTALLED) .FORCE
 	envsubst < $< > $@
 $(HOME)/%:
 	mkdir --parents $@
-run:
-	$(MAKE) -C $(PYTHONPATH)
-rerun:
-	$(MAKE) retouch
-	$(MAKE) run
-bind-rerun:
-	$(MAKE) retouch
-	$(MAKE) bind-run
-reconnect reattach:
-	$(MAKE) retouch
-	$(MAKE) connect
 stop: smokesignal.stop proxy.stop
 async: async.log | $(INSTALLED)/w3m
 async.stop:
