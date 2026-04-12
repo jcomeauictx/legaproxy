@@ -155,17 +155,6 @@ $(INSTALLED)/pip: $(INSTALLED) .FORCE
 	envsubst < $< > $@
 $(HOME)/%:
 	mkdir --parents $@
-run:
-	$(MAKE) -C $(PYTHONPATH)
-rerun:
-	$(MAKE) retouch
-	$(MAKE) run
-bind-rerun:
-	$(MAKE) retouch
-	$(MAKE) bind-run
-reconnect reattach:
-	$(MAKE) retouch
-	$(MAKE) connect
 stop: smokesignal.stop proxy.stop
 async: async.log | $(INSTALLED)/w3m
 async.stop:
