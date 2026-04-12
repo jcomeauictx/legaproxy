@@ -1,7 +1,7 @@
 # allow Bashisms
 SHELL := /bin/bash
 # keep track of dependencies
-INSTALLED := .installed
+INSTALLED := $(CURDIR)/.installed
 # make sure we can find executables installed in $HOME/*/bin
 PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin:.
 WHICH := command -v
@@ -140,10 +140,10 @@ timestamp:
 test: tests.log
 $(INSTALLED)/mitmdump: $(INSTALLED)/$(INSTALLER)/mitmdump
 	touch $@
-$(INSTALLED)/apk/mitmdump: .FORCE
+$(INSTALLED)/apk/mitmdump: .FORCE | $(INSTALLED)/apk
 	$(MAKE) reinstall
 	touch $@
-$(INSTALLED)/apt-get/mitmdump:
+$(INSTALLED)/apt-get/mitmdump: | $(INSTALLED)/apt-get
 	# on desktop, prefer pip-installed mitmdump over Debian package;
 	# as of Trixie, it still attempts to import blinker._saferef,
 	# which hasn't existed for years.
@@ -160,17 +160,16 @@ $(INSTALLED)/setuptools: | $(INSTALLED)/pip
 	touch $@
 $(INSTALLED)/pip: $(INSTALLED)/$(PYTHON)/pip
 	touch $@
-$(INSTALLED)/$(PYTHON)/pip: | $(INSTALLED)/$(PYTHON)
-	touch $@
-$(INSTALLED)/python2/pip: | get-pip.py
+$(INSTALLED)/python2/pip: | get-pip.py $(INSTALLED)/python2
 	python2 $|
 	touch $@
-$(INSTALLED)/python3/pip:
+$(INSTALLED)/python3/pip: | $(INSTALLED)/python3
 	$(PIP_GET)
 	touch $@
 %: %.template Makefile
 	envsubst < $< > $@
 $(HOME)/%:
+	# for making $(INSTALLED) and subdirs
 	mkdir --parents $@
 stop: smokesignal.stop proxy.stop
 async: async.log | $(INSTALLED)/w3m
@@ -209,7 +208,7 @@ certs:
 	else \
 	 : "creating an empty logfile" > $@; \
 	 echo starting up $*; \
-	 $* $(MITM_OPTIONS) $(PWD)/filter.py \
+	 $* $(MITM_OPTIONS) $(CURDIR)/filter.py \
 	  $(MITM_SAVE) mitmproxy.log &>$@ & \
 	  echo $$! >$*.pid; \
 	 sleep $(SLEEP); \
@@ -314,14 +313,13 @@ $(INSTALLED)/certutil: $(INSTALLED)
 # the cargo installed swc doesn't inline helpers, and alpine/iSH
 # can't compile it, so we need to use a remote executable for now.
 $(INSTALLED)/swc: $(INSTALLED)/swcserver
-	ln -sf $(PWD)/remoteswc $(HOME)/.local/bin/$(@F)
+	ln -sf $(CURDIR)/remoteswc $(HOME)/.local/bin/$(@F)
 	touch $@
 # default install is to use apt-get, apk, dnf, etc.
-$(INSTALLED)/%: $(INSTALLED) .FORCE
-	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 $(INSTALL) $* && \
-	 touch $@ || rm -f $@; \
-	fi
+# NOTE: must make explicit $(INSTALLED)/something rules, not a pattern rule,
+# or $(HOME)/% directory creation may not work properly.
+# THE RULE: shortest stem wins, earliest breaks the tie
+#$(INSTALLED)/%: $(INSTALLED)
 $(INSTALLED)/cargo: $(INSTALLED)/rustup .FORCE
 	# don't bother installing Debian stable cargo, always too old.
 	if [ -z "$$($(WHICH) $(@F))" ] || ! $(@F) --version; then \
@@ -364,7 +362,7 @@ swcversion: $(INSTALLED)/swc
 tests.log: tests.log.rotate tests.$(PY).log.rotate .FORCE | \
  ../netlib ../mitmproxy
 	-for dir in $|; do \
-	 $(MAKE) PYTHON=$(PYTHON) -C $$dir tests; done 2>&1 | tee $(PWD)/$@
+	 $(MAKE) PYTHON=$(PYTHON) -C $$dir tests; done 2>&1 | tee $(CURDIR)/$@
 	cp $@ tests.$(PY).log
 %.rotate:
 	for i in $$(seq 1 9 | tac); do \
