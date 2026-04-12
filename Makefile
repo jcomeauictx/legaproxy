@@ -97,7 +97,7 @@ endif
 #http_proxy=http://$(PROXY)
 # copied from python-antlr-example Makefile
 PROXY_SETTINGS := https_proxy=http://$(PROXY) http_proxy=http://$(PROXY)
-WGET ?= $(PROXY_SETTINGS) wget
+WGET ?= $(PROXY_SETTINGS) wget -q
 NSSDB ?= $(HOME)/.pki/nssdb
 SQLDB := sql:$(NSSDB)
 CERTNICK := mitmproxy
@@ -123,7 +123,8 @@ ifneq ($(SHOWENV),)
 else  # export what's needed for envsubst and for python scripts
  export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
 endif
-default: clean reinstall tests
+default: debug
+nosetests: clean reinstall tests tests.results
 make.log: Makefile
 	$(MAKE) timestamp proxy.stop testproxy 2>&1 | tee -a $@
 timestamp:
@@ -169,7 +170,8 @@ async.stop:
 # have to fetch certs to create them? seems that way.
 # (later) nope, not true, but maybe needs a delay. so this should still help
 certs:
-	$(WGET) -O- http://mitm.it/ | grep mitmproxy-ca-cert
+	$(WGET) -O- http://mitm.it/ | \
+	 grep --color=always -E 'mitmproxy-ca-cert|$$'
 %.grep: | . ../mitmproxy ../netlib ../pathod
 	grep -r '$*' $|
 %.grepl: | . ../mitmproxy ../netlib ../pathod
@@ -374,7 +376,7 @@ tests.%.diff: | tests.log.%
 	diff -y <(grep -v '^DEBUG:' tests.log) <(grep -v '^DEBUG:' $|) | less
 rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
 	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
-debug: reinstall clean make.log
+debug: reinstall stop clean make.log
 	-tail -n 30 mitmdump.log
 %.results:
 	egrep '^(Ran|FAILED) ' $*.log
