@@ -5,7 +5,9 @@ INSTALLED := .installed
 # make sure we can find executables installed in $HOME/*/bin
 PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin:.
 WHICH := command -v
-INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf)))
+# no need for `apt` in this list, any that have `apt` also have `apt-get`,
+# and the latter covers far more systems.
+INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt-get yum dnf)))
 ifeq ($(INSTALLER),apk)
 INSTALL := sudo $(INSTALLER) add
 else
@@ -304,7 +306,7 @@ $(INSTALLED)/certutil: $(INSTALLED) .FORCE
 $(INSTALLED)/swc: $(INSTALLED)/swcserver
 	ln -sf $(PWD)/remoteswc $(HOME)/.local/bin/$(@F)
 	touch $@
-# default install is to use apt, apk, dnf, etc.
+# default install is to use apt-get, apk, dnf, etc.
 $(INSTALLED)/%: $(INSTALLED) .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(INSTALL) $* && \
