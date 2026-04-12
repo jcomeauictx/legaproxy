@@ -15,10 +15,13 @@ INSTALL := sudo $(INSTALLER) install -y
 endif
 # python3 preferred, but you can attempt to run it under python2:
 # `make PYTHON=python2`
-PYTHON ?= $(word 1, $(shell $(WHICH) python3 python 2>/dev/null))
+# NOTE: now that we're using $(PYTHON) as part of a path ($(INSTALLED...)
+# we're only using the name, not the full path. so if you're using a custom
+# python under /usr/local/bin or wherever, you also have to set PATH.
+PYTHON ?= $(notdir $(word 1, $(shell $(WHICH) python3 python python2)))
 ifeq ($(PYTHON),)
 $(shell $(INSTALL) python3)
-PYTHON := $(word 1, $(shell $(WHICH) python3 python 2>/dev/null))
+PYTHON := python3
 endif
 PY_VER := $(shell $(PYTHON) -c "import sys; print('.'.join(map(str, sys.version_info[:2])))")
 PYLINT ?= $(word 1, $(shell $(WHICH) pylint3 pylint true 2>/dev/null))
@@ -153,11 +156,12 @@ $(INSTALLED)/setuptools: $(INSTALLED)/pip .FORCE
 	 $(PIP_INSTALL) $(@F); \
 	fi
 	touch $@
-$(INSTALLED)/pip: $(INSTALLED) .FORCE
+$(INSTALLED)/pip: .FORCE | $(INSTALLED)
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(PIP_GET); \
 	fi
 	touch $@
+$(INSTALLED)/$(PYTHON)/pip | $(INSTALLED)/$(PYTHON)
 %: %.template Makefile
 	envsubst < $< > $@
 $(HOME)/%:
