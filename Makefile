@@ -5,8 +5,7 @@ INSTALLED := .installed
 # make sure we can find executables installed in $HOME/*/bin
 PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin:.
 WHICH := command -v
-INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf \
- 2>/dev/null)))
+INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt apt-get yum dnf)))
 ifeq ($(INSTALLER),apk)
 INSTALL := sudo $(INSTALLER) add
 else
@@ -140,7 +139,11 @@ test: tests.log
 # existed for years.
 $(INSTALLED)/mitmdump: $(INSTALLED)/setuptools $(INSTALLED)/swc .FORCE
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 $(PIP_INSTALL) $(MITM_PKG); \
+	 if [ "$(INSTALLER)" = "apk" ]; then \
+	  $(MAKE) reinstall; \
+	 else \
+	  $(PIP_INSTALL) $(MITM_PKG); \
+	 fi ;\
 	fi
 	touch $@
 $(INSTALLED)/setuptools: $(INSTALLED)/pip .FORCE
@@ -176,27 +179,31 @@ certs:
 	grep -r '\<$*\>' $|
 %.grepwl: | . ../mitmproxy ../netlib ../pathod
 	grep -rl '\<$*\>' $|
+# the following is the recipe for async.log and possibly others
 %.log: %.py mitm/%.html mitm/pixel.png %.log.rotate .FORCE
+	@echo using %.log recipe for async.py and similar scripts >&2
 	mitmdump $(MITM_OPTIONS) $< 2>&1 | tee $@ &
 	sleep $(SLEEP)  # allow mitmproxy to start up
 	rm -rf $(CACHE)  # delete browser cache
-	$(BROWSE) http://example.com/
+	-$(BROWSE) http://example.com/
 	read -p "<enter> to terminate..."
 	$(MAKE) $*.stop
-%.log: | $(INSTALLED)/%
+# the following is the recipe for mitmdump.log, and possibly others
+%.log: .FORCE | $(INSTALLED)/%
+	@echo using %.log recipe for mitmdump >&2
 	pid=$$(cat $*.pid 2>/dev/null); \
 	if [ "$$pid" ]; then \
 	 echo $* is already running >&2; \
 	else \
 	 : "creating an empty logfile" > $@; \
+	 echo starting up $*; \
 	 $* $(MITM_OPTIONS) $(PWD)/filter.py \
 	  $(MITM_SAVE) mitmproxy.log &>$@ & \
 	  echo $$! >$*.pid; \
 	 sleep $(SLEEP); \
 	fi
-testproxy: mitmdump.log certs $(INSTALLED)/cert \
- $(INSTALLED)/mitmdump | \
- $(DATADIR)
+testproxy: $(INSTALLED)/mitmdump mitmdump.log certs | $(DATADIR)
+	@echo starting testproxy >&2
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
 	read -p "<enter> to terminate..."
@@ -209,6 +216,7 @@ proxy.stop:
 	 echo Nothing to stop: mitmdump has not been running >&2; \
 	fi
 	rm -f mitmdump.pid
+	@echo rotating mitmdump.log after stopping
 	$(MAKE) mitmdump.log.rotate
 clean:
 	$(MAKE) stop
@@ -268,6 +276,7 @@ push: ../netlib ../mitmproxy ../pathod
 %.pylint: %.py
 	$(PYLINT) $<
 pylint: $(PYTHON_SCRIPTS:.py=.pylint)
+# the cert needs to be installed before launching chromium (at least)
 $(INSTALLED)/cert: $(CERTFILE) $(NSSDB)/cert9.db \
  | $(HOME)/.pki/nssdb/cert9.db $(INSTALLED)/certutil
 	if certutil -d $(SQLDB) -L -n "$(CERTNICK)"; then \
