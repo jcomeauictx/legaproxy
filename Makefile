@@ -138,30 +138,36 @@ make.log: .FORCE
 timestamp:
 	@echo starting run at $$(date -u) >&2
 test: tests.log
-# on desktop:
-# prefer pip-installed mitmdump over Debian package
-# as of Trixie, it still attempts to import blinker._saferef, which hasn't
-# existed for years.
-$(INSTALLED)/mitmdump: $(INSTALLED)/setuptools $(INSTALLED)/swc .FORCE
-	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 if [ "$(INSTALLER)" = "apk" ]; then \
-	  $(MAKE) reinstall; \
-	 else \
-	  $(PIP_INSTALL) $(MITM_PKG); \
-	 fi ;\
-	fi
+$(INSTALLED)/mitmdump: $(INSTALLED)/$(INSTALLER)/mitmdump
 	touch $@
-$(INSTALLED)/setuptools: $(INSTALLED)/pip .FORCE
+$(INSTALLED)/apk/mitmdump: .FORCE
+	$(MAKE) reinstall
+	touch $@
+$(INSTALLED)/apt-get/mitmdump:
+	# on desktop, prefer pip-installed mitmdump over Debian package;
+	# as of Trixie, it still attempts to import blinker._saferef,
+	# which hasn't existed for years.
+	$(PIP_INSTALL) $(MITM_PKG)
+	touch $@
+# not sure whether setuptools needs to be installed separately any more.
+# seems to me if it's needed it will be pullled in by whatever needs it.
+# FIXME: if this is made a dependency on anything, flesh out the recipe
+# to use distro installer where available
+$(INSTALLED)/setuptools: | $(INSTALLED)/pip
 	if ! $(PYTHON) -c 'import distutils'; then \
 	 $(PIP_INSTALL) $(@F); \
 	fi
 	touch $@
-$(INSTALLED)/pip: .FORCE | $(INSTALLED)
-	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 $(PIP_GET); \
-	fi
+$(INSTALLED)/pip: $(INSTALLED)/$(PYTHON)/pip
 	touch $@
-$(INSTALLED)/$(PYTHON)/pip | $(INSTALLED)/$(PYTHON)
+$(INSTALLED)/$(PYTHON)/pip: | $(INSTALLED)/$(PYTHON)
+	touch $@
+$(INSTALLED)/python2/pip: | get-pip.py
+	python2 $|
+	touch $@
+$(INSTALLED)/python3/pip:
+	$(PIP_GET)
+	touch $@
 %: %.template Makefile
 	envsubst < $< > $@
 $(HOME)/%:
@@ -299,14 +305,14 @@ $(INSTALLED)/cert: $(CERTFILE) $(NSSDB)/cert9.db \
 $(NSSDB)/cert9.db:
 	mkdir -p $(@D)
 	certutil -d $(SQLDB) -N --empty-password
-# force reinstall of executables that may have been removed
-$(INSTALLED)/certutil: $(INSTALLED) .FORCE
+# consider forcing reinstall of executables that may have been removed
+$(INSTALLED)/certutil: $(INSTALLED)
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(INSTALL) libnss3-tools; \
 	 touch $@; \
 	fi
-# the cargo installed swc doesn't inline helpers, and alpine/iSH can't
-# compile it, so we need to use a remote executable for now.
+# the cargo installed swc doesn't inline helpers, and alpine/iSH
+# can't compile it, so we need to use a remote executable for now.
 $(INSTALLED)/swc: $(INSTALLED)/swcserver
 	ln -sf $(PWD)/remoteswc $(HOME)/.local/bin/$(@F)
 	touch $@
