@@ -127,12 +127,15 @@ ifneq ($(SHOWENV),)
 else  # export what's needed for envsubst and for python scripts
  export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
 endif
-default: clean reinstall tests
-make.log: Makefile
+default: make.log
+retest:
+	clean reinstall test
+make.log: .FORCE
 	$(MAKE) timestamp proxy.stop testproxy 2>&1 | tee -a $@
 timestamp:
 	@echo starting run at $$(date -u) >&2
-test: run
+test: tests.log
+# on desktop:
 # prefer pip-installed mitmdump over Debian package
 # as of Trixie, it still attempts to import blinker._saferef, which hasn't
 # existed for years.
@@ -337,7 +340,6 @@ $(INSTALLED)/swcserver: $(INSTALLED)
 	cd $@ && git checkout $(BRANCH) || true  # not all have alpine-ish
 swcversion: $(INSTALLED)/swc
 	swc --version
-tests: tests.log
 tests.log: tests.log.rotate tests.$(PY).log.rotate .FORCE | \
  ../netlib ../mitmproxy
 	-for dir in $|; do \
