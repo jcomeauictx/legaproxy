@@ -108,15 +108,19 @@ ARCHIVE := https://archive.debian.org/debian
 GITPREFIX := $(dir $(shell git remote get-url origin))
 MITM_OPTIONS := --anticache
 ifeq ($(INSTALLER),apk)
-MITM_OPTIONS += -z -b $(PROXYHOST) -p $(PROXYPORT) -s
+MITM_OPTIONS += -a -z -b $(PROXYHOST) -p $(PROXYPORT) -s
 MITM_SAVE := -w
 # slow startup if running under iSH
 SLEEP ?= 10
+# old mitmproxy 0.9.x: web app served at http://mitm/ (APP_DOMAIN default)
+CERT_APP_URL := http://mitm/
 else
 MITM_OPTIONS += --anticomp --flow-detail 3 \
  --listen-host $(PROXYHOST) --listen-port $(PROXYPORT) --scripts
 MITM_SAVE := --save-stream-file
 SLEEP ?= 3
+# modern mitmproxy: mitm.it is the magic cert-download domain
+CERT_APP_URL := http://mitm.it/
 endif
 ifneq ($(SHOWENV),)
  export
@@ -170,7 +174,7 @@ async.stop:
 # have to fetch certs to create them? seems that way.
 # (later) nope, not true, but maybe needs a delay. so this should still help
 certs:
-	$(WGET) -O- http://mitm.it/ | \
+	$(WGET) -O- $(CERT_APP_URL) | \
 	 grep --color=always -E 'mitmproxy-ca-cert|$$'
 %.grep: | . ../mitmproxy ../netlib ../pathod
 	grep -r '$*' $|
@@ -376,8 +380,8 @@ tests.%.diff: | tests.log.%
 	diff -y <(grep -v '^DEBUG:' tests.log) <(grep -v '^DEBUG:' $|) | less
 rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
 	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
-debug: reinstall stop clean make.log
-	-tail -n 30 mitmdump.log
+debug: clean reinstall make.log
+	#-tail -n 30 mitmdump.log
 %.results:
 	egrep '^(Ran|FAILED) ' $*.log
 results: tests.results
