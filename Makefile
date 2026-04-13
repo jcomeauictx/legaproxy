@@ -283,7 +283,7 @@ mitm/pixel.png:
 	git checkout $*
 push: ../netlib ../mitmproxy ../pathod
 	-$(foreach remote, $(REMOTES), git push $(remote) $(BRANCH);)
-	@for dir in $+; do $(MAKE) -C $$dir $@; done
+	for dir in $+; do $(MAKE) -C $$dir $@; done
 %.pylint: %.py
 	$(PYLINT) $<
 pylint: $(PYTHON_SCRIPTS:.py=.pylint)
@@ -387,7 +387,11 @@ pull status diff commit: | ../netlib ../mitmproxy ../pathod
 tests.%.diff: | tests.log.%
 	diff -y <(grep -v '^DEBUG:' tests.log) <(grep -v '^DEBUG:' $|) | less
 rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
-	@for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done
+	if [ "$(INSTALLER)" = "apk" ]; then \
+	 for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done; \
+	else \
+	 echo not installing old mitmproxy on new system >&2; \
+	fi
 debug: clean reinstall make.log
 	#-tail -n 30 mitmdump.log
 %.results:
