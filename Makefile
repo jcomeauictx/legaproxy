@@ -1,7 +1,8 @@
 # allow Bashisms
 SHELL := /bin/bash
+DATADIR := $(HOME)/.legaproxy
 # keep track of dependencies
-INSTALLED := $(CURDIR)/.installed
+INSTALLED := $(DATADIR)/installed
 # make sure we can find executables installed in $HOME/*/bin
 PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.cargo/bin:.
 WHICH := command -v
@@ -44,10 +45,9 @@ ifneq ($(INSTALLER),apk)
 PIP_INSTALL += --break-system-packages
 endif
 HOST ?= 127.0.0.1
-DATADIR := $(HOME)/.legaproxy/chrome
 # limit `make log` to this many entries
 LOGLIMIT ?= 10000
-CACHE := $(DATADIR)/Cache "$(DATADIR)/Code Cache"
+CACHE := $(DATADIR)/chrome/Cache "$(DATADIR)/chrome/Code Cache"
 BRANCH := $(shell git branch --show-current)
 REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
@@ -92,9 +92,16 @@ ifeq ($(BROWSER),$(CHROME))
 # --disable-cache, suggested by claude.ai, has no discernable effect
 # (added `rm -rf $(CACHE)` to relevant recipes instead)
 #BROWSE += --disable-cache
- BROWSE += --user-data-dir=$(DATADIR)
+ BROWSE += --user-data-dir=$(DATADIR)/chrome
  BROWSE += --proxy-server=$(PROXY)  # add proxy to browser commandline
+ # eliminate annoying credential popups
+ BROWSE += --password-store=basic
+ NSSDB ?= $(HOME)/.pki/nssdb
+else ifeq ($(BROWSER),$(FIREFOX))  # assuming firefox on Alpine
+ BROWSE += --profile $(DATADIR)/firefox
+ NSSDB := $(DATADIR)/firefox
 endif
+SQLDB := sql:$(NSSDB)
 # proxy envvars lowercase, for testing with wget
 # WARNING: setting these at install time breaks pip! set them when needed!
 #https_proxy=http://$(PROXY)
@@ -102,8 +109,6 @@ endif
 # copied from python-antlr-example Makefile
 PROXY_SETTINGS := https_proxy=http://$(PROXY) http_proxy=http://$(PROXY)
 WGET ?= $(PROXY_SETTINGS) wget -q
-NSSDB ?= $(HOME)/.pki/nssdb
-SQLDB := sql:$(NSSDB)
 CERTNICK := mitmproxy
 CERTFILE := $(HOME)/.mitmproxy/mitmproxy-ca-cert.pem
 # archive for running wheezy32firefox (for testing)
@@ -213,7 +218,8 @@ certs:
 	  echo $$! >$*.pid; \
 	 sleep $(SLEEP); \
 	fi
-testproxy: $(INSTALLED)/mitmdump mitmdump.log certs | $(DATADIR)
+testproxy: $(INSTALLED)/mitmdump mitmdump.log certs | $(DATADIR)/chrome \
+ $(INSTALLED)/cert
 	@echo starting testproxy >&2
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
@@ -288,11 +294,10 @@ push: ../netlib ../mitmproxy ../pathod
 	$(PYLINT) $<
 pylint: $(PYTHON_SCRIPTS:.py=.pylint)
 # the cert needs to be installed before launching chromium (at least)
-$(INSTALLED)/cert: $(CERTFILE) $(NSSDB)/cert9.db \
- | $(HOME)/.pki/nssdb/cert9.db $(INSTALLED)/certutil
+$(INSTALLED)/cert: $(CERTFILE) $(NSSDB)/cert9.db | $(INSTALLED)/certutil
 	if certutil -d $(SQLDB) -L -n "$(CERTNICK)"; then \
 	 echo $(CERTNICK) already installed >&2; \
-	else \
+	elif [ "$(SQLDB)" != "sql:" ]; then \
 	 echo installing $<... >&2; \
 	 certutil -d $(SQLDB) -A -t "C,," -n "$(CERTNICK)" -a -i $<; \
 	 if [ "$$?" = "0" ]; then \
@@ -300,10 +305,13 @@ $(INSTALLED)/cert: $(CERTFILE) $(NSSDB)/cert9.db \
 	 else \
 	  echo "certutil failed adding $<, status $$?" >&2; \
 	 fi; \
+	else echo no nssdb exists for this browser >&2; \
 	fi
 $(NSSDB)/cert9.db:
-	mkdir -p $(@D)
-	certutil -d $(SQLDB) -N --empty-password
+	if [ "$(@D)" ]; then \
+	 mkdir --parents $(@D); \
+	 certutil -d $(SQLDB) -N --empty-password; \
+	fi
 # consider forcing reinstall of executables that may have been removed
 $(INSTALLED)/certutil: $(INSTALLED)
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
