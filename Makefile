@@ -178,7 +178,7 @@ async.stop:
 # have to fetch certs to create them? seems that way.
 # (later) nope, not true, but maybe needs a delay. so this should still help
 certs:
-	$(WGET) -O- $(CERT_APP_URL) | \
+	-$(WGET) -O- $(CERT_APP_URL) | \
 	 grep --color=always -E 'mitmproxy-ca-cert|$$'
 %.grep: | . ../mitmproxy ../netlib ../pathod
 	grep -r '$*' $|
