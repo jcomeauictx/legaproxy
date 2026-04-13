@@ -8,9 +8,11 @@ fontconfig
 npx
 legaproxy.pid
 *.old
+!dercert.old
 JavaScriptParser*
 JavaScriptLexer*
 pathological*.js
 pixel.png
-.installed
 mitmdump.pid
+shimmer.pyc
+*.log.*

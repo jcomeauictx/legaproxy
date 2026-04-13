@@ -5,17 +5,16 @@ legaproxy -- JavaScript translator for legacy devices
 Based on example internet-in-mirror.py from
 https://docs.mitmproxy.org/stable/addons-examples/
 
-This will allow old computers/operating systems, smartphones, tablets,
+This might allow old computers/operating systems, smartphones, tablets,
 iPod Touch, and many other legacy devices to access the modern Web.
 '''
 import sys, os, logging, base64, hashlib  # pylint: disable=multiple-imports
-import asyncio  # pylint: disable=multiple-imports
 from time import strftime
 from hashlib import sha256
 from subprocess import Popen, PIPE
 try:
     from mitmproxy import http
-except (ImportError, ModuleNotFoundError):  # for doctests
+except ImportError:  # for doctests
     http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
 try:
     sys.path.append(os.getcwd())
@@ -43,7 +42,7 @@ USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '
              'Version/12.1.2 Mobile/15E148'
 )
 
-def request(flow: http.HTTPFlow):
+def request(flow):
     '''
     filter requests
     '''
@@ -75,8 +74,7 @@ def request(flow: http.HTTPFlow):
     for header, value in flow.request.headers.items():
         logging.debug('header "%s": "%s"', header, value)
 
-async def response(  # pylint: disable=too-many-branches
-        flow: http.HTTPFlow) -> None:
+def response(flow):  # pylint: disable=too-many-branches
     '''
     filter responses
     '''
@@ -116,7 +114,7 @@ async def response(  # pylint: disable=too-many-branches
     if mimetype == 'text/html':
         logging.debug('adding shims and processing scripts in html')
         try:
-            fixed = await asyncio.to_thread(shimtext, text)
+            fixed = shimtext(text)
         except (ValueError, IndexError) as problem:
             logging.error('call to shim failed: %s', problem)
         if fixed and fixed != text:
@@ -132,7 +130,7 @@ async def response(  # pylint: disable=too-many-branches
             logging.debug("shim didn't change content of html")
     elif mimetype.endswith('/javascript'):
         logging.debug('processing %s file', mimetype)
-        fixed = await asyncio.to_thread(fixup, text, flow.request.path)
+        fixed = fixup(text, flow.request.path)
         if fixed != text:
             logging.debug('fixup modified script, saving to %s', MODIFIED)
             savefile(os.path.join(

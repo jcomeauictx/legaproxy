@@ -6,16 +6,6 @@ difficult to impossible to use many webapps and sites due to expired
 certificates and use of javascript features that my phones and other devices
 don't support.
 
-This application was based on the getting started guide at
-<https://docs.docker.com/get-started/>, tutorial at
-<https://github.com/docker/getting-started>, and sample app source at
-<https://github.com/docker/getting-started-app>, because originally I
-thought Babel was my best potential solution to the javascript problem,
-and, not wanting to pollute my dev machine with npm ever again, was going
-to run it in a Docker image. I'm glad I did, because I learned a lot about
-Docker, but decided to code my own JavaScript translator after finding the
-ANTLR4 parser project.
-
 ## Installing MITM certificate
 
 Chrome/Chromium ignores the CA certificate store whose instructions are
@@ -26,6 +16,21 @@ the certificate into "Trusted Certificates".
 
 Alternatively, the Makefile attempts to install the certificate by utilizing
 the `certutil` program. It works on Debian trixie chromium as of 2026-03.
+
+## Testing
+
+Since this is intended to run on the devices themselves, it should be
+tested on an Alpine image similar to that which runs under the iOS iSH app.
+Clone and cd to my `tk-ish-dev` repo, the `docker` subdirectory, and
+`make login`, fixing all problems that arise in the process, until you're
+sitting at a prompt under the Docker image. Then
+cd to ../../legaproxy and `make`. That installs the current `alpine-ish`
+branch of mitmproxy, netlib, and pathod to your python3.9 local library and
+runs the nosetest suite. Analyze the `tests.log` errors, edit the
+appropriate files, and `make` again to test your changes. If you saved
+the previous results as tests.log.1, you can compare using
+`diff -y <(grep -v '^DEBUG:' tests.log) <(grep -v '^DEBUG:' tests.log.1)`,
+expanding your xterm to full screen for easier viewing.
 
 ## Developer notes
 
@@ -103,3 +108,65 @@ the `certutil` program. It works on Debian trixie chromium as of 2026-03.
       from mitmproxy import http, ctx
   ModuleNotFoundError: No module named 'mitmproxy'
   ```
+ * for Python2, `pip2 install pyasn1==0.1.3`, `pip2 install flask==0.5.2`,
+   which latter requires werkzeug==0.6.1. there may be newer versions that
+   will install but those worked for me on alpine-ish.
+   also, `sudo apk install python2-dev` before attempting
+   `pip2 install urwid==1.1`; `pip2 install pillow==2.5.3`;
+   `pip2 install lxml==3.8.0` worked on a beefy desktop under the
+   alpine-ish-dev container, but I'll maybe need a much older version for
+   the iphone under iSH.
+   `pip2 install mock==3.0.5`; `pip install six==1.7.3`, since 1.5.2 was
+   automatically installed by previous packages and it's not enough for
+   nosetests.
+ * `make PYTHON=python2` just now had the fllowing nosetests results
+   on the iphone 8, and it didn't lock up as it's been doing on
+   the iphone 6 and docker image on desktop. progress!
+    Ran 88 tests in 33.825s
+    FAILED (failures=7)
+    Ran 155 tests in 175.204s
+    FAILED (errors=11, failures=2)
+ * previous results were due to missing `urwid` and `requests` modules.
+   now installed, still hanging in tests after SSL handshake failed.
+ * two hanging tests on python3 were commented out, now 88 + 244 tests are
+   being run.
+ * hanging test on python2, `test_server.TestHTTPS.test_clientcert`, was
+   found to be using a PEM cert in `/tmp/tmp*/rep` that's identical to
+   ../mitmproxy/test/data/dercert, an old (2013 expiration) GitHub cert.
+   could that be why some of these tests fail or hang?
+ * attempting to figure out handshake errors on python2, at the command line
+   `t = TestSNI()`, then `t.test_echo()`, getting
+   `TestSNI instance has no attribute port`
+ * last night (2026-04-12) Claude and I got it working to the point that
+   example.com shows up fine in the alpine firefox browser, but other sites
+   pop up an error of one kind or another. One bank causes the browser
+   to throw `SSL_ERROR_RX_RECORD_TOO_LONG`, a fix for which was found on
+   [reddit](https://www.reddit.com/r/firefox/comments/8rilyj/ssl_error_rx_record_too_long/):
+    ```
+    DrKangaroo
+    •
+    8y ago
+    • Edited 8y ago
+
+    For me the fix was to disable TLS 1.3 for now.
+
+    You can do it by doing this:
+
+        Write to your address bar: about:config
+
+        Search for: security.tls.version.max
+
+        Change the value from 4 to 3.
+
+    Click ok and you should be good to go! The broken sites should start working instantly!
+
+    4 stands for TLS 1.3 and 3 for TLS 1.2
+    ```
+   but of course, mitmproxy should be handling this, not the browser.
+   and, it must be noted, I was not "good to go" after this. it made 
+   no discernable difference whatsoever.
+ * firefox no longer goes through proxy 2026-04-13:14:50
+   I restarted after changing `$(INSTALLED)` to a directory under `$HOME`,
+   and firefox no longer abides by the system proxy settings `http_proxy`
+   and `https_proxy`. or perhaps it never did, and I forgot setting the
+   proxy up manually.
