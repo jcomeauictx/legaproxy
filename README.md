@@ -137,3 +137,29 @@ expanding your xterm to full screen for easier viewing.
  * attempting to figure out handshake errors on python2, at the command line
    `t = TestSNI()`, then `t.test_echo()`, getting
    `TestSNI instance has no attribute port`
+ * last night (2026-04-12) Claude and I got it working to the point that
+   example.com shows up fine in the alpine firefox browser, but other sites
+   pop up an error of one kind or another. One bank causes the browser
+   to throw `SSL_ERROR_RX_RECORD_TOO_LONG`, a fix for which was found on
+   [reddit](https://www.reddit.com/r/firefox/comments/8rilyj/ssl_error_rx_record_too_long/):
+    ```
+    DrKangaroo
+    •
+    8y ago
+    • Edited 8y ago
+
+    For me the fix was to disable TLS 1.3 for now.
+
+    You can do it by doing this:
+
+        Write to your address bar: about:config
+
+        Search for: security.tls.version.max
+
+        Change the value from 4 to 3.
+
+    Click ok and you should be good to go! The broken sites should start working instantly!
+
+    4 stands for TLS 1.3 and 3 for TLS 1.2
+    ```
+   but of course, mitmproxy should be handling this, not the browser.
