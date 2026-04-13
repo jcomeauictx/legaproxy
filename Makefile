@@ -308,7 +308,7 @@ $(NSSDB)/cert9.db:
 	 certutil -d $(SQLDB) -N --empty-password; \
 	fi
 # consider forcing reinstall of executables that may have been removed
-$(INSTALLED)/certutil: $(INSTALLED)
+$(INSTALLED)/certutil: | $(INSTALLED)
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(INSTALL) libnss3-tools; \
 	 touch $@; \
