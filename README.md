@@ -163,3 +163,10 @@ expanding your xterm to full screen for easier viewing.
     4 stands for TLS 1.3 and 3 for TLS 1.2
     ```
    but of course, mitmproxy should be handling this, not the browser.
+   and, it must be noted, I was not "good to go" after this. it made 
+   no discernable difference whatsoever.
+ * firefox no longer goes through proxy 2026-04-13:14:50
+   I restarted after changing `$(INSTALLED)` to a directory under `$HOME`,
+   and firefox no longer abides by the system proxy settings `http_proxy`
+   and `https_proxy`. or perhaps it never did, and I forgot setting the
+   proxy up manually.
