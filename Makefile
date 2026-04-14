@@ -248,18 +248,17 @@ distclean: clean
 	rm -f dummy $(DOWNLOADED)
 useragent:
 	@echo '$(IPHONE6)'
-smokesignal: ../smokesignal proxy.stop mitmdump.log $(BROWSERPOLICY) | \
- $(INSTALLED)/swc
-	-$(MAKE) PORT=8888 -C $< wsgi &
+smokesignal: proxy.stop mitmdump.log $(BROWSERPOLICY) | \
+ $(INSTALLED)/swc ../smokesignal
+	-$(MAKE) PORT=8888 -C ../smokesignal uwsgi &
+	sleep 3  # give uwsgi a chance to start up
 	@echo BROWSER=$(BROWSER)
 	@echo attempting $(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/ >&2
 	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
 	read -p "<enter> to terminate..."
 	$(MAKE) $@.stop proxy.stop
 smokesignal.stop:
-	-pid=$$(cat smokesignal.pid 2>/dev/null); \
-	if [ "$$pid" ]; then kill $$pid; fi
-	rm -f smokesignal.pid
+	$(MAKE) -C ../smokesignal stop
 localserver: $(BROWSERPOLICY) | $(TESTFILE)
 	@echo testing $< on local computer
 	# don't fail launching browser if server launched previously
