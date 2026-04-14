@@ -245,7 +245,7 @@ distclean: clean
 	rm -f dummy $(DOWNLOADED)
 useragent:
 	@echo '$(IPHONE6)'
-smokesignal: ../smokesignal proxy.stop mitmdump.log
+smokesignal: ../smokesignal proxy.stop mitmdump.log | $(INSTALLED)/swc
 	-$(MAKE) PORT=8888 -C $< wsgi &
 	@echo BROWSER=$(BROWSER)
 	@echo attempting $(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/ >&2
