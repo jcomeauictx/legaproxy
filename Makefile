@@ -205,7 +205,7 @@ certs:
 	read -p "<enter> to terminate..."
 	$(MAKE) $*.stop
 # the following is the recipe for mitmdump.log, and possibly others
-%.log: .FORCE | $(INSTALLED)/%
+%.log: .FORCE | $(INSTALLED)/% $(INSTALLED)/swc
 	@echo using %.log recipe for mitmdump >&2
 	pid=$$(cat $*.pid 2>/dev/null); \
 	if [ "$$pid" ]; then \
@@ -313,10 +313,14 @@ $(INSTALLED)/certutil: | $(INSTALLED)
 	 $(INSTALL) libnss3-tools; \
 	 touch $@; \
 	fi
-# the cargo installed swc doesn't inline helpers, and alpine/iSH
-# can't compile it, so we need to use a remote executable for now.
-$(INSTALLED)/swc: $(INSTALLED)/swcserver
+# alpine can't compile swc, so we need to use a remote executable under it.
+$(INSTALLED)/apk/swc: $(INSTALLED)/swcserver | $(INSTALLED)/apk
 	ln -sf $(CURDIR)/remoteswc $(HOME)/.local/bin/$(@F)
+	touch $@
+$(INSTALLED)/apt-get/swc: | $(INSTALLED)/apt-get $(INSTALLED)/cargo
+	cargo install swc_cli
+	touch $@
+$(INSTALLED)/swc: $(INSTALLED)/$(INSTALLER)/swc
 	touch $@
 # default install is to use apt-get, apk, dnf, etc.
 # NOTE: must make explicit $(INSTALLED)/something rules, not a pattern rule,
