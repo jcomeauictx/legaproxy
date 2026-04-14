@@ -1,0 +1,4 @@
+"Proxy": 
+  {"HTTPProxy": "host:port",
+   "UseHTTPProxyForAllProtocols": true
+  }
