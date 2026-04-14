@@ -113,6 +113,7 @@ def response(flow):  # pylint: disable=too-many-branches
         logging.debug('not saving %s', flow.request.path)
     if mimetype == 'text/html':
         logging.debug('adding shims and processing scripts in html')
+        fixed = None
         try:
             fixed = shimtext(text)
         except (ValueError, IndexError) as problem:
