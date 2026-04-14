@@ -15,10 +15,13 @@ class ShimmerParser(HTMLParser):
     '''
     parser that inserts a script tag with shim code
     '''
-    parts = []
-    tags = []
     shim = '<script src="/mitm/shims.js"></script>'
-    shimmed = False
+
+    def __init__(self, *args, **kwargs):
+        super(ShimmerParser, self).__init__(*args, **kwargs)
+        self.parts = []
+        self.tags = []
+        self.shimmed = False
 
     def handle_starttag(self, tag, attrs):
         '''
@@ -67,7 +70,7 @@ class ShimmerParser(HTMLParser):
         handle character reference
         '''
         logging.debug('handling charref %r', name)
-        self.parts.append(name)
+        self.parts.append('&#' + name + ';')
 
     def handle_entityref(self, name):
         '''
@@ -131,8 +134,8 @@ def expand_attrs(attrs):
     '''
     result = ''
     for key, value in attrs:
-        result += key + '="' + value + '"'
-    return ' ' + result if result else result
+        result += ' ' + key + '="' + value + '"'
+    return result
 
 if __name__ == '__main__':
     shim(*sys.argv[1:])
