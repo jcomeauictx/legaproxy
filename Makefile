@@ -100,6 +100,7 @@ ifeq ($(BROWSER),$(CHROME))
 else ifeq ($(BROWSER),$(FIREFOX))  # assuming firefox on Alpine
  BROWSE += --profile $(DATADIR)/firefox
  NSSDB := $(DATADIR)/firefox
+ BROWSERPOLICY := /usr/lib/firefox/distribution/policies.json
 else  # assume iPhone, just tell caller what to do
  BROWSE := echo launch browser to
 endif
@@ -198,7 +199,7 @@ certs:
 %.grepwl: | . ../mitmproxy ../netlib ../pathod
 	grep -rl '\<$*\>' $|
 # the following is the recipe for async.log and possibly others
-%.log: %.py mitm/%.html mitm/pixel.png %.log.rotate .FORCE
+%.log: %.py mitm/%.html mitm/pixel.png %.log.rotate $(BROWSERPOLICY) .FORCE
 	@echo using %.log recipe for async.py and similar scripts >&2
 	mitmdump $(MITM_OPTIONS) $< 2>&1 | tee $@ &
 	sleep $(SLEEP)  # allow mitmproxy to start up
@@ -207,7 +208,7 @@ certs:
 	read -p "<enter> to terminate..."
 	$(MAKE) $*.stop
 # the following is the recipe for mitmdump.log, and possibly others
-%.log: .FORCE | $(INSTALLED)/% $(INSTALLED)/swc
+%.log: .FORCE | $(INSTALLED)/% $(INSTALLED)/swc $(BROWSERPOLICY)
 	@echo using %.log recipe for mitmdump >&2
 	pid=$$(cat $*.pid 2>/dev/null); \
 	if [ "$$pid" ]; then \
@@ -220,8 +221,8 @@ certs:
 	  echo $$! >$*.pid; \
 	 sleep $(SLEEP); \
 	fi
-testproxy: $(INSTALLED)/mitmdump mitmdump.log certs | $(DATADIR)/chrome \
- $(INSTALLED)/cert
+testproxy: $(INSTALLED)/mitmdump mitmdump.log certs $(BROWSERPOLICY) | \
+ $(DATADIR)/chrome $(INSTALLED)/cert
 	@echo starting testproxy >&2
 	rm -rf $(CACHE)  # delete browser cache
 	$(BROWSE) https://$(WEBSITE)/$(INDEXPAGE) $(LOGGING)
@@ -247,7 +248,8 @@ distclean: clean
 	rm -f dummy $(DOWNLOADED)
 useragent:
 	@echo '$(IPHONE6)'
-smokesignal: ../smokesignal proxy.stop mitmdump.log | $(INSTALLED)/swc
+smokesignal: ../smokesignal proxy.stop mitmdump.log $(BROWSERPOLICY) | \
+ $(INSTALLED)/swc
 	-$(MAKE) PORT=8888 -C $< wsgi &
 	@echo BROWSER=$(BROWSER)
 	@echo attempting $(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/ >&2
@@ -256,7 +258,7 @@ smokesignal.stop:
 	-pid=$$(cat smokesignal.pid 2>/dev/null); \
 	if [ "$$pid" ]; then kill $$pid; fi
 	rm -f smokesignal.pid
-localserver: | $(TESTFILE)
+localserver: $(BROWSERPOLICY) | $(TESTFILE)
 	@echo testing $< on local computer
 	# don't fail launching browser if server launched previously
 	-python3 -m http.server --bind 127.0.0.1 8888 & \
@@ -267,7 +269,7 @@ localserver: | $(TESTFILE)
 	 >/var/tmp/legaproxy.log 2>&1
 	-kill $$(cat $*.pid)
 	rm -f *.pid
-browse:
+browse: $(BROWSERPOLICY)
 	$(BROWSE) https://$(TESTSITE)/
 env:
 ifneq ($(SHOWENV),)
@@ -413,5 +415,10 @@ results: tests.results
 	 openssl x509 -in $< -inform pem --noout -text
 %.der: %.pem
 	openssl x509 -in $< -inform pem -out $@ -outform der
+/usr/lib/firefox/distribution/policies.json: policies.json | \
+ /usr/lib/firefox/distribution
+	-sudo cp -i $< $@
+%/distribution: | %
+	-sudo mkdir $@
 .FORCE:
 .PRECIOUS: %.log tests.log
