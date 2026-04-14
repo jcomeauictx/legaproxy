@@ -134,7 +134,9 @@ def expand_attrs(attrs):
     '''
     result = ''
     for key, value in attrs:
-        result += ' ' + key + '="' + value + '"'
+        result += ' ' + key
+        if value is not None:
+            result += '="' + value + '"'
     return result
 
 if __name__ == '__main__':
