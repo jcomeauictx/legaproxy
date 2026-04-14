@@ -1,4 +1,11 @@
-"Proxy": 
-  {"HTTPProxy": "127.0.0.1:8080",
-   "UseHTTPProxyForAllProtocols": true
+{
+  "policies": {
+    "Proxy": {
+      "Mode": "manual",
+      "HTTPProxy": "127.0.0.1:8080",
+      "SSLProxy": "127.0.0.1:8080",
+      "UseHTTPProxyForAllProtocols": true,
+      "Locked": true
+    }
   }
+}

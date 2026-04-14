@@ -100,6 +100,8 @@ ifeq ($(BROWSER),$(CHROME))
 else ifeq ($(BROWSER),$(FIREFOX))  # assuming firefox on Alpine
  BROWSE += --profile $(DATADIR)/firefox
  NSSDB := $(DATADIR)/firefox
+else  # assume iPhone, just tell caller what to do
+ BROWSE := echo launch browser to
 endif
 SQLDB := sql:$(NSSDB)
 # proxy envvars lowercase, for testing with wget
@@ -179,7 +181,7 @@ $(HOME)/%:
 stop: smokesignal.stop proxy.stop
 async: async.log | $(INSTALLED)/w3m
 async.stop:
-	$(WGET) -O- http://example.com/mitm/shutdown
+	$(WGET) -O- http://$(TESTSITE)/mitm/shutdown
 # have to fetch certs to create them? seems that way.
 # (later) nope, not true, but maybe needs a delay. so this should still help
 certs:
@@ -201,7 +203,7 @@ certs:
 	mitmdump $(MITM_OPTIONS) $< 2>&1 | tee $@ &
 	sleep $(SLEEP)  # allow mitmproxy to start up
 	rm -rf $(CACHE)  # delete browser cache
-	-$(BROWSE) http://example.com/
+	-$(BROWSE) http://$(TESTSITE)/
 	read -p "<enter> to terminate..."
 	$(MAKE) $*.stop
 # the following is the recipe for mitmdump.log, and possibly others
