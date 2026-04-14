@@ -254,6 +254,8 @@ smokesignal: ../smokesignal proxy.stop mitmdump.log $(BROWSERPOLICY) | \
 	@echo BROWSER=$(BROWSER)
 	@echo attempting $(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/ >&2
 	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
+	read -p "<enter> to terminate..."
+	$(MAKE) $@.stop proxy.stop
 smokesignal.stop:
 	-pid=$$(cat smokesignal.pid 2>/dev/null); \
 	if [ "$$pid" ]; then kill $$pid; fi
