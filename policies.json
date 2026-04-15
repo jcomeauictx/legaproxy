@@ -5,8 +5,11 @@
       "HTTPProxy": "127.0.0.1:8080",
       "SSLProxy": "127.0.0.1:8080",
       "UseHTTPProxyForAllProtocols": true,
-      "Passthrough": "<-loopback>",
+      "Bypass": "<-loopback>, localhost, 127.0.0.1",
       "Locked": true
     }
+  },
+  "Preferences": {
+    "network.proxy.allow_hijacking_localhost": true
   }
 }
