@@ -74,7 +74,7 @@ USERPUB := $(shell cat $(HOME)/.ssh/id_rsa.pub)
 IPHONE6 := Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X)
 IPHONE6 += AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2
 IPHONE6 += Mobile/15E148
-WEBSITE ?= redwoodcu.org
+WEBSITE ?= httbin.org
 TESTSITE ?= example.com
 PYTHON_SCRIPTS := $(wildcard *.py)
 # leave HOSTSUFFIX blank to capture everything
