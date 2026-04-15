@@ -29,6 +29,9 @@ PYLINT ?= $(word 1, $(shell $(WHICH) pylint3 pylint true 2>/dev/null))
 ifeq ($(PYLINT),true)
 $(warning ***NOTE*** no pylint installed, scripts unlinted)
 endif
+INSTALL_DIR := $(shell $(PYTHON) -c "from site \
+ import getusersitepackages as installdir; \
+ print(installdir())")
 PY := $(notdir $(PYTHON:.exe=))
 PIP = $(PYTHON) -m pip
 PIP_GET := $(INSTALL) python3-pip
