@@ -299,15 +299,15 @@ push: ../netlib ../mitmproxy ../pathod
 pylint: $(PYTHON_SCRIPTS:.py=.pylint)
 # the cert needs to be installed before launching chromium (at least)
 $(INSTALLED)/cert: $(CERTFILE) $(NSSDB)/cert9.db | $(INSTALLED)/certutil
-	if [ "$(SQLDB)" != "sql:" ]; then \
+	-if [ "$(SQLDB)" != "sql:" ]; then \
 	 certutil -d $(SQLDB) -D -n "$(CERTNICK)" 2>/dev/null || true; \
 	 echo installing $<... >&2; \
 	 certutil -d $(SQLDB) -A -t "CT,," -n "$(CERTNICK)" -a -i $< && \
 	  touch $@; \
 	else echo no nssdb exists for this browser >&2; \
 	fi
-$(NSSDB)/cert9.db:
-	if [ "$(@D)" ]; then \
+$(NSSDB)/cert9.db: | $(INSTALLED)/certutil
+	-if [ "$(@D)" ]; then \
 	 mkdir --parents $(@D); \
 	 certutil -d $(SQLDB) -N --empty-password; \
 	fi
