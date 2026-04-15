@@ -238,8 +238,7 @@ proxy.stop:
 	rm -f mitmdump.pid
 	@echo rotating mitmdump.log after stopping
 	$(MAKE) mitmdump.log.rotate
-clean:
-	$(MAKE) stop
+clean: proxy.stop
 	rm -rf dummy $(GENERATED) __pycache__
 	rm -f make.log
 distclean: clean
