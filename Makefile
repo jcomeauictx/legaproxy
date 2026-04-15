@@ -133,6 +133,8 @@ MITM_SAVE := --save-stream-file
 SLEEP ?= 3
 # modern mitmproxy: mitm.it is the magic cert-download domain
 CERT_APP_URL := http://mitm.it/
+REQUIRED_APK := gcc musl-dev python3-dev py3-pip py3-cryptography py3-openssl
+REQUIRED_PIP := setuptools packaging==21.3 markupsafe==2.0.1 mitmproxy==6.0.2
 endif
 ifneq ($(SHOWENV),)
  export
@@ -173,6 +175,7 @@ $(INSTALLED)/python2/pip: | get-pip.py $(INSTALLED)/python2
 	touch $@
 $(INSTALLED)/python3/pip: | $(INSTALLED)/python3
 	$(PIP_GET)
+	$(PIP) install --upgrade pip
 	touch $@
 %: %.template Makefile
 	envsubst < $< > $@
