@@ -1,12 +1,13 @@
 #!/bin/bash
 LC_ALL=C
-LD_LIBRARY_PATH=/opt/wheezy32/usr/lib/i386-linux-gnu
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/wheezy32/usr/lib/gcc/i486-linux-gnu
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/wheezy32/lib/i386-linux-gnu
-LD_LINUX=/opt/wheezy32/lib/ld-linux.so.2
-FIREFOX=/opt/wheezy32/usr/lib/iceweasel/iceweasel
-if [ -x $FIREFOX ]; then
- $LD_LINUX $FIREFOX "$@"
+WHEEZY=/opt/wheezy32
+LD_LIBRARY_PATH=$WHEEZY/usr/lib/i386-linux-gnu
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$WHEEZY/usr/lib/gcc/i486-linux-gnu
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$WHEEZY/lib/i386-linux-gnu
+LD_LINUX=$WHEEZY/lib/ld-linux.so.2
+FIREFOX=/usr/lib/iceweasel/iceweasel
+if [ -x $WHEEZY/$FIREFOX ]; then
+  $LD_LINUX $WHEEZY/$FIREFOX "$@"
 else
- echo browse to $@ >&2
+  echo browse to $@ >&2
 fi
