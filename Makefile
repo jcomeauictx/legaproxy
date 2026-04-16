@@ -9,6 +9,7 @@ WHICH := command -v
 # no need for `apt` in this list, any that have `apt` also have `apt-get`,
 # and the latter covers far more systems.
 INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt-get yum dnf)))
+INSTALLERNAME := $(shell echo $(INSTALLER) | tr 'a-z' 'A-Z')
 ifeq ($(INSTALLER),apk)
 INSTALL := sudo $(INSTALLER) add
 else
@@ -137,8 +138,12 @@ MITM_SAVE := --save-stream-file
 SLEEP ?= 3
 # modern mitmproxy: mitm.it is the magic cert-download domain
 CERT_APP_URL := http://mitm.it/
-REQUIRED_APK := gcc musl-dev python3-dev py3-pip py3-cryptography py3-openssl
-REQUIRED_PIP := setuptools packaging==21.3 markupsafe==2.0.1 mitmproxy==6.0.2
+REQUIRED_APK := $(foreach package, \
+ gcc musl-dev python3-dev py3-pip py3-cryptography py3-openssl,
+ $(INSTALLED)/$package)
+REQUIRED_PIP := $(foreach package, \
+ setuptools packaging==21.3 markupsafe==2.0.1 mitmproxy==6.0.2,
+ $(INSTALLED)/pip3-$package)
 endif
 ifneq ($(SHOWENV),)
  export
@@ -154,8 +159,7 @@ timestamp:
 test: tests.log
 $(INSTALLED)/mitmdump: $(INSTALLED)/$(INSTALLER)/mitmdump
 	touch $@
-$(INSTALLED)/apk/mitmdump: .FORCE | $(INSTALLED)/apk
-	$(MAKE) reinstall
+$(INSTALLED)/apk/mitmdump: reinstall | $(INSTALLED)/apk
 	touch $@
 $(INSTALLED)/apt-get/mitmdump: | $(INSTALLED)/apt-get
 	# on desktop, prefer pip-installed mitmdump over Debian package;
@@ -404,17 +408,7 @@ pull status diff commit: | ../netlib ../mitmproxy ../pathod
 	for dir in $|; do $(MAKE) -C $$dir $@; done
 tests.%.diff: | tests.log.%
 	diff -y <(grep -v '^DEBUG:' tests.log) <(grep -v '^DEBUG:' $|) | less
-rebuild reinstall:
-	if [ "$(INSTALLER)" = "apk" ]; then \
-	 for package in $(REQUIRED_APK); do \
-	  sudo apk add $$package; \
-	 done;
-	 for package in $(REQUIRED_PIP); do \
-	  pip install $$package; \
-	 done;
-	else \
-	 echo not installing old mitmproxy on new system >&2; \
-	fi
+reinstall: $(REQUIRED_$(INSTALLERNAME)) $(REQUIRED_PIP)
 debug: clean reinstall make.log
 	#-tail -n 30 mitmdump.log
 %.results:
@@ -432,5 +426,8 @@ results: tests.results
 	-sudo cp -i $< $@
 %/distribution: | %
 	-sudo mkdir $@
+$(INSTALLED)/pip3-%: | $(INSTALLED)
+	$(PYTHON3) -m pip install $*
+	touch $@
 .FORCE:
 .PRECIOUS: %.log tests.log
