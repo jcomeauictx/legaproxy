@@ -170,3 +170,9 @@ expanding your xterm to full screen for easier viewing.
    and firefox no longer abides by the system proxy settings `http_proxy`
    and `https_proxy`. or perhaps it never did, and I forgot setting the
    proxy up manually.
+ * after visiting http://mitm/ on iPhone after starting legaproxy,
+   clicking Certs, then the cert for iPhone, you will get a popup
+   asking for confirmation to download a configuration profile.
+   if you assent, it will tell you to go to Settings to complete it.
+   at the top of Settings, you should see "Profile downloaded".
+   from there, follow the steps to install the mitmproxy cert.
