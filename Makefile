@@ -150,7 +150,7 @@ timestamp:
 	@echo starting run at $$(date -u) >&2
 test: tests.log
 $(INSTALLED)/mitmdump: $(INSTALLED)/$(INSTALLER)/mitmdump \
- $(INSTALLED)/pyopenssl
+ $(INSTALLED)/pyopenssl $(INSTALLED)/pyasn1 $(INSTALLED)/flask
 	touch $@
 $(INSTALLED)/apk/mitmdump: .FORCE | $(INSTALLED)/apk
 	$(MAKE) reinstall
@@ -452,6 +452,13 @@ $(INSTALLED)/apk/python2/pyasn1: | $(INSTALLED)/apk/python2
 	touch $@
 $(INSTALLED)/apk/python3/pyasn1: | $(INSTALLED)/apk/python3
 	$(INSTALL) py3-asn1
+	touch $@
+$(INSTALLED)/flask: $(INSTALLED)/$(INSTALLER)/flask
+$(INSTALLED)/apk/flask: | $(INSTALLED)/apk
+	$(PYTHON) -m pip install flask==0.5.2
+	touch $@
+$(INSTALLED)/apt-get/flask: | $(INSTALLED)/apt-get
+	$(INSTALL) python3-flask
 	touch $@
 .FORCE:
 .PRECIOUS: %.log tests.log
