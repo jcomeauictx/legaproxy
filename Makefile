@@ -149,7 +149,8 @@ make.log: .FORCE
 timestamp:
 	@echo starting run at $$(date -u) >&2
 test: tests.log
-$(INSTALLED)/mitmdump: $(INSTALLED)/$(INSTALLER)/mitmdump
+$(INSTALLED)/mitmdump: $(INSTALLED)/$(INSTALLER)/mitmdump \
+ $(INSTALLED)/pyopenssl
 	touch $@
 $(INSTALLED)/apk/mitmdump: .FORCE | $(INSTALLED)/apk
 	$(MAKE) reinstall
@@ -412,7 +413,7 @@ debug: clean reinstall make.log
 %.results:
 	egrep '^(Ran|FAILED) ' $*.log
 results: tests.results
-%.pem: %
+%.pem: % | $(INSTALLED)/openssl
 	openssl x509 -in $< -inform der -out $@ -outform pem
 %.text: %
 	openssl x509 -in $< -inform der -noout -text || \
@@ -424,5 +425,33 @@ results: tests.results
 	-sudo cp -i $< $@
 %/distribution: | %
 	-sudo mkdir $@
+$(INSTALLED)/openssl: $(INSTALLED)
+	$(INSTALL) openssl
+	touch $@
+$(INSTALLED)/pyopenssl: $(INSTALLED)/$(INSTALLER)/pyopenssl
+	touch $@
+$(INSTALLED)/apk/pyopenssl: $(INSTALLED)/apk/$(PYTHON)/pyopenssl
+	touch $@
+$(INSTALLED)/apk/python2/pyopenssl: | $(INSTALLED)/apk/python2
+	pip install "$(@F)>=0.13"
+	touch $@
+$(INSTALLED)/apk/python3/pyopenssl: | $(INSTALLED)/apk/python3
+	$(INSTALL) py3-openssl
+	touch $@
+$(INSTALLED)/apt-get/pyopenssl: | $(INSTALLED)/apt-get
+	$(INSTALL) python3-openssl
+	touch $@
+$(INSTALLED)/pyasn1: $(INSTALLED)/$(INSTALLER)/pyasn1
+	touch $@
+$(INSTALLED)/apk/pyasn1: $(INSTALLED)/apk/$(PYTHON)/pyasn1
+	touch $@
+$(INSTALLED)/apt-get/pyasn1: | $(INSTALLED)/apt-get
+	$(INSTALL) python3-pyasn1
+$(INSTALLED)/apk/python2/pyasn1: | $(INSTALLED)/apk/python2
+	$(PYTHON) -m pip install 'pyasn1>0.1.2'
+	touch $@
+$(INSTALLED)/apk/python3/pyasn1: | $(INSTALLED)/apk/python3
+	$(INSTALL) py3-asn1
+	touch $@
 .FORCE:
 .PRECIOUS: %.log tests.log
