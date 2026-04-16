@@ -136,6 +136,7 @@ MITM_SAVE := --save-stream-file
 SLEEP ?= 3
 # modern mitmproxy: mitm.it is the magic cert-download domain
 CERT_APP_URL := http://mitm.it/
+endif
 REQUIRED_APT_GET := $(foreach package, \
  gcc python3-dev python3-pip libnss3-tools,
  $(INSTALLED)/apt-get/$package)
@@ -145,7 +146,6 @@ REQUIRED_APK := $(foreach package, \
 REQUIRED_PIP := $(foreach package, \
  setuptools packaging==21.3 markupsafe==2.0.1 mitmproxy==6.0.2,
  $(INSTALLED)/pip3-$package)
-endif
 ifneq ($(SHOWENV),)
  export
 else  # export what's needed for envsubst and for python scripts
