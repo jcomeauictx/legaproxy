@@ -24,7 +24,8 @@ ifeq ($(PYTHON),)
 $(shell $(INSTALL) python3)
 PYTHON := python3
 endif
-PY_VER := $(shell $(PYTHON) -c "import sys; print('.'.join(map(str, sys.version_info[:2])))")
+PY_VER := $(shell $(PYTHON) -c "import sys; print('.'.join(map(str, \
+ sys.version_info[:2])))")
 PYLINT ?= $(word 1, $(shell $(WHICH) pylint3 pylint true 2>/dev/null))
 ifeq ($(PYLINT),true)
 $(warning ***NOTE*** no pylint installed, scripts unlinted)
@@ -403,9 +404,14 @@ pull status diff commit: | ../netlib ../mitmproxy ../pathod
 	for dir in $|; do $(MAKE) -C $$dir $@; done
 tests.%.diff: | tests.log.%
 	diff -y <(grep -v '^DEBUG:' tests.log) <(grep -v '^DEBUG:' $|) | less
-rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
+rebuild reinstall:
 	if [ "$(INSTALLER)" = "apk" ]; then \
-	 for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done; \
+	 for package in $(REQUIRED_APK); do \
+	  sudo apk add $$package; \
+	 done;
+	 for package in $(REQUIRED_PIP); do \
+	  pip install $$package; \
+	 done;
 	else \
 	 echo not installing old mitmproxy on new system >&2; \
 	fi
