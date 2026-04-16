@@ -64,12 +64,12 @@ SSHPORT ?= 3022
 # honor http_proxy and https_proxy, or have options setting up the proxy
 # added to this Makefile
 CHROME := $(word 1, $(shell $(WHICH) chromium chromium-browser))
-$(warning CHROME=$(CHROME))
 WHEEZY32FF := $(shell $(WHICH) /opt/wheezy32/usr/lib/iceweasel/iceweasel)
 # wheezy32firefox only usable when iceweasel exists
 W32FIREFOX := $(word 2, $(WHEEZY32FF) wheezy32firefox)
 FIREFOX := $(word 1, $(shell $(WHICH) firefox) $(W32FIREFOX))
-BROWSER ?= $(word 1, $(CHROME) $(FIREFOX) $(shell $(WHICH) w3m))
+BROWSER ?= $(shell echo $(word 1, $(CHROME) $(FIREFOX) \
+ echo_launch_browser_to) | tr '_' ' ')
 $(warning BROWSER=$(BROWSER))
 TESTFILE := sarge/capabilities.html
 SSHDCONF := /etc/ssh/sshd_config
@@ -85,7 +85,7 @@ PYTHON_SCRIPTS := $(wildcard *.py)
 # leave HOSTSUFFIX blank to capture everything
 HOSTSUFFIX=
 INDEXPAGE ?=
-LOGGING := &>$(HOME)/$(notdir $(BROWSER)).log &
+LOGGING := &>$(HOME)/$(word 1, $(notdir $(BROWSER))).log &
 BROWSE := $(BROWSER)
 # don't use `localhost`, many Debian installs have both 127.0.0.1 and ::1
 PROXYHOST := 127.0.0.1
@@ -106,8 +106,6 @@ else ifeq ($(BROWSER),$(FIREFOX))  # assuming firefox on Alpine
  BROWSE += --profile $(DATADIR)/firefox
  NSSDB := $(DATADIR)/firefox
  BROWSERPOLICY := /usr/lib/firefox/distribution/policies.json
-else  # assume iPhone, just tell caller what to do
- BROWSE := echo launch browser to
 endif
 SQLDB := sql:$(NSSDB)
 # proxy envvars lowercase, for testing with wget
@@ -138,9 +136,12 @@ MITM_SAVE := --save-stream-file
 SLEEP ?= 3
 # modern mitmproxy: mitm.it is the magic cert-download domain
 CERT_APP_URL := http://mitm.it/
+REQUIRED_APT_GET := $(foreach package, \
+ gcc python3-dev python3-pip libnss3-tools,
+ $(INSTALLED)/apt-get/$package)
 REQUIRED_APK := $(foreach package, \
- gcc musl-dev python3-dev py3-pip py3-cryptography py3-openssl,
- $(INSTALLED)/$package)
+ gcc musl-dev python3-dev py3-pip py3-cryptography py3-openssl nss-tools,
+ $(INSTALLED)/apk/$package)
 REQUIRED_PIP := $(foreach package, \
  setuptools packaging==21.3 markupsafe==2.0.1 mitmproxy==6.0.2,
  $(INSTALLED)/pip3-$package)
@@ -322,10 +323,20 @@ $(NSSDB)/cert9.db: | $(INSTALLED)/certutil
 	 mkdir --parents $(@D); \
 	 certutil -d $(SQLDB) -N --empty-password; \
 	fi
-# consider forcing reinstall of executables that may have been removed
-$(INSTALLED)/certutil: | $(INSTALLED)
+# consider forcing reinstall of executables that may have been removed;
+# use `which` or equivalent in the recipe, or for a really blunt approach,
+# don't use `touch $@` and run the installer each time the tool is needed.
+# create subdir regardless of installer
+$(INSTALLED)/$(INSTALLER)/%: | $(INSTALLED)/$(INSTALLER)
+$(INSTALLED)/certutil: | $(INSTALLED)/$(INSTALLER)/certutil
+$(INSTALLED)/apt-get/certutil:
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(INSTALL) libnss3-tools; \
+	 touch $@; \
+	fi
+$(INSTALLED)/apk/certutil:
+	if [ -z "$$($(WHICH) $(@F))" ]; then \
+	 $(INSTALL) nss-tools; \
 	 touch $@; \
 	fi
 # alpine can't compile swc, so we need to use a remote executable under it.
@@ -428,6 +439,16 @@ results: tests.results
 	-sudo mkdir $@
 $(INSTALLED)/pip3-%: | $(INSTALLED)
 	$(PYTHON3) -m pip install $*
+	touch $@
+$(INSTALLED)/firefox: $(INSTALLED)/font
+	# alpine firefox-esr doesn't have a font prerequisite, so it renders
+	# a page completely with boxes containing unicode hex
+	$(INSTALL) firefox-esr
+	touch $@
+$(INSTALLED)/font: $(INSTALLED)/$(INSTALLER)/font
+	touch $@
+$(INSTALLED)/apk/font:
+	sudo apk add unifont
 	touch $@
 .FORCE:
 .PRECIOUS: %.log tests.log
