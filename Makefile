@@ -68,9 +68,7 @@ WHEEZY32FF := $(shell $(WHICH) /opt/wheezy32/usr/lib/iceweasel/iceweasel)
 # wheezy32firefox only usable when iceweasel exists
 W32FIREFOX := $(word 2, $(WHEEZY32FF) wheezy32firefox)
 FIREFOX := $(word 1, $(shell $(WHICH) firefox) $(W32FIREFOX))
-BROWSER ?= $(shell echo $(word 1, $(CHROME) $(FIREFOX) \
- echo_launch_browser_to) | tr '_' ' ')
-$(warning BROWSER=$(BROWSER))
+BROWSER ?= $(word 1, $(CHROME) $(FIREFOX) browser)
 TESTFILE := sarge/capabilities.html
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
@@ -259,8 +257,8 @@ smokesignal: proxy.stop mitmdump.log $(BROWSERPOLICY) | \
 	-$(MAKE) PORT=8888 -C ../smokesignal uwsgi &
 	sleep 3  # give uwsgi a chance to start up
 	@echo BROWSER=$(BROWSER)
-	@echo attempting $(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/ >&2
-	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
+	@echo attempting $(PROXY_SETTINGS) $(BROWSE) http://localhost:8888/ >&2
+	-$(PROXY_SETTINGS) $(BROWSE) http://localhost:8888/
 	read -p "<enter> to terminate..."
 	$(MAKE) $@.stop proxy.stop
 smokesignal.stop:
@@ -272,7 +270,7 @@ localserver: $(BROWSERPOLICY) | $(TESTFILE)
 	echo $$! >$*.pid
 	@echo waiting a few seconds to launch the browser
 	sleep $(SLEEP)
-	-$(BROWSER) http://localhost:8888/$| \
+	-$(BROWSE) http://localhost:8888/$| \
 	 >/var/tmp/legaproxy.log 2>&1
 	-kill $$(cat $*.pid)
 	rm -f *.pid
