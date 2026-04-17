@@ -9,6 +9,7 @@ WHICH := command -v
 # no need for `apt` in this list, any that have `apt` also have `apt-get`,
 # and the latter covers far more systems.
 INSTALLER := $(notdir $(word 1, $(shell $(WHICH) apk apt-get yum dnf)))
+INSTALLERNAME := $(shell echo $(INSTALLER) | tr 'a-z' 'A-Z')
 ifeq ($(INSTALLER),apk)
 INSTALL := sudo $(INSTALLER) add
 else
@@ -24,7 +25,8 @@ ifeq ($(PYTHON),)
 $(shell $(INSTALL) python3)
 PYTHON := python3
 endif
-PY_VER := $(shell $(PYTHON) -c "import sys; print('.'.join(map(str, sys.version_info[:2])))")
+PY_VER := $(shell $(PYTHON) -c "import sys; print('.'.join(map(str, \
+ sys.version_info[:2])))")
 PYLINT ?= $(word 1, $(shell $(WHICH) pylint3 pylint true 2>/dev/null))
 ifeq ($(PYLINT),true)
 $(warning ***NOTE*** no pylint installed, scripts unlinted)
@@ -62,12 +64,12 @@ SSHPORT ?= 3022
 # honor http_proxy and https_proxy, or have options setting up the proxy
 # added to this Makefile
 CHROME := $(word 1, $(shell $(WHICH) chromium chromium-browser))
-$(warning CHROME=$(CHROME))
 WHEEZY32FF := $(shell $(WHICH) /opt/wheezy32/usr/lib/iceweasel/iceweasel)
 # wheezy32firefox only usable when iceweasel exists
 W32FIREFOX := $(word 2, $(WHEEZY32FF) wheezy32firefox)
 FIREFOX := $(word 1, $(shell $(WHICH) firefox) $(W32FIREFOX))
-BROWSER ?= $(word 1, $(CHROME) $(FIREFOX) $(shell $(WHICH) w3m))
+BROWSER ?= $(shell echo $(word 1, $(CHROME) $(FIREFOX) \
+ echo_launch_browser_to) | tr '_' ' ')
 $(warning BROWSER=$(BROWSER))
 TESTFILE := sarge/capabilities.html
 SSHDCONF := /etc/ssh/sshd_config
@@ -454,8 +456,12 @@ $(INSTALLED)/apk/python3/pyasn1: | $(INSTALLED)/apk/python3
 	$(INSTALL) py3-asn1
 	touch $@
 $(INSTALLED)/flask: $(INSTALLED)/$(INSTALLER)/flask
-$(INSTALLED)/apk/flask: | $(INSTALLED)/apk
+$(INSTALLED)/apk/flask: | $(INSTALLED)/$(PYTHON)/apk
+$(INSTALLED)/apk/python2/flask:
 	$(PYTHON) -m pip install flask==0.5.2
+	touch $@
+$(INSTALLED)/apk/python3/flask:
+	$(INSTALL) flask
 	touch $@
 $(INSTALLED)/apt-get/flask: | $(INSTALLED)/apt-get
 	$(INSTALL) python3-flask
