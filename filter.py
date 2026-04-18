@@ -85,7 +85,7 @@ def response(*args):  # pylint: disable=too-many-branches
     try:
         _response(flow)
     except Exception as exc:  # pylint: disable=broad-except
-        logging.error('response hook failed: %s: %s', type(exc).__name__, exc)
+        logging.exception('response hook failed: %s: %s', type(exc).__name__, exc)
 
 def _path_components(flow):
     '''
