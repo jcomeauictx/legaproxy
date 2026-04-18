@@ -90,11 +90,10 @@ def response(*args):  # pylint: disable=too-many-branches
 def _path_components(flow):
     '''
     return path segments as a tuple, compatible with old libmproxy and new mitmproxy
+
+    Avoids flow.request.path_components; old libmproxy's version caused infinite recursion.
     '''
-    try:
-        return _path_components(flow)
-    except AttributeError:
-        return tuple(p for p in flow.request.path.split('?')[0].split('/') if p)
+    return tuple(p for p in flow.request.path.split('?')[0].split('/') if p)
 
 def _header(value, default=''):
     '''
