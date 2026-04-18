@@ -47,7 +47,7 @@ def request(*args):
     filter requests
     '''
     flow = args[-1]  # old libmproxy: request(context, flow); new mitmproxy: request(flow)
-    print('filter.request started', file=sys.stderr)
+    logging.debug('filter.request started')
     path = None
     if flow.request.path.startswith('/mitm/'):
         logging.debug('MITM intercepting request for %s', flow.request.path)
@@ -81,7 +81,7 @@ def response(*args):  # pylint: disable=too-many-branches
     filter responses
     '''
     flow = args[-1]  # old libmproxy: response(context, flow); new mitmproxy: response(flow)
-    print('filter.response started', file=sys.stderr)
+    logging.debug('filter.response started')
     try:
         _response(flow)
     except Exception as exc:  # pylint: disable=broad-except
