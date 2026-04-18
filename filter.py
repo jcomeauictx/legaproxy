@@ -46,6 +46,7 @@ def request(flow):
     '''
     filter requests
     '''
+    logging.warning('filter.request started')
     path = None
     if flow.request.path.startswith('/mitm/'):
         logging.debug('MITM intercepting request for %s', flow.request.path)
@@ -78,6 +79,7 @@ def response(flow):  # pylint: disable=too-many-branches
     '''
     filter responses
     '''
+    logging.warning('filter.response started')
     hostname = flow.request.host
     uahash = md5sum(flow.request.headers['user-agent'])
     logging.debug('response headers: %s', flow.response.headers)
