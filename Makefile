@@ -173,7 +173,7 @@ $(INSTALLED)/setuptools: | $(INSTALLED)/pip
 $(INSTALLED)/pip: $(INSTALLED)/$(PYTHON)/pip
 	touch $@
 $(INSTALLED)/python2/pip: | get-pip.py $(INSTALLED)/python2
-	python2 $|
+	python2 get-pip.py
 	touch $@
 $(INSTALLED)/python3/pip: | $(INSTALLED)/python3
 	$(PIP_GET)
