@@ -87,19 +87,26 @@ def response(*args):  # pylint: disable=too-many-branches
     except Exception as exc:  # pylint: disable=broad-except
         logging.error('response hook failed: %s: %s', type(exc).__name__, exc)
 
+def _header(value, default=''):
+    '''
+    normalize a header value: old libmproxy returns lists, new mitmproxy returns strings
+    '''
+    if isinstance(value, list):
+        return value[0] if value else default
+    return value if value is not None else default
+
 def _response(flow):  # pylint: disable=too-many-branches
     '''
     inner body of response hook, wrapped so old mitmproxy can't swallow exceptions silently
     '''
     hostname = flow.request.host
-    ua = flow.request.headers.get('user-agent') or flow.request.headers.get('User-Agent') or ''
-    if isinstance(ua, list):
-        ua = ua[0] if ua else ''
+    ua = _header(flow.request.headers.get('user-agent') or
+                 flow.request.headers.get('User-Agent'))
     uahash = md5sum(ua)
     logging.debug('response headers: %s', flow.response.headers)
     for header, value in flow.response.headers.items():
         logging.debug('header "%s": "%s"', header, value)
-    mimetype = flow.response.headers.get('content-type', '').split(';')[0]
+    mimetype = _header(flow.response.headers.get('content-type', '')).split(';')[0]
     encode = str  # for encoding after modification
     try:
         text = flow.response.content.decode('utf-8')
