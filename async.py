@@ -33,11 +33,11 @@ def request(flow):
     if flow.request.host.endswith('gvt1.com'):
         logging.info('dropping google spyware')
         flow.kill()
-    elif flow.request.host == 'mitm.it':
+    elif flow.request.host in ('mitm', 'mitm.it'):
         logging.info('passing on request to mitm.it')
     elif directory == '' and filename in ('', 'index.html', 'favicon.ico'):
         logging.info('passing request on to server')
-    elif directory == 'mitm' and os.path.exists(path):
+    elif directory == 'legaproxy' and os.path.exists(path):
         logging.info('serving file %s', path)
         mimetype = MIMETYPES.get(os.path.splitext(filename)[1], 'text/plain')
         response = Response(
@@ -48,7 +48,7 @@ def request(flow):
             None
         )
         flow.request.reply(response)
-    elif directory == 'mitm' and filename == 'shutdown':
+    elif directory == 'legaproxy' and filename == 'shutdown':
         logging.warning('shutting down MITM')
         response = Response(
             [1, 1],
@@ -70,12 +70,12 @@ async def response(flow):
     directory, filename = split(sep.join(flow.request.path_components))
     logging.debug('received request for directory %s, filename %s',
                   directory, filename)
-    if directory == 'mitm' and filename.endswith('.png'):
+    if directory == 'legaproxy' and filename.endswith('.png'):
         delay = int(flow.request.query.get('delay', '0').rstrip('s'))
         await asyncio.to_thread(swc, delay)
     elif directory == '' and filename in ('', 'index.html'):
         logging.info('filter: %s', __file__)
-        filepath = os.path.join('mitm', __file__.replace('.py', '.html'))
+        filepath = os.path.join('legaproxy', __file__.replace('.py', '.html'))
         flow.response.content = read(filepath)
 
 def swc(delay):

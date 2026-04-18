@@ -187,7 +187,7 @@ $(HOME)/%:
 stop: smokesignal.stop proxy.stop
 async: async.log | $(INSTALLED)/w3m
 async.stop:
-	$(WGET) -O- http://$(TESTSITE)/mitm/shutdown
+	$(WGET) -O- http://$(TESTSITE)/legaproxy/shutdown
 # have to fetch certs to create them? seems that way.
 # (later) nope, not true, but maybe needs a delay. so this should still help
 certs:
@@ -204,7 +204,8 @@ certs:
 %.grepwl: | . ../mitmproxy ../netlib ../pathod
 	grep -rl '\<$*\>' $|
 # the following is the recipe for async.log and possibly others
-%.log: %.py mitm/%.html mitm/pixel.png %.log.rotate $(BROWSERPOLICY) .FORCE
+%.log: %.py legaproxy/%.html legaproxy/pixel.png \
+ %.log.rotate $(BROWSERPOLICY) .FORCE
 	@echo using %.log recipe for async.py and similar scripts >&2
 	mitmdump $(MITM_OPTIONS) $< 2>&1 | tee $@ &
 	sleep $(SLEEP)  # allow mitmproxy to start up
@@ -289,7 +290,7 @@ storagediff:
 	done
 shell:
 	$(PYTHON)
-mitm/pixel.png:
+legaproxy/pixel.png:
 	convert -size 1x1 xc:none $@
 %.branch: | ../netlib ../mitmproxy ../pathod
 	for dir in $|; do \

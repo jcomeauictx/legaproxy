@@ -49,7 +49,7 @@ def request(*args):
     flow = args[-1]  # old libmproxy: request(context, flow); new mitmproxy: request(flow)
     logging.debug('filter.request started')
     path = None
-    if flow.request.path.startswith('/mitm/'):
+    if flow.request.path.startswith('/legaproxy/'):
         logging.debug('MITM intercepting request for %s', flow.request.path)
         path = flow.request.path.lstrip('/')
         if os.path.isfile(path):

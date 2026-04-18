@@ -15,7 +15,7 @@ class ShimmerParser(HTMLParser):
     '''
     parser that inserts a script tag with shim code
     '''
-    shim = '<script src="/mitm/shims.js"></script>'
+    shim = '<script src="/legaproxy/shims.js"></script>'
 
     def __init__(self, *args, **kwargs):
         super(ShimmerParser, self).__init__(*args, **kwargs)
