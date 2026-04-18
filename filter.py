@@ -42,10 +42,11 @@ USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '
              'Version/12.1.2 Mobile/15E148'
 )
 
-def request(flow):
+def request(*args):
     '''
     filter requests
     '''
+    flow = args[-1]  # old libmproxy: request(context, flow); new mitmproxy: request(flow)
     print('filter.request started', file=sys.stderr)
     path = None
     if flow.request.path.startswith('/mitm/'):
@@ -75,10 +76,11 @@ def request(flow):
     for header, value in flow.request.headers.items():
         logging.debug('header "%s": "%s"', header, value)
 
-def response(flow):  # pylint: disable=too-many-branches
+def response(*args):  # pylint: disable=too-many-branches
     '''
     filter responses
     '''
+    flow = args[-1]  # old libmproxy: response(context, flow); new mitmproxy: response(flow)
     print('filter.response started', file=sys.stderr)
     hostname = flow.request.host
     uahash = md5sum(flow.request.headers['user-agent'])
