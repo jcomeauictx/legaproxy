@@ -87,6 +87,15 @@ def response(*args):  # pylint: disable=too-many-branches
     except Exception as exc:  # pylint: disable=broad-except
         logging.error('response hook failed: %s: %s', type(exc).__name__, exc)
 
+def _path_components(flow):
+    '''
+    return path segments as a tuple, compatible with old libmproxy and new mitmproxy
+    '''
+    try:
+        return _path_components(flow)
+    except AttributeError:
+        return tuple(p for p in flow.request.path.split('?')[0].split('/') if p)
+
 def _header(value, default=''):
     '''
     normalize a header value: old libmproxy returns lists, new mitmproxy returns strings
@@ -123,11 +132,11 @@ def _response(flow):  # pylint: disable=too-many-branches
         logging.debug('webpage text was already decoded')
     encoded = text.encode()
     if hostname.endswith(HOSTSUFFIX):
-        logging.debug('response path: %s', flow.request.path_components)
+        logging.debug('response path: %s', _path_components(flow))
         savefile(
             os.path.join(
                 FILES, hostname, uahash, TIMESTAMP,
-                *flow.request.path_components
+                *_path_components(flow)
             ),
             encoded, mimetype
         )
@@ -145,7 +154,7 @@ def _response(flow):  # pylint: disable=too-many-branches
             logging.debug('shim modified html, saving to %s', MODIFIED)
             savefile(os.path.join(
                 MODIFIED, hostname, uahash, TIMESTAMP,
-                *flow.request.path_components
+                *_path_components(flow)
                 ),
                 fixed.encode(), mimetype, overwrite=True
             )
@@ -159,7 +168,7 @@ def _response(flow):  # pylint: disable=too-many-branches
             logging.debug('fixup modified script, saving to %s', MODIFIED)
             savefile(os.path.join(
                 MODIFIED, hostname, uahash, TIMESTAMP,
-                *flow.request.path_components
+                *_path_components(flow)
                 ),
                 fixed.encode(), mimetype, overwrite=True
             )
