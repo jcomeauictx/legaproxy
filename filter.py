@@ -17,6 +17,11 @@ try:
 except ImportError:  # for doctests
     http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
 try:
+    from libmproxy.flow import Response as LibmproxyResponse, ODictCaseless
+except ImportError:
+    LibmproxyResponse = None
+    ODictCaseless = None
+try:
     sys.path.append(os.getcwd())
     from shimmer import shimtext
 except ImportError as problem:
@@ -42,31 +47,38 @@ USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '
              'Version/12.1.2 Mobile/15E148'
 )
 
+def _respond(flow, code, body, content_type):
+    '''
+    short-circuit a flow with a synthetic response, compatible with old libmproxy and new mitmproxy
+    '''
+    if LibmproxyResponse is not None:
+        response = LibmproxyResponse(
+            flow.request, flow.request.httpversion,
+            code, 'OK' if code == 200 else 'Not Found',
+            ODictCaseless([['Content-Type', content_type]]),
+            body, None
+        )
+        flow.request.reply(response)
+    else:
+        flow.response = http.Response.make(code, body, {'Content-Type': content_type})
+
 def request(*args):
     '''
     filter requests
     '''
     flow = args[-1]  # old libmproxy: request(context, flow); new mitmproxy: request(flow)
     logging.debug('filter.request started')
-    path = None
     if flow.request.path.startswith('/legaproxy/'):
         logging.debug('MITM intercepting request for %s', flow.request.path)
         path = flow.request.path.lstrip('/')
         if os.path.isfile(path):
             logging.debug('MITM returning local file %s', path)
             with open(path, 'rb') as infile:
-                flow.response = http.Response.make(
-                    200,
-                    infile.read(),
-                    {'Content-Type': 'application/javascript'}  # FIXME
-                )
+                _respond(flow, 200, infile.read(), 'application/javascript')  # FIXME
         else:
             logging.debug('MITM could not find local file %s', path)
-            flow.response = http.Response.make(
-                404,
-                b'404 File not found',
-                {'Content-Type': 'text/html'}
-            )
+            _respond(flow, 404, b'404 File not found', 'text/html')
+        return
     elif flow.request.host.endswith('gvt1.com'):
         logging.debug('dropping spyware(?) junk from gvt1.com')
         flow.kill()
