@@ -82,8 +82,20 @@ def response(*args):  # pylint: disable=too-many-branches
     '''
     flow = args[-1]  # old libmproxy: response(context, flow); new mitmproxy: response(flow)
     print('filter.response started', file=sys.stderr)
+    try:
+        _response(flow)
+    except Exception as exc:  # pylint: disable=broad-except
+        logging.error('response hook failed: %s: %s', type(exc).__name__, exc)
+
+def _response(flow):  # pylint: disable=too-many-branches
+    '''
+    inner body of response hook, wrapped so old mitmproxy can't swallow exceptions silently
+    '''
     hostname = flow.request.host
-    uahash = md5sum(flow.request.headers['user-agent'])
+    ua = flow.request.headers.get('user-agent') or flow.request.headers.get('User-Agent') or ''
+    if isinstance(ua, list):
+        ua = ua[0] if ua else ''
+    uahash = md5sum(ua)
     logging.debug('response headers: %s', flow.response.headers)
     for header, value in flow.response.headers.items():
         logging.debug('header "%s": "%s"', header, value)
