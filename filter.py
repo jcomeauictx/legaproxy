@@ -283,7 +283,7 @@ def savefile( # pylint: disable=too-many-arguments,too-many-positional-arguments
         # pylint: disable=unspecified-encoding
         with open(path, mode) as outfile:
             outfile.write(contents)
-            logging.debug('wrote %s successfully as %s', path,
+            logging.debug('savefile: wrote %s successfully as %s', path,
                           'binary' if binary else 'string')
     except OSError as failed:
         logging.error('could not write %s (%s): %s', path, mimetype, failed)
@@ -328,8 +328,11 @@ def rebuild(path):
                 contents = infile.read()
             os.remove(path)
             os.makedirs(path)
-            with open(os.path.join(path, 'index.html'), 'wb') as outfile:
+            newpath = os.path.join(path, 'index.html')
+            with open(newpath, 'wb') as outfile:
                 outfile.write(contents)
+                logging.debug('rebuild: wrote %s successfully as %s',
+                              newpath, 'binary')
             return True
         # path doesn't exist, so try one level up
         return rebuild(os.path.dirname(path))
