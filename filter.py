@@ -9,6 +9,7 @@ This might allow old computers/operating systems, smartphones, tablets,
 iPod Touch, and many other legacy devices to access the modern Web.
 '''
 import sys, os, logging, base64, hashlib  # pylint: disable=multiple-imports
+import posixpath as wwwpath
 from time import strftime
 from hashlib import sha256
 from subprocess import Popen, PIPE
@@ -75,27 +76,36 @@ def request(*args):
     '''
     flow = args[-1]
     logging.debug('filter.request started')
+    mimetypes = {
+        '.png': 'image/png',
+        '.html': 'text/html',
+        '.js': 'application/javascript'
+    }
     if flow.request.path.startswith('/legaproxy') and (
             flow.request.path == '/legaproxy' or
             flow.request.path[len('/legaproxy')] == '/'):
         logging.debug('MITM intercepting request for %s', flow.request.path)
         path = flow.request.path.lstrip('/')
+        extension = wwwpath.splitext(path)[-1]
         if os.path.isfile(path):
             logging.debug('MITM returning local file %s', path)
             with open(path, 'rb') as infile:
-                # pylint: disable=fixme
-                # FIXME: assuming js file here, revisit someday
-                _respond(flow, 200, infile.read(), 'application/javascript')
-        logging.debug('MITM could not find local file %s', path)
-        _respond(flow, 404, b'404 File not found', 'text/html')
+                _respond(
+                    flow, 200, infile.read(),
+                    mimetypes.get(extension, 'application/octet-stream')
+                )
+        else:
+            logging.debug('MITM could not find local file %s', path)
+            _respond(flow, 404, b'404 File not found', 'text/html')
     elif flow.request.host.endswith('gvt1.com'):
         logging.debug('dropping spyware(?) junk from gvt1.com')
         flow.kill()
-    logging.debug('request: %s', vars(flow.request))
-    logging.debug('flow.live: %s', flow.live)
-    logging.debug('request.method: %s', flow.request.method)
-    for header, value in flow.request.headers.items():
-        logging.debug('header "%s": "%s"', header, value)
+    else:
+        logging.debug('request: %s', vars(flow.request))
+        logging.debug('flow.live: %s', flow.live)
+        logging.debug('request.method: %s', flow.request.method)
+        for header, value in flow.request.headers.items():
+            logging.debug('header "%s": "%s"', header, value)
 
 def response(*args):
     '''
