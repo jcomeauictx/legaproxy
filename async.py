@@ -2,12 +2,16 @@
 '''
 mitmdump filter to test delayed responses
 '''
-import os, logging, time, asyncio  # pylint: disable=multiple-imports
+import sys, os, logging, time, asyncio  # pylint: disable=multiple-imports
 from http import HTTPStatus
 from posixpath import split, sep
 # the following are only for mitmproxy 0.9.x
-from libmproxy.flow import Response
-from libmproxy import controller
+try:
+    from libmproxy.flow import Response, ODictCaseless
+    from libmproxy import controller
+except ImportError:
+    logging.error('this script is only meant for testing under libmproxy')
+    sys.exit(1)
 
 MIMETYPES = {
     '.html': 'text/html',
@@ -40,17 +44,17 @@ def request(flow):
     elif directory == 'legaproxy' and os.path.exists(path):
         logging.info('serving file %s', path)
         mimetype = MIMETYPES.get(os.path.splitext(filename)[1], 'text/plain')
-        response = Response(
+        _response = Response(
             [1, 1],
             HTTPStatus.OK, "OK",
             ODictCaseless([['Content-Type', mimetype]]),
             read(path),
             None
         )
-        flow.request.reply(response)
+        flow.request.reply(_response)
     elif directory == 'legaproxy' and filename == 'shutdown':
         logging.warning('shutting down MITM')
-        response = Response(
+        _response = Response(
             [1, 1],
             HTTPStatus.OK, "OK",
             ODictCaseless([['Content-Type', 'text/plain']]),
