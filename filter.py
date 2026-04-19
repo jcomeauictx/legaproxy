@@ -49,24 +49,31 @@ USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '
 
 def _respond(flow, code, body, content_type):
     '''
-    short-circuit a flow with a synthetic response, compatible with old libmproxy and new mitmproxy
+    short-circuit a flow with a synthetic response
+
+    compatible with old libmproxy and new mitmproxy
     '''
     if LibmproxyResponse is not None:
-        response = LibmproxyResponse(
+        _response = LibmproxyResponse(
             flow.request, flow.request.httpversion,
             code, 'OK' if code == 200 else 'Not Found',
             ODictCaseless([['Content-Type', content_type]]),
             body, None
         )
-        flow.request.reply(response)
+        flow.request.reply(_response)
     else:
-        flow.response = http.Response.make(code, body, {'Content-Type': content_type})
+        flow.response = http.Response.make(
+            code, body, {'Content-Type': content_type}
+        )
 
 def request(*args):
     '''
     filter requests
+
+    old libmproxy: request(context, flow)
+    new mitmproxy: request(flow)
     '''
-    flow = args[-1]  # old libmproxy: request(context, flow); new mitmproxy: request(flow)
+    flow = args[-1]
     logging.debug('filter.request started')
     if flow.request.path.startswith('/legaproxy') and (
             flow.request.path == '/legaproxy' or
@@ -76,11 +83,11 @@ def request(*args):
         if os.path.isfile(path):
             logging.debug('MITM returning local file %s', path)
             with open(path, 'rb') as infile:
-                _respond(flow, 200, infile.read(), 'application/javascript')  # FIXME
-        else:
-            logging.debug('MITM could not find local file %s', path)
-            _respond(flow, 404, b'404 File not found', 'text/html')
-        return
+                # pylint: disable=fixme
+                # FIXME: assuming js file here, revisit someday
+                _respond(flow, 200, infile.read(), 'application/javascript')
+        logging.debug('MITM could not find local file %s', path)
+        _respond(flow, 404, b'404 File not found', 'text/html')
     elif flow.request.host.endswith('gvt1.com'):
         logging.debug('dropping spyware(?) junk from gvt1.com')
         flow.kill()
@@ -90,36 +97,43 @@ def request(*args):
     for header, value in flow.request.headers.items():
         logging.debug('header "%s": "%s"', header, value)
 
-def response(*args):  # pylint: disable=too-many-branches
+def response(*args):
     '''
     filter responses
+
+    old libmproxy: response(context, flow); new mitmproxy: response(flow)
     '''
-    flow = args[-1]  # old libmproxy: response(context, flow); new mitmproxy: response(flow)
+    flow = args[-1]
     logging.debug('filter.response started')
     try:
         _response(flow)
     except Exception as exc:  # pylint: disable=broad-except
-        logging.exception('response hook failed: %s: %s', type(exc).__name__, exc)
+        logging.exception(
+            'response hook failed: %s: %s', type(exc).__name__, exc
+        )
 
 def _path_components(flow):
     '''
-    return path segments as a tuple, compatible with old libmproxy and new mitmproxy
+    return path segments as a tuple, compatible with old and new mitmproxy
 
-    Avoids flow.request.path_components; old libmproxy's version caused infinite recursion.
+    avoids flow.request.path_components; old libmproxy's version
+    caused infinite recursion.
     '''
     return tuple(p for p in flow.request.path.split('?')[0].split('/') if p)
 
 def _header(value, default=''):
     '''
-    normalize a header value: old libmproxy returns lists, new mitmproxy returns strings
+    normalize a header value: old libmproxy returns lists,
+    new mitmproxy returns strings
     '''
     if isinstance(value, list):
         return value[0] if value else default
     return value if value is not None else default
 
-def _response(flow):  # pylint: disable=too-many-branches
+def _response(flow):  # pylint: disable=too-many-branches, too-many-statements
     '''
-    inner body of response hook, wrapped so old mitmproxy can't swallow exceptions silently
+    inner body of response hook, wrapped so old mitmproxy can't
+    swallow exceptions silently
     '''
     hostname = flow.request.host
     ua = _header(flow.request.headers.get('user-agent') or
@@ -128,7 +142,9 @@ def _response(flow):  # pylint: disable=too-many-branches
     logging.debug('response headers: %s', flow.response.headers)
     for header, value in flow.response.headers.items():
         logging.debug('header "%s": "%s"', header, value)
-    mimetype = _header(flow.response.headers.get('content-type', '')).split(';')[0]
+    mimetype = _header(
+        flow.response.headers.get('content-type', '')
+    ).split(';')[0]
     encode = str  # for encoding after modification
     try:
         text = flow.response.content.decode('utf-8')
