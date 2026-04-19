@@ -448,6 +448,7 @@ $(INSTALLED)/apk/pyasn1: $(INSTALLED)/apk/$(PYTHON)/pyasn1
 	touch $@
 $(INSTALLED)/apt-get/pyasn1: | $(INSTALLED)/apt-get
 	$(INSTALL) python3-pyasn1
+	touch $@
 $(INSTALLED)/apk/python2/pyasn1: | $(INSTALLED)/apk/python2
 	$(PYTHON) -m pip install 'pyasn1>0.1.2'
 	touch $@
