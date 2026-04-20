@@ -319,8 +319,10 @@ $(NSSDB)/cert9.db: | $(INSTALLED)/certutil
 	fi
 # consider forcing reinstall of executables that may have been removed
 $(INSTALLED)/certutil: | $(INSTALLED)
+	[ -d $@ ] && rmdir $@ 2>/dev/null || true
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 $(INSTALL) libnss3-tools; \
+	 $(INSTALL) libnss3-tools && touch $@; \
+	elif [ ! -e $@ ]; then \
 	 touch $@; \
 	fi
 # alpine can't compile swc, so we need to use a remote executable under it.
