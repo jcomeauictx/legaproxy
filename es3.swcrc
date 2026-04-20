@@ -5,6 +5,11 @@
       "jsx": false
     },
     "target": "es3",
-    "externalHelpers": false
-  }
+    "externalHelpers": false,
+    "minify": {
+      "compress": true,
+      "mangle": false
+    }
+  },
+  "minify": true
 }
