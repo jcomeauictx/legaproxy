@@ -270,28 +270,33 @@ def savefile( # pylint: disable=too-many-arguments,too-many-positional-arguments
         if os.path.isfile(path):
             if not overwrite:
                 logging.warning('not overwriting %s', path)
-                return
+                return None
             # no `else` here, we will continue to overwrite
+            logging.debug('savefile: overwriting %s', path)
         else:  # directory, so write as index file
-            path = os.path.join(path, 'index.html')
-            savefile(path, contents, mimetype, binary, overwrite, retry_ok)
+            return savefile(
+                os.path.join(path, 'index.html'),
+                contents, mimetype, binary, overwrite, retry_ok
+            )
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         # pylint: disable=unspecified-encoding
         with open(path, mode) as outfile:
             outfile.write(contents)
-            logging.debug('wrote %s successfully as %s', path,
+            logging.debug('savefile: wrote %s successfully as %s', path,
                           'binary' if binary else 'string')
     except OSError as failed:
         logging.error('could not write %s (%s): %s', path, mimetype, failed)
         if rebuild(os.path.dirname(path)):
-            savefile(path, contents, mimetype, binary, overwrite, retry_ok)
+            return savefile(
+                path, contents, mimetype, binary, overwrite, retry_ok
+            )
     except TypeError as failed:
         if retry_ok:
-            savefile(path, contents, mimetype, True, True, False)
-        else:
-            logging.error('could not write contents of %s (%s): %s',
-                          path, mimetype, failed)
+            return savefile(path, contents, mimetype, True, True, False)
+        logging.error('could not write contents of %s (%s): %s',
+                      path, mimetype, failed)
+    return None
 
 def rebuild(path):
     '''
@@ -323,8 +328,11 @@ def rebuild(path):
                 contents = infile.read()
             os.remove(path)
             os.makedirs(path)
-            with open(os.path.join(path, 'index.html'), 'wb') as outfile:
+            newpath = os.path.join(path, 'index.html')
+            with open(newpath, 'wb') as outfile:
                 outfile.write(contents)
+                logging.debug('rebuild: wrote %s successfully as %s',
+                              newpath, 'binary')
             return True
         # path doesn't exist, so try one level up
         return rebuild(os.path.dirname(path))
