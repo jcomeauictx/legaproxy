@@ -52,7 +52,8 @@ endif
 HOST ?= 127.0.0.1
 # limit `make log` to this many entries
 LOGLIMIT ?= 10000
-CACHE := $(DATADIR)/chrome/Cache "$(DATADIR)/chrome/Code Cache"
+CACHE := $(DATADIR)/chrome/Cache "$(DATADIR)/chrome/Code Cache" \
+ $(DATADIR)/firefox/cache2
 BRANCH := $(shell git branch --show-current)
 REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
