@@ -477,4 +477,4 @@ $(INSTALLED)/apt-get/flask: | $(INSTALLED)/apt-get
 	$(INSTALL) python3-flask
 	touch $@
 .FORCE:
-.PRECIOUS: %.log tests.log
+.PRECIOUS: %.log tests.log make.log
