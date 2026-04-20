@@ -149,10 +149,15 @@ make.log: .FORCE
 timestamp:
 	@echo starting run at $$(date -u) >&2
 test: tests.log
+$(HOME)/%:
+	# for making $(INSTALLED) and subdirs
+	# PUT THIS FIRST, above all other INSTALLED rules,
+	# or you will short-circuit installations.
+	mkdir --parents $@
 $(INSTALLED)/mitmdump: $(INSTALLED)/$(INSTALLER)/mitmdump \
  $(INSTALLED)/pyopenssl $(INSTALLED)/pyasn1 $(INSTALLED)/flask
 	touch $@
-$(INSTALLED)/apk/mitmdump: .FORCE | $(INSTALLED)/apk
+$(INSTALLED)/apk/mitmdump: | $(INSTALLED)/apk
 	$(MAKE) reinstall
 	touch $@
 $(INSTALLED)/apt-get/mitmdump: | $(INSTALLED)/apt-get
@@ -181,9 +186,6 @@ $(INSTALLED)/python3/pip: | $(INSTALLED)/python3
 	touch $@
 %: %.template Makefile
 	envsubst < $< > $@
-$(HOME)/%:
-	# for making $(INSTALLED) and subdirs
-	mkdir --parents $@
 stop: smokesignal.stop proxy.stop
 async: async.log | $(INSTALLED)/w3m
 async.stop:
@@ -318,14 +320,22 @@ $(NSSDB)/cert9.db: | $(INSTALLED)/certutil
 	 certutil -d $(SQLDB) -N --empty-password; \
 	fi
 # consider forcing reinstall of executables that may have been removed
-$(INSTALLED)/certutil: | $(INSTALLED)
+$(INSTALLED)/certutil: | $(INSTALLED)/$(INSTALLER)/certutil
+	touch $@
+$((INSTALLED)/apt-get/certutil: $(INSTALLED)/apt-get
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 $(INSTALL) libnss3-tools; \
+	 $(INSTALL) libnss3-tools && \
+	 touch $@; \
+	fi
+$((INSTALLED)/apk/certutil: $(INSTALLED)/apk
+	if [ -z "$$($(WHICH) $(@F))" ]; then \
+	 $(INSTALL) nss-tools && \
 	 touch $@; \
 	fi
 # alpine can't compile swc, so we need to use a remote executable under it.
 $(INSTALLED)/apk/swc: $(INSTALLED)/swcserver | $(INSTALLED)/apk
 	ln -sf $(CURDIR)/remoteswc $(HOME)/.local/bin/$(@F)
+	scp es3.swcrc swcserver:
 	touch $@
 $(INSTALLED)/apt-get/swc: | $(INSTALLED)/apt-get $(INSTALLED)/cargo
 	cargo install swc_cli
