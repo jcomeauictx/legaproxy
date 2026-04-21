@@ -6,7 +6,7 @@ if (typeof Element.prototype.append == "undefined") {
             var thing = arguments[i];
             if (typeof thing == "string") {
                 this.appendChild(document.createTextNode(thing));
-            } else if (thing instanceof Node) {
+            } else if (Node[Symbol.hasInstance](thing)) {
                 this.appendChild(thing);
             } else {
                 console.log("cannot appendChild(" + thing + ")");
