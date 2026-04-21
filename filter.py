@@ -159,7 +159,7 @@ def _response(flow):  # pylint: disable=too-many-branches, too-many-statements
     try:
         text = flow.response.content.decode('utf-8')
         logging.debug('webpage text was utf-8 encoded')
-        encode = str.encode
+        encode = lambda s: s.encode('utf-8')
     except UnicodeError:
         text = flow.response.content.decode('latin1')
         logging.debug('assuming webpage text latin1-encoded')
@@ -195,7 +195,7 @@ def _response(flow):  # pylint: disable=too-many-branches, too-many-statements
                 MODIFIED, hostname, uahash, TIMESTAMP,
                 *_path_components(flow)
                 ),
-                fixed.encode(), mimetype, overwrite=True
+                fixed.encode('utf-8'), mimetype, overwrite=True
             )
             flow.response.content = encode(fixed)
         else:
@@ -209,7 +209,7 @@ def _response(flow):  # pylint: disable=too-many-branches, too-many-statements
                 MODIFIED, hostname, uahash, TIMESTAMP,
                 *_path_components(flow)
                 ),
-                fixed.encode(), mimetype, overwrite=True
+                fixed.encode('utf-8'), mimetype, overwrite=True
             )
             flow.response.content = encode(fixed)
         else:
