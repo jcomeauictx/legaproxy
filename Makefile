@@ -475,5 +475,36 @@ $(INSTALLED)/apk/python3/flask:
 $(INSTALLED)/apt-get/flask: | $(INSTALLED)/apt-get
 	$(INSTALL) python3-flask
 	touch $@
+$(INSTALLED)/pathod: $(INSTALLED)/$(INSTALLER)/pathod
+	touch $@
+$(INSTALLED)/apk/pathod: | $(INSTALLED)/apk/$(PYTHON)/pathod
+	touch $@
+$(INSTALLED)/apk/python2/pathod: ../pathod | $(INSTALLED)/apk/python2
+	$(MAKE) -C $< install
+	touch $@
+$(INSTALLED)/netlib: $(INSTALLED)/$(INSTALLER)/netlib
+	touch $@
+$(INSTALLED)/apk/netlib: | $(INSTALLED)/apk/$(PYTHON)/netlib
+	touch $@
+$(INSTALLED)/apk/python2/netlib: ../netlib | $(INSTALLED)/apk/python2
+	$(MAKE) -C $< install
+	touch $@
+$(INSTALLED)/mitmproxy: $(INSTALLED)/$(INSTALLER)/mitmproxy
+	touch $@
+$(INSTALLED)/apk/mitmproxy: $(INSTALLED)/apk/$(PYTHON)/mitmproxy
+	touch $@
+$(INSTALLED)/apk/python2/mitmproxy: ../mitmproxy $(INSTALLED)/netlib \
+ $(INSTALLED)/pathod | $(INSTALLED)/apk/python2
+	$(MAKE) -C $< install
+	touch $@
+$(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
+ $(INSTALLED)/py3-pip $(INSTALLED)/nss-tools $(INSTALLED)/musl-dev \
+ $(INSTALLED)/py3-cryptography $(INSTALLED)/py3-openssl \
+ $(INSTALLED)/setuptools $(INSTALLED)/packaging==21.3 \
+ $(INSTALLED)/markupsafe==2.0.1 $(INSTALLED)/mitmproxy==6.0.2 | \
+ $(INSTALLED)/apk/python3
+	touch $@
+$(INSTALLED)/apt-get/mitmproxy: | $(INSTALLED)/apt-get
+	$(INSTALL) mitmproxy
 .FORCE:
 .PRECIOUS: %.log tests.log make.log
