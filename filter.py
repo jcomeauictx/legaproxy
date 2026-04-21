@@ -222,15 +222,15 @@ def fixup(text, path):
     convert modern javascript to legacy code
     '''
     logging.info('starting conversion of %s to es3', path)
-    with Popen([
+    command = Popen([
             'swc', 'compile',
             '--config-file', 'es3.swcrc',
             '--filename', path],
-            stdin=PIPE, stdout=PIPE, stderr=PIPE) as command:
-        stdout, stderr = command.communicate(text.encode('utf-8'))
-        logging.info('ending conversion of %s to es3', path)
-        # chop echoed filename which is always sent
-        stderr = ' '.join(stderr.decode('utf-8').split('\n')[1:]).rstrip()
+            stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = command.communicate(text.encode('utf-8'))
+    logging.info('ending conversion of %s to es3', path)
+    # chop echoed filename which is always sent
+    stderr = ' '.join(stderr.decode('utf-8').split('\n')[1:]).rstrip()
     if stderr:
         logging.error('"swc convert" %s to ES3 problems: "%s"', path, stderr)
     if stdout:

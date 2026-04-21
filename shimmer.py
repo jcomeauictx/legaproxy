@@ -18,6 +18,7 @@ class ShimmerParser(HTMLParser):
     shim = '<script src="/legaproxy/shims.js"></script>'
 
     def __init__(self, *args, **kwargs):
+        kwargs.pop('convert_charrefs', None)
         HTMLParser.__init__(self, *args, **kwargs)
         self.parts = []
         self.tags = []
