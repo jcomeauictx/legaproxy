@@ -169,7 +169,7 @@ def _response(flow):  # pylint: disable=too-many-branches, too-many-statements
     except AttributeError:
         text = flow.response.content
         logging.debug('webpage text was already decoded')
-    encoded = text.encode()
+    encoded = text.encode('utf-8')
     if hostname.endswith(HOSTSUFFIX):
         logging.debug('response path: %s', _path_components(flow))
         savefile(
@@ -226,16 +226,15 @@ def fixup(text, path):
             'swc', 'compile',
             '--config-file', 'es3.swcrc',
             '--filename', path],
-            stdin=PIPE, stdout=PIPE, stderr=PIPE, text=True,
-            encoding='utf-8') as command:
-        stdout, stderr = command.communicate(text)
+            stdin=PIPE, stdout=PIPE, stderr=PIPE) as command:
+        stdout, stderr = command.communicate(text.encode('utf-8'))
         logging.info('ending conversion of %s to es3', path)
         # chop echoed filename which is always sent
-        stderr = ' '.join(stderr.split('\n')[1:]).rstrip()
+        stderr = ' '.join(stderr.decode('utf-8').split('\n')[1:]).rstrip()
     if stderr:
         logging.error('"swc convert" %s to ES3 problems: "%s"', path, stderr)
     if stdout:
-        return stdout
+        return stdout.decode('utf-8')
     logging.error('swc could not convert %s, returning original', path)
     return text
 
@@ -279,7 +278,9 @@ def savefile( # pylint: disable=too-many-arguments,too-many-positional-arguments
                 contents, mimetype, binary, overwrite, retry_ok
             )
     try:
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        dirpath = os.path.dirname(path)
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
         # pylint: disable=unspecified-encoding
         with open(path, mode) as outfile:
             outfile.write(contents)

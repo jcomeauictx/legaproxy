@@ -18,8 +18,7 @@ class ShimmerParser(HTMLParser):
     shim = '<script src="/legaproxy/shims.js"></script>'
 
     def __init__(self, *args, **kwargs):
-        # pylint: disable=super-with-arguments
-        super(ShimmerParser, self).__init__(*args, **kwargs)
+        HTMLParser.__init__(self, *args, **kwargs)
         self.parts = []
         self.tags = []
         self.shimmed = False
