@@ -8,7 +8,10 @@
     "externalHelpers": false,
     "minify": {
       "compress": true,
-      "mangle": false
+      "mangle": false,
+      "format": {
+        "ascii_only": true
+      }
     }
   },
   "minify": true
