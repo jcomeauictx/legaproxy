@@ -20,7 +20,7 @@ endif
 # NOTE: now that we're using $(PYTHON) as part of a path ($(INSTALLED...)
 # we're only using the name, not the full path. so if you're using a custom
 # python under /usr/local/bin or wherever, you also have to set PATH.
-PYTHON ?= $(notdir $(word 1, $(shell $(WHICH) python3 python python2)))
+PYTHON ?= $(notdir $(word 1, $(shell $(WHICH) python3 python2)))
 ifeq ($(PYTHON),)
 $(shell $(INSTALL) python3)
 PYTHON := python3
@@ -34,16 +34,8 @@ endif
 INSTALL_DIR := $(shell $(PYTHON) -c "from site \
  import getusersitepackages as installdir; \
  print(installdir())")
-PY := $(notdir $(PYTHON:.exe=))
 PIP = $(PYTHON) -m pip
-PIP_GET := $(INSTALL) python3-pip
-ifeq ($(INSTALLER),apk)
-PIP_GET := $(INSTALL) py3-pip
 # assume apk means iSH, alpine 3.14.3, with Python3.9.16
-MITM_PKG := git+https://github.com/jcomeauictx/mitmproxy@alpine-ish
-else
-MITM_PKG := mitmproxy
-endif
 PIP_INSTALL = $(PIP) install --verbose --user --upgrade --exists-action i
 # on non-iSH (non-alpine) systems, use --break-system-packages
 ifneq ($(INSTALLER),apk)
@@ -137,15 +129,6 @@ SLEEP ?= 3
 # modern mitmproxy: mitm.it is the magic cert-download domain
 CERT_APP_URL := http://mitm.it/
 endif
-REQUIRED_APT_GET := $(foreach package, \
- gcc python3-dev python3-pip libnss3-tools,
- $(INSTALLED)/apt-get/$package)
-REQUIRED_APK := $(foreach package, \
- gcc musl-dev python3-dev py3-pip py3-cryptography py3-openssl nss-tools,
- $(INSTALLED)/apk/$package)
-REQUIRED_PIP := $(foreach package, \
- setuptools packaging==21.3 markupsafe==2.0.1 mitmproxy==6.0.2,
- $(INSTALLED)/pip3-$package)
 ifneq ($(SHOWENV),)
  export
 else  # export what's needed for envsubst and for python scripts
@@ -158,16 +141,11 @@ make.log: .FORCE
 timestamp:
 	@echo starting run at $$(date -u) >&2
 test: tests.log
-$(INSTALLED)/mitmdump: $(INSTALLED)/$(INSTALLER)/mitmdump
-	touch $@
-$(INSTALLED)/apk/mitmdump: reinstall | $(INSTALLED)/apk
-	touch $@
-$(INSTALLED)/apt-get/mitmdump: | $(INSTALLED)/apt-get
-	# on desktop, prefer pip-installed mitmdump over Debian package;
-	# as of Trixie, it still attempts to import blinker._saferef,
-	# which hasn't existed for years.
-	$(PIP_INSTALL) $(MITM_PKG)
-	touch $@
+$(HOME)/%:
+	# for making $(INSTALLED) and subdirs
+	# PUT THIS FIRST, above all other INSTALLED rules,
+	# or you will short-circuit installations.
+	mkdir --parents $@
 # not sure whether setuptools needs to be installed separately any more.
 # seems to me if it's needed it will be pullled in by whatever needs it.
 # FIXME: if this is made a dependency on anything, flesh out the recipe
@@ -182,9 +160,14 @@ $(INSTALLED)/pip: $(INSTALLED)/$(PYTHON)/pip
 $(INSTALLED)/python2/pip: | get-pip.py $(INSTALLED)/python2
 	python2 $|
 	touch $@
-$(INSTALLED)/python3/pip: | $(INSTALLED)/python3
-	$(PIP_GET)
-	$(PIP) install --upgrade pip
+$(INSTALLED)/python3/pip: $(INSTALLED)/python3/$(INSTALLER)/pip
+	touch $@
+$(INSTALLED)/python3/apk/pip: | $(INSTALLED)/python3/apk
+	$(INSTALL) py3-pip
+	$(PIP_INSTALL) --upgrade pip
+	touch $@
+$(INSTALLED)/python3/apt-get/pip: | $(INSTALLED)/python3/apt-get
+	$(INSTALL) python3-pip
 	touch $@
 %: %.template Makefile
 	envsubst < $< > $@
@@ -360,9 +343,9 @@ $(INSTALLED)/cargo: $(INSTALLED)/rustup .FORCE
 	 touch $@ ||rm -f $@; \
 	fi
 # libraries and headers required for pip install
-$(INSTALLED)/libffi-dev: $(INSTALLED)
-$(INSTALLED)/python3-dev: $(INSTALLED)
-$(INSTALLED)/w3m: $(INSTALLED)
+$(INSTALLED)/libffi-dev \
+ $(INSTALLED)/python3-dev \
+ $(INSTALLED)/w3m: | $(INSTALLED)
 	$(INSTALLER) $(INSTALL) $(@F)
 	touch $@
 $(INSTALLED):
@@ -392,11 +375,11 @@ $(INSTALLED)/swcserver: $(INSTALLED)
 	cd $@ && git checkout $(BRANCH) || true  # not all have alpine-ish
 swcversion: $(INSTALLED)/swc
 	swc --version
-tests.log: tests.log.rotate tests.$(PY).log.rotate .FORCE | \
+tests.log: tests.log.rotate tests.$(PYTHON).log.rotate .FORCE | \
  ../netlib ../mitmproxy
 	-for dir in $|; do \
 	 $(MAKE) PYTHON=$(PYTHON) -C $$dir tests; done 2>&1 | tee $(CURDIR)/$@
-	cp $@ tests.$(PY).log
+	cp $@ tests.$(PYTHON).log
 %.rotate:
 	for i in $$(seq 1 9 | tac); do \
 	 if [ -e $*.$$i ]; then \
@@ -444,11 +427,36 @@ $(INSTALLED)/firefox: $(INSTALLED)/font
 	# alpine firefox-esr doesn't have a font prerequisite, so it renders
 	# a page completely with boxes containing unicode hex
 	$(INSTALL) firefox-esr
+$(INSTALLED)/mitmdump: $(INSTALLED)/mitmproxy
+	touch $@
+$(INSTALLED)/apk/mitmproxy: $(INSTALLED)/apk/$(PYTHON)/mitmproxy
 	touch $@
 $(INSTALLED)/font: $(INSTALLED)/$(INSTALLER)/font
 	touch $@
 $(INSTALLED)/apk/font:
 	sudo apk add unifont
+	touch $@
+$(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
+ $(INSTALLED)/pip $(INSTALLED)/certutil $(INSTALLED)/musl-dev \
+ $(INSTALLED)/py3-cryptography $(INSTALLED)/pyopenssl \
+ $(INSTALLED)/setuptools $(INSTALLED)/packaging \
+ $(INSTALLED)/pyasn1 $(INSTALLED)/flask $(INSTALLED)/markupsafe | \
+ $(INSTALLED)/apk/python3
+	# on desktop, prefer pip-installed mitmdump over Debian package;
+	# as of Trixie, it still attempts to import blinker._saferef,
+	# which hasn't existed for years.
+	$(PIP_INSTALL) mitmproxy==6.0.2
+	touch $@
+$(INSTALLED)/apt-get/mitmproxy: | $(INSTALLED)/apt-get
+	$(INSTALL) mitmproxy
+$(INSTALLED)/packaging: | $(INSTALLED)
+	$(PIP_INSTALL) $(@F)==21.3
+	touch $@
+$(INSTALLED)/markupsafe: | $(INSTALLED)
+	$(PIP_INSTALL) $(@F)==2.0.1
+	touch $@
+$(INSTALLED)/musl-dev: | $(INSTALLED)
+	$(INSTALL) $(@F)
 	touch $@
 .FORCE:
 .PRECIOUS: %.log tests.log
