@@ -323,7 +323,8 @@ $(INSTALLED)/apk/certutil:
 	 touch $@; \
 	fi
 # alpine can't compile swc, so we need to use a remote executable under it.
-$(INSTALLED)/apk/swc: $(INSTALLED)/swcserver | $(INSTALLED)/apk
+$(INSTALLED)/apk/swc: $(INSTALLED)/swcserver | $(INSTALLED)/apk \
+ $(HOME)/.local/bin
 	ln -sf $(CURDIR)/remoteswc $(HOME)/.local/bin/$(@F)
 	touch $@
 $(INSTALLED)/apt-get/swc: | $(INSTALLED)/apt-get $(INSTALLED)/cargo
