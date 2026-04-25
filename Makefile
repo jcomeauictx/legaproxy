@@ -440,9 +440,12 @@ $(INSTALLED)/mitmproxy: $(INSTALLED)/$(INSTALLER)/mitmproxy
 	touch $@
 $(INSTALLED)/apk/mitmproxy: $(INSTALLED)/apk/$(PYTHON)/mitmproxy
 	touch $@
+$(INSTALLED)/gcc:
+	$(INSTALL) gcc
+	touch $@
 $(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
  $(INSTALLED)/pip $(INSTALLED)/certutil $(INSTALLED)/musl-dev \
- $(INSTALLED)/py3-cryptography $(INSTALLED)/pyopenssl \
+ $(INSTALLED)/py3-cryptography $(INSTALLED)/pyopenssl $(INSTALLED)/openssl-dev \
  $(INSTALLED)/setuptools $(INSTALLED)/packaging \
  $(INSTALLED)/pyasn1 $(INSTALLED)/flask $(INSTALLED)/markupsafe | \
  $(INSTALLED)/apk/python3
@@ -466,7 +469,10 @@ $(INSTALLED)/packaging: | $(INSTALLED)
 $(INSTALLED)/markupsafe: | $(INSTALLED)
 	$(PIP_INSTALL) $(@F)==2.0.1
 	touch $@
-$(INSTALLED)/musl-dev: | $(INSTALLED)
+$(INSTALLED)/py3-%: | $(INSTALLED)
+	$(INSTALL) $(@F)
+	touch $@
+$(INSTALLED)/%-dev: | $(INSTALLED)
 	$(INSTALL) $(@F)
 	touch $@
 .FORCE:
