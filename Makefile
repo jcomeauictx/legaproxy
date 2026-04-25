@@ -312,6 +312,7 @@ $(NSSDB)/cert9.db: | $(INSTALLED)/certutil
 # create subdir regardless of installer
 $(INSTALLED)/$(INSTALLER)/%: | $(INSTALLED)/$(INSTALLER)
 $(INSTALLED)/certutil: | $(INSTALLED)/$(INSTALLER)/certutil
+	touch $@
 $(INSTALLED)/apt-get/certutil:
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(INSTALL) libnss3-tools; \
