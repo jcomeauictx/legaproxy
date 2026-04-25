@@ -114,7 +114,7 @@ ARCHIVE := https://archive.debian.org/debian
 # for fetching sibling repos
 GITPREFIX := $(dir $(shell git remote get-url origin))
 MITM_OPTIONS := --anticache
-ifeq ($(INSTALLER),apk)
+ifeq ($(INSTALLER)/$(PYTHON),apk/python2)
 MITM_OPTIONS += -a -z -b $(PROXYHOST) -p $(PROXYPORT) -s
 MITM_SAVE := -w
 # slow startup if running under iSH
