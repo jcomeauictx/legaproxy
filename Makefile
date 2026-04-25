@@ -348,7 +348,7 @@ $(INSTALLED)/cargo: $(INSTALLED)/rustup .FORCE
 $(INSTALLED)/libffi-dev \
  $(INSTALLED)/python3-dev \
  $(INSTALLED)/w3m: | $(INSTALLED)
-	$(INSTALLER) $(INSTALL) $(@F)
+	$(INSTALL) $(@F)
 	touch $@
 $(INSTALLED):
 	mkdir -p $@
@@ -404,7 +404,12 @@ pull status diff commit: | ../netlib ../mitmproxy ../pathod
 	for dir in $|; do $(MAKE) -C $$dir $@; done
 tests.%.diff: | tests.log.%
 	diff -y <(grep -v '^DEBUG:' tests.log) <(grep -v '^DEBUG:' $|) | less
-reinstall: $(REQUIRED_$(INSTALLERNAME)) $(REQUIRED_PIP)
+reinstall: ../netlib ../mitmproxy ../pathod
+	if [ "$(INSTALLER)/$(PYTHON)" = "apk/python2" ]; then \
+	 for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done; \
+	else \
+	 echo not installing old mitmproxy on new system >&2; \
+	fi
 debug: clean reinstall make.log
 	#-tail -n 30 mitmdump.log
 %.results:
@@ -431,12 +436,9 @@ $(INSTALLED)/firefox: $(INSTALLED)/font
 	$(INSTALL) firefox-esr
 $(INSTALLED)/mitmdump: $(INSTALLED)/mitmproxy
 	touch $@
+$(INSTALLED)/mitmproxy: $(INSTALLED)/$(INSTALLER)/mitmproxy
+	touch $@
 $(INSTALLED)/apk/mitmproxy: $(INSTALLED)/apk/$(PYTHON)/mitmproxy
-	touch $@
-$(INSTALLED)/font: $(INSTALLED)/$(INSTALLER)/font
-	touch $@
-$(INSTALLED)/apk/font:
-	sudo apk add unifont
 	touch $@
 $(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
  $(INSTALLED)/pip $(INSTALLED)/certutil $(INSTALLED)/musl-dev \
@@ -449,8 +451,15 @@ $(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
 	# which hasn't existed for years.
 	$(PIP_INSTALL) mitmproxy==6.0.2
 	touch $@
+$(INSTALLED)/apk/python2/mitmproxy: reinstall
+	touch $@
 $(INSTALLED)/apt-get/mitmproxy: | $(INSTALLED)/apt-get
 	$(INSTALL) mitmproxy
+$(INSTALLED)/font: $(INSTALLED)/$(INSTALLER)/font
+	touch $@
+$(INSTALLED)/apk/font:
+	$(INSTALL) unifont
+	touch $@
 $(INSTALLED)/packaging: | $(INSTALLED)
 	$(PIP_INSTALL) $(@F)==21.3
 	touch $@
