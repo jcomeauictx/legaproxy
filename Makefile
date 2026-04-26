@@ -314,12 +314,12 @@ $(NSSDB)/cert9.db: | $(INSTALLED)/certutil
 $(INSTALLED)/$(INSTALLER)/%: | $(INSTALLED)/$(INSTALLER)
 $(INSTALLED)/certutil: | $(INSTALLED)/$(INSTALLER)/certutil
 	touch $@
-$(INSTALLED)/apt-get/certutil:
+$(INSTALLED)/apt-get/certutil: | $(INSTALLED)/apt-get
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(INSTALL) libnss3-tools; \
 	 touch $@; \
 	fi
-$(INSTALLED)/apk/certutil:
+$(INSTALLED)/apk/certutil: | $(INSTALLED)/apk
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(INSTALL) nss-tools; \
 	 touch $@; \
@@ -441,7 +441,7 @@ $(INSTALLED)/mitmproxy: $(INSTALLED)/$(INSTALLER)/mitmproxy
 	touch $@
 $(INSTALLED)/apk/mitmproxy: $(INSTALLED)/apk/$(PYTHON)/mitmproxy
 	touch $@
-$(INSTALLED)/gcc:
+$(INSTALLED)/gcc: | $(INSTALLED)
 	$(INSTALL) gcc
 	touch $@
 $(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
