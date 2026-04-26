@@ -44,7 +44,8 @@ endif
 HOST ?= 127.0.0.1
 # limit `make log` to this many entries
 LOGLIMIT ?= 10000
-CACHE := $(DATADIR)/chrome/Cache "$(DATADIR)/chrome/Code Cache"
+CACHE := $(DATADIR)/chrome/Cache "$(DATADIR)/chrome/Code Cache" \
+ $(DATADIR)/firefox/cache2
 BRANCH := $(shell git branch --show-current)
 REMOTES := $(filter-out original, $(shell git remote))
 SSHPORT ?= 3022
@@ -60,9 +61,7 @@ WHEEZY32FF := $(shell $(WHICH) /opt/wheezy32/usr/lib/iceweasel/iceweasel)
 # wheezy32firefox only usable when iceweasel exists
 W32FIREFOX := $(word 2, $(WHEEZY32FF) wheezy32firefox)
 FIREFOX := $(word 1, $(shell $(WHICH) firefox) $(W32FIREFOX))
-BROWSER ?= $(shell echo $(word 1, $(CHROME) $(FIREFOX) \
- echo_launch_browser_to) | tr '_' ' ')
-$(warning BROWSER=$(BROWSER))
+BROWSER ?= $(word 1, $(CHROME) $(FIREFOX) browser)
 TESTFILE := sarge/capabilities.html
 SSHDCONF := /etc/ssh/sshd_config
 SSHDORIG := $(SSHDCONF).orig
@@ -77,7 +76,7 @@ PYTHON_SCRIPTS := $(wildcard *.py)
 # leave HOSTSUFFIX blank to capture everything
 HOSTSUFFIX=
 INDEXPAGE ?=
-LOGGING := &>$(HOME)/$(word 1, $(notdir $(BROWSER))).log &
+LOGGING := &>$(HOME)/$(notdir $(BROWSER)).log &
 BROWSE := $(BROWSER)
 # don't use `localhost`, many Debian installs have both 127.0.0.1 and ::1
 PROXYHOST := 127.0.0.1
@@ -98,6 +97,8 @@ else ifeq ($(BROWSER),$(FIREFOX))  # assuming firefox on Alpine
  BROWSE += --profile $(DATADIR)/firefox
  NSSDB := $(DATADIR)/firefox
  BROWSERPOLICY := /usr/lib/firefox/distribution/policies.json
+else
+ BROWSE := echo launch browser to
 endif
 SQLDB := sql:$(NSSDB)
 # proxy envvars lowercase, for testing with wget
