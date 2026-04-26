@@ -356,7 +356,7 @@ $(INSTALLED)/cargo: $(INSTALLED)/rustup .FORCE
 $(INSTALLED)/libffi-dev: $(INSTALLED)
 $(INSTALLED)/python3-dev: $(INSTALLED)
 $(INSTALLED)/w3m: $(INSTALLED)
-	$(INSTALLER) $(INSTALL) $(@F)
+	$(INSTALL) $(@F)
 	touch $@
 $(INSTALLED):
 	mkdir -p $@
