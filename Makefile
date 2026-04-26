@@ -97,7 +97,7 @@ else ifeq ($(BROWSER),$(FIREFOX))  # assuming firefox on Alpine
  BROWSE += --profile $(DATADIR)/firefox
  NSSDB := $(DATADIR)/firefox
  BROWSERPOLICY := /usr/lib/firefox/distribution/policies.json
-else
+else  # assume iPhone, just tell caller what to do
  BROWSE := echo launch browser to
 endif
 SQLDB := sql:$(NSSDB)
@@ -159,7 +159,7 @@ $(INSTALLED)/setuptools: | $(INSTALLED)/pip
 $(INSTALLED)/pip: $(INSTALLED)/$(PYTHON)/pip
 	touch $@
 $(INSTALLED)/python2/pip: | get-pip.py $(INSTALLED)/python2
-	python2 $|
+	python2 get-pip.py
 	touch $@
 $(INSTALLED)/python3/pip: $(INSTALLED)/python3/$(INSTALLER)/pip
 	touch $@
@@ -172,13 +172,10 @@ $(INSTALLED)/python3/apt-get/pip: | $(INSTALLED)/python3/apt-get
 	touch $@
 %: %.template Makefile
 	envsubst < $< > $@
-$(HOME)/%:
-	# for making $(INSTALLED) and subdirs
-	mkdir --parents $@
 stop: smokesignal.stop proxy.stop
 async: async.log | $(INSTALLED)/w3m
 async.stop:
-	$(WGET) -O- http://$(TESTSITE)/mitm/shutdown
+	$(WGET) -O- http://$(TESTSITE)/legaproxy/shutdown
 # have to fetch certs to create them? seems that way.
 # (later) nope, not true, but maybe needs a delay. so this should still help
 certs:
@@ -195,7 +192,8 @@ certs:
 %.grepwl: | . ../mitmproxy ../netlib ../pathod
 	grep -rl '\<$*\>' $|
 # the following is the recipe for async.log and possibly others
-%.log: %.py mitm/%.html legaproxy/pixel.png %.log.rotate $(BROWSERPOLICY) .FORCE
+%.log: %.py legaproxy/%.html legaproxy/pixel.png \
+ %.log.rotate $(BROWSERPOLICY) .FORCE
 	@echo using %.log recipe for async.py and similar scripts >&2
 	mitmdump $(MITM_OPTIONS) $< 2>&1 | tee $@ &
 	sleep $(SLEEP)  # allow mitmproxy to start up
@@ -248,8 +246,8 @@ smokesignal: proxy.stop mitmdump.log $(BROWSERPOLICY) | \
 	-$(MAKE) PORT=8888 -C ../smokesignal uwsgi &
 	sleep 3  # give uwsgi a chance to start up
 	@echo BROWSER=$(BROWSER)
-	@echo attempting $(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/ >&2
-	-$(PROXY_SETTINGS) $(BROWSER) http://localhost:8888/
+	@echo attempting $(PROXY_SETTINGS) $(BROWSE) http://localhost:8888/ >&2
+	-$(PROXY_SETTINGS) $(BROWSE) http://localhost:8888/
 	read -p "<enter> to terminate..."
 	$(MAKE) $@.stop proxy.stop
 smokesignal.stop:
@@ -261,7 +259,7 @@ localserver: $(BROWSERPOLICY) | $(TESTFILE)
 	echo $$! >$*.pid
 	@echo waiting a few seconds to launch the browser
 	sleep $(SLEEP)
-	-$(BROWSER) http://localhost:8888/$| \
+	-$(BROWSE) http://localhost:8888/$| \
 	 >/var/tmp/legaproxy.log 2>&1
 	-kill $$(cat $*.pid)
 	rm -f *.pid
