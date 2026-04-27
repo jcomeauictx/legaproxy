@@ -351,12 +351,17 @@ $(INSTALLED)/libffi-dev \
 	touch $@
 $(INSTALLED):
 	mkdir -p $@
-$(INSTALLED)/debian-release-7.gpg: $(INSTALLED)
+$(INSTALLED)/debian-release-7.gpg: | $(INSTALLED)
 	# https://serverfault.com/a/984605/58945
 	wget https://ftp-master.debian.org/keys/release-7.asc -qO- | \
 	 gpg --import --no-default-keyring --keyring $@
-$(INSTALLED)/swcserver: $(INSTALLED)
+$(INSTALLED)/swcserver: | $(INSTALLED)
+	# if this is running on a docker image, assume host is swc-capable
 	if [ -z "$$(getent hosts $(@F))" ]; then \
+	 if ping -c1 -W1 172.17.0.1; then \
+	  echo 172.17.0.1 $(@F) | sudo tee -a /etc/hosts; \
+	 fi; \
+	else \
 	 echo alpine/iSH cannot run a suitable version of swc >&2; \
 	 echo you must put an entry for $(@F) in /etc/hosts >&2; \
 	 false; \
