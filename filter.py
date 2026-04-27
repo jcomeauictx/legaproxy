@@ -14,9 +14,12 @@ from time import strftime
 from hashlib import sha256
 from subprocess import Popen, PIPE
 try:
-    from mitmproxy import http
-except ImportError:  # for doctests
-    http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
+    from mitmproxy.http import HTTPResponse  # mitmproxy v6
+except ImportError:  # newer mitmproxy
+    try:
+        from mitmproxy.http import Response as HTTPResponse
+    except ImportError:  # possibly very old mitmproxy (libmproxy)
+        HTTPResponse = None
 try:
     from libmproxy.flow import Response as LibmproxyResponse, ODictCaseless
 except ImportError:
@@ -63,7 +66,7 @@ def _respond(flow, code, body, content_type):
         )
         flow.request.reply(_response)
     else:
-        flow.response = http.Response.make(
+        flow.response = HTTPResponse.make(
             code, body, {'Content-Type': content_type}
         )
 
