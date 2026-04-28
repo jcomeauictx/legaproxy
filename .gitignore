@@ -16,3 +16,4 @@ pixel.png
 mitmdump.pid
 shimmer.pyc
 *.log.*
+ssh.config
