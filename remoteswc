@@ -1,2 +1,2 @@
 #!/bin/sh
-ssh swcserver "PATH=~/.cargo/bin swc '$@'"
+ssh swcserver PATH=~/.cargo/bin swc "$@"

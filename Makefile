@@ -358,11 +358,12 @@ $(INSTALLED)/debian-release-7.gpg: | $(INSTALLED)
 	# https://serverfault.com/a/984605/58945
 	wget https://ftp-master.debian.org/keys/release-7.asc -qO- | \
 	 gpg --import --no-default-keyring --keyring $@
-$(INSTALLED)/swcserver: | $(INSTALLED)
+$(INSTALLED)/swcserver: es3.swcrc | $(INSTALLED)
 	# if this is running on a docker image, assume host is swc-capable
 	if ping -c1 -W1 172.17.0.1; then \
 	 $(MAKE) $(HOME)/.ssh/config; \
 	fi
+	rsync -avuz es3.swcrc swcserver:
 	touch $@
 /opt/wheezy32/usr/bin/iceweasel: \
  | $(INSTALLED)/debian-release-7.gpg $(INSTALLED)/debootstrap
@@ -479,7 +480,7 @@ $(INSTALLED)/%-dev: | $(INSTALLED)
 $(HOME)/.ssh/config: ssh.config
 	# replace config for swcserver when updated
 	# first delete any existing configuration for it
-	sed -i '/^Host swcserver$/ \
+	sed -i '/^Host swcserver$$/ \
 	 { d; :a; N; /\n\t/ { s/\n\t.*/\n\t/; ba; }; d; }' $@
 	# now append the new contents
 	cat $< >> $@
