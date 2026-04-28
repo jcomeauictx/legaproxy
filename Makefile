@@ -451,15 +451,15 @@ $(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
  $(INSTALLED)/setuptools $(INSTALLED)/packaging \
  $(INSTALLED)/pyasn1 $(INSTALLED)/flask $(INSTALLED)/markupsafe | \
  $(INSTALLED)/apk/python3
-	# on desktop, prefer pip-installed mitmdump over Debian package;
-	# as of Trixie, it still attempts to import blinker._saferef,
-	# which hasn't existed for years.
 	$(PIP_INSTALL) mitmproxy==6.0.2
 	touch $@
 $(INSTALLED)/apk/python2/mitmproxy: reinstall
 	touch $@
 $(INSTALLED)/apt-get/mitmproxy: | $(INSTALLED)/apt-get
-	$(INSTALL) mitmproxy
+	# on desktop, prefer pip-installed mitmdump over Debian package;
+	# as of Trixie, it still attempts to import blinker._saferef,
+	# which hasn't existed for years.
+	$(PIP_INSTALL) mitmproxy
 $(INSTALLED)/font: $(INSTALLED)/$(INSTALLER)/font
 	touch $@
 $(INSTALLED)/apk/font:
@@ -487,4 +487,4 @@ $(HOME)/.ssh/config: ssh.config
 %: %.template
 	envsubst < $< > $@
 .FORCE:
-.PRECIOUS: %.log tests.log
+.PRECIOUS: %.log tests.log make.log
