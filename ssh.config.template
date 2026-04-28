@@ -1,0 +1,3 @@
+Host swcserver
+	HostName 172.17.0.1
+	User $HOSTUSER

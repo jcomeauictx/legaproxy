@@ -130,10 +130,13 @@ SLEEP ?= 3
 # modern mitmproxy: mitm.it is the magic cert-download domain
 CERT_APP_URL := http://mitm.it/
 endif
+# for use on Docker alpine-ish-dev image, get username for ssh to host
+HOSTUSER ?= $(shell cat $(HOME)/.ssh/id_rsa.pub | awk '{print $$3}' | \
+ awk -F@ '{print $$1}')
 ifneq ($(SHOWENV),)
  export
 else  # export what's needed for envsubst and for python scripts
- export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
+ export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB HOSTUSER
 endif
 default: debug
 retest: clean reinstall test tests.results
@@ -357,14 +360,8 @@ $(INSTALLED)/debian-release-7.gpg: | $(INSTALLED)
 	 gpg --import --no-default-keyring --keyring $@
 $(INSTALLED)/swcserver: | $(INSTALLED)
 	# if this is running on a docker image, assume host is swc-capable
-	if [ -z "$$(getent hosts $(@F))" ]; then \
-	 if ping -c1 -W1 172.17.0.1; then \
-	  echo 172.17.0.1 $(@F) | sudo tee -a /etc/hosts; \
-	 fi; \
-	else \
-	 echo alpine/iSH cannot run a suitable version of swc >&2; \
-	 echo you must put an entry for $(@F) in /etc/hosts >&2; \
-	 false; \
+	if ping -c1 -W1 172.17.0.1; then \
+	 $(MAKE) $(HOME)/.ssh/config; \
 	fi
 	touch $@
 /opt/wheezy32/usr/bin/iceweasel: \
@@ -479,5 +476,14 @@ $(INSTALLED)/py3-%: | $(INSTALLED)
 $(INSTALLED)/%-dev: | $(INSTALLED)
 	$(INSTALL) $(@F)
 	touch $@
+$(HOME)/.ssh/config: ssh.config
+	# replace config for swcserver when updated
+	# first delete any existing configuration for it
+	sed -i '/^Host swcserver$/ \
+	 { d; :a; N; /\n\t/ { s/\n\t.*/\n\t/; ba; }; d; }' $@
+	# now append the new contents
+	cat $< >> $@
+%: %.template
+	envsubst < $< > $@
 .FORCE:
 .PRECIOUS: %.log tests.log

@@ -91,16 +91,16 @@ class ShimmerParser(HTMLParser):
         '''
         handle data
         '''
-        logging.debug('self: %s, data: %r', vars(self), data)
+        #logging.debug('self: %s, data: %r', vars(self), data)
         self.parts.append(data)
 
     def handle_pi(self, data):
         '''
         handle processing instruction
 
-        (I don't know what this is... guess I'll find out eventually--jc)
+        example given in online docs: <?proc color='red'>
         '''
-        logging.debug('self: %s, pi: %r', vars(self), data)
+        #logging.debug('self: %s, pi: %r', vars(self), data)
         self.parts.append(data)
 
 def shim(filename=None):
