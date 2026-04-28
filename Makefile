@@ -20,7 +20,7 @@ endif
 # NOTE: now that we're using $(PYTHON) as part of a path ($(INSTALLED...)
 # we're only using the name, not the full path. so if you're using a custom
 # python under /usr/local/bin or wherever, you also have to set PATH.
-PYTHON ?= $(notdir $(word 1, $(shell $(WHICH) python3 python python2)))
+PYTHON ?= $(notdir $(word 1, $(shell $(WHICH) python3 python2)))
 ifeq ($(PYTHON),)
 $(shell $(INSTALL) python3)
 PYTHON := python3
@@ -34,16 +34,8 @@ endif
 INSTALL_DIR := $(shell $(PYTHON) -c "from site \
  import getusersitepackages as installdir; \
  print(installdir())")
-PY := $(notdir $(PYTHON:.exe=))
 PIP = $(PYTHON) -m pip
-PIP_GET := $(INSTALL) python3-pip
-ifeq ($(INSTALLER),apk)
-PIP_GET := $(INSTALL) py3-pip
 # assume apk means iSH, alpine 3.14.3, with Python3.9.16
-MITM_PKG := git+https://github.com/jcomeauictx/mitmproxy@alpine-ish
-else
-MITM_PKG := mitmproxy
-endif
 PIP_INSTALL = $(PIP) install --verbose --user --upgrade --exists-action i
 # on non-iSH (non-alpine) systems, use --break-system-packages
 ifneq ($(INSTALLER),apk)
