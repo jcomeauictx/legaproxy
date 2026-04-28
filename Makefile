@@ -130,10 +130,13 @@ SLEEP ?= 3
 # modern mitmproxy: mitm.it is the magic cert-download domain
 CERT_APP_URL := http://mitm.it/
 endif
+# for use on Docker alpine-ish-dev image, get username for ssh to host
+HOSTUSER ?= $(shell cat $(HOME)/.ssh/id_rsa.pub | awk '{print $$3}' | \
+ awk -F@ '{print $$1}')
 ifneq ($(SHOWENV),)
  export
 else  # export what's needed for envsubst and for python scripts
- export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB
+ export HOST SSHPORT PATH SSHDCONF SSHDORIG USER USERPUB HOSTUSER
 endif
 default: debug
 retest: clean reinstall test tests.results
@@ -173,10 +176,14 @@ $(INSTALLED)/pip: $(INSTALLED)/$(PYTHON)/pip
 $(INSTALLED)/python2/pip: | get-pip.py $(INSTALLED)/python2
 	python2 get-pip.py
 	touch $@
-$(INSTALLED)/python3/pip: | $(INSTALLED)/python3
-	$(PIP_GET)
-	$(PIP) install --upgrade pip
+$(INSTALLED)/python3/pip: $(INSTALLED)/python3/$(INSTALLER)/pip
 	touch $@
+$(INSTALLED)/python3/apk/pip: | $(INSTALLED)/python3/apk
+	$(INSTALL) py3-pip
+	$(PIP_INSTALL) --upgrade pip
+	touch $@
+$(INSTALLED)/python3/apt-get/pip: | $(INSTALLED)/python3/apt-get
+	$(INSTALL) python3-pip
 %: %.template Makefile
 	envsubst < $< > $@
 stop: smokesignal.stop proxy.stop
@@ -312,21 +319,23 @@ $(NSSDB)/cert9.db: | $(INSTALLED)/certutil
 	 mkdir --parents $(@D); \
 	 certutil -d $(SQLDB) -N --empty-password; \
 	fi
-# consider forcing reinstall of executables that may have been removed
+# consider forcing reinstall of executables that may have been removed;
+# use `which` or equivalent in the recipe, or for a really blunt approach,
+# don't use `touch $@` and run the installer each time the tool is needed.
 $(INSTALLED)/certutil: | $(INSTALLED)/$(INSTALLER)/certutil
 	touch $@
-$(INSTALLED)/apt-get/certutil: $(INSTALLED)/apt-get
+$(INSTALLED)/apt-get/certutil: | $(INSTALLED)/apt-get
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(INSTALL) libnss3-tools && touch $@; \
 	fi
-$(INSTALLED)/apk/certutil: $(INSTALLED)/apk
+$(INSTALLED)/apk/certutil: | $(INSTALLED)/apk
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
 	 $(INSTALL) nss-tools && touch $@; \
 	fi
 # alpine can't compile swc, so we need to use a remote executable under it.
 $(INSTALLED)/apk/swc: $(INSTALLED)/swcserver | $(INSTALLED)/apk
 	ln -sf $(CURDIR)/remoteswc $(HOME)/.local/bin/$(@F)
-	scp es3.swcrc swcserver:
+	rsync -avuz es3.swcrc swcserver:
 	touch $@
 $(INSTALLED)/apt-get/swc: | $(INSTALLED)/apt-get $(INSTALLED)/cargo
 	cargo install swc_cli
