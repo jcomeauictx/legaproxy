@@ -357,7 +357,7 @@ $(INSTALLED)/cargo: $(INSTALLED)/rustup .FORCE
 # libraries and headers required for pip install
 $(INSTALLED)/libffi-dev \
  $(INSTALLED)/python3-dev \
- $(INSTALLED)/w3m | $(INSTALLED)
+ $(INSTALLED)/w3m: | $(INSTALLED)
 	$(INSTALL) $(@F)
 	touch $@
 $(INSTALLED):
@@ -517,5 +517,20 @@ $(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
 $(INSTALLED)/apt-get/mitmproxy: | $(INSTALLED)/apt-get
 	$(PIP_INSTALL) mitmproxy
 	touch $@
+$(INSTALLED)/py3-%: | $(INSTALLED)
+	$(INSTALL) $(@F)
+	touch $@
+$(INSTALLED)/%-dev: | $(INSTALLED)
+	$(INSTALL) $(@F)
+	touch $@
+$(HOME)/.ssh/config: ssh.config
+	# replace config for swcserver when updated
+	# first delete any existing configuration for it
+	sed -i '/^Host swcserver$$/ \
+	 { d; :a; N; /\n\t/ { s/\n\t.*/\n\t/; ba; }; d; }' $@
+	# now append the new contents
+	cat $< >> $@
+%: %.template
+	envsubst < $< > $@
 .FORCE:
 .PRECIOUS: %.log tests.log make.log
