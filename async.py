@@ -2,16 +2,12 @@
 '''
 mitmdump filter to test delayed responses
 '''
-import sys, os, logging, time, asyncio  # pylint: disable=multiple-imports
+import os, logging, time, asyncio  # pylint: disable=multiple-imports
 from http import HTTPStatus
 from posixpath import split, sep
 # the following are only for mitmproxy 0.9.x
-try:
-    from libmproxy.flow import Response, ODictCaseless
-    from libmproxy import controller
-except ImportError:
-    logging.error('this script is only meant for testing under libmproxy')
-    sys.exit(1)
+from libmproxy.flow import Response
+from libmproxy import controller
 
 MIMETYPES = {
     '.html': 'text/html',
@@ -37,24 +33,24 @@ def request(flow):
     if flow.request.host.endswith('gvt1.com'):
         logging.info('dropping google spyware')
         flow.kill()
-    elif flow.request.host in ('mitm', 'mitm.it'):
+    elif flow.request.host == 'mitm.it':
         logging.info('passing on request to mitm.it')
     elif directory == '' and filename in ('', 'index.html', 'favicon.ico'):
         logging.info('passing request on to server')
-    elif directory == 'legaproxy' and os.path.exists(path):
+    elif directory == 'mitm' and os.path.exists(path):
         logging.info('serving file %s', path)
         mimetype = MIMETYPES.get(os.path.splitext(filename)[1], 'text/plain')
-        _response = Response(
+        response = Response(
             [1, 1],
             HTTPStatus.OK, "OK",
             ODictCaseless([['Content-Type', mimetype]]),
             read(path),
             None
         )
-        flow.request.reply(_response)
-    elif directory == 'legaproxy' and filename == 'shutdown':
+        flow.request.reply(response)
+    elif directory == 'mitm' and filename == 'shutdown':
         logging.warning('shutting down MITM')
-        _response = Response(
+        response = Response(
             [1, 1],
             HTTPStatus.OK, "OK",
             ODictCaseless([['Content-Type', 'text/plain']]),
@@ -74,12 +70,12 @@ async def response(flow):
     directory, filename = split(sep.join(flow.request.path_components))
     logging.debug('received request for directory %s, filename %s',
                   directory, filename)
-    if directory == 'legaproxy' and filename.endswith('.png'):
+    if directory == 'mitm' and filename.endswith('.png'):
         delay = int(flow.request.query.get('delay', '0').rstrip('s'))
         await asyncio.to_thread(swc, delay)
     elif directory == '' and filename in ('', 'index.html'):
         logging.info('filter: %s', __file__)
-        filepath = os.path.join('legaproxy', __file__.replace('.py', '.html'))
+        filepath = os.path.join('mitm', __file__.replace('.py', '.html'))
         flow.response.content = read(filepath)
 
 def swc(delay):
