@@ -14,9 +14,12 @@ from time import strftime
 from hashlib import sha256
 from subprocess import Popen, PIPE
 try:
-    from mitmproxy import http
-except ImportError:  # for doctests
-    http = type('', (), {'HTTPFlow': None})  # pylint: disable=invalid-name
+    from mitmproxy.http import HTTPResponse  # mitmproxy v6
+except ImportError:  # newer mitmproxy
+    try:
+        from mitmproxy.http import Response as HTTPResponse
+    except ImportError:  # possibly very old mitmproxy (libmproxy)
+        HTTPResponse = None
 try:
     from libmproxy.flow import Response as LibmproxyResponse, ODictCaseless
 except ImportError:
@@ -63,7 +66,7 @@ def _respond(flow, code, body, content_type):
         )
         flow.request.reply(_response)
     else:
-        flow.response = http.Response.make(
+        flow.response = HTTPResponse.make(
             code, body, {'Content-Type': content_type}
         )
 
@@ -219,7 +222,7 @@ def _response(flow):  # pylint: disable=too-many-branches, too-many-statements
 
 def fixup(text, path):
     '''
-    convert modern javascript to legacy code
+    transpile modern javascript to legacy code
     '''
     logging.info('starting conversion of %s to es3', path)
     command = Popen([
@@ -231,11 +234,12 @@ def fixup(text, path):
     logging.info('ending conversion of %s to es3', path)
     # chop echoed filename which is always sent
     stderr = ' '.join(stderr.decode('utf-8').split('\n')[1:]).rstrip()
-    if stderr:
-        logging.error('"swc convert" %s to ES3 problems: "%s"', path, stderr)
+    # some versions of swc spit filename arg to stderr
+    if stderr and stderr != path:
+        logging.error('"swc compile" %s to ES3 problems: "%s"', path, stderr)
     if stdout:
         return stdout.decode('utf-8')
-    logging.error('swc could not convert %s, returning original', path)
+    logging.error('swc could not compile %s, returning original', path)
     return text
 
 def md5sum(string, base64encode=True):

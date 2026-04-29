@@ -184,6 +184,7 @@ $(INSTALLED)/python3/apk/pip: | $(INSTALLED)/python3/apk
 	touch $@
 $(INSTALLED)/python3/apt-get/pip: | $(INSTALLED)/python3/apt-get
 	$(INSTALL) python3-pip
+	touch $@
 %: %.template Makefile
 	envsubst < $< > $@
 stop: smokesignal.stop proxy.stop
