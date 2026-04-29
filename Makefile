@@ -355,9 +355,9 @@ $(INSTALLED)/cargo: $(INSTALLED)/rustup .FORCE
 	 touch $@ ||rm -f $@; \
 	fi
 # libraries and headers required for pip install
-$(INSTALLED)/libffi-dev: $(INSTALLED)
-$(INSTALLED)/python3-dev: $(INSTALLED)
-$(INSTALLED)/w3m: $(INSTALLED)
+$(INSTALLED)/libffi-dev \
+ $(INSTALLED)/python3-dev \
+ $(INSTALLED)/w3m | $(INSTALLED)
 	$(INSTALL) $(@F)
 	touch $@
 $(INSTALLED):
@@ -453,6 +453,13 @@ $(INSTALLED)/apk/python3/pyopenssl: | $(INSTALLED)/apk/python3
 $(INSTALLED)/apt-get/pyopenssl: | $(INSTALLED)/apt-get
 	$(INSTALL) python3-openssl
 	touch $@
+$(INSTALLED)/packaging: | $(INSTALLED)
+	$(PIP_INSTALL) $(@F)==21.3
+$(INSTALLED)/markupsafe: | $(INSTALLED)
+	$(PIP_INSTALL) markupsafe==2.0.1
+$(INSTALLED)/zstandard: | $(INSTALLED)
+	# dependency of mitmproxy==6.0.2, takes a long time to build
+	$(PIP_INSTALL) zstandard==0.14.1
 $(INSTALLED)/pyasn1: $(INSTALLED)/$(INSTALLER)/pyasn1
 	touch $@
 $(INSTALLED)/apk/pyasn1: $(INSTALLED)/apk/$(PYTHON)/pyasn1
@@ -502,11 +509,13 @@ $(INSTALLED)/apk/python2/mitmproxy: ../mitmproxy $(INSTALLED)/netlib \
 $(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
  $(INSTALLED)/py3-pip $(INSTALLED)/nss-tools $(INSTALLED)/musl-dev \
  $(INSTALLED)/py3-cryptography $(INSTALLED)/py3-openssl \
- $(INSTALLED)/setuptools $(INSTALLED)/packaging==21.3 \
- $(INSTALLED)/markupsafe==2.0.1 $(INSTALLED)/mitmproxy==6.0.2 | \
+ $(INSTALLED)/setuptools $(INSTALLED)/packaging \
+ $(INSTALLED)/markupsafe | \
  $(INSTALLED)/apk/python3
+	$(PIP_INSTALL) mitmproxy==6.0.2
 	touch $@
 $(INSTALLED)/apt-get/mitmproxy: | $(INSTALLED)/apt-get
-	$(INSTALL) mitmproxy
+	$(PIP_INSTALL) mitmproxy
+	touch $@
 .FORCE:
 .PRECIOUS: %.log tests.log make.log
