@@ -317,13 +317,11 @@ $(INSTALLED)/certutil: | $(INSTALLED)/$(INSTALLER)/certutil
 	touch $@
 $(INSTALLED)/apt-get/certutil: | $(INSTALLED)/apt-get
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 $(INSTALL) libnss3-tools; \
-	 touch $@; \
+	 $(INSTALL) libnss3-tools && touch $@; \
 	fi
 $(INSTALLED)/apk/certutil: | $(INSTALLED)/apk
 	if [ -z "$$($(WHICH) $(@F))" ]; then \
-	 $(INSTALL) nss-tools; \
-	 touch $@; \
+	 $(INSTALL) nss-tools && touch $@; \
 	fi
 # alpine can't compile swc, so we need to use a remote executable under it.
 $(INSTALLED)/apk/swc: $(INSTALLED)/swcserver | $(INSTALLED)/apk \
