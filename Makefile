@@ -462,6 +462,7 @@ $(INSTALLED)/apt-get/mitmproxy: | $(INSTALLED)/apt-get
 	# which hasn't existed for years.
 	$(MAKE) uninstall
 	$(PIP_INSTALL) mitmproxy
+	touch $@
 $(INSTALLED)/font: $(INSTALLED)/$(INSTALLER)/font
 	touch $@
 $(INSTALLED)/apk/font:
