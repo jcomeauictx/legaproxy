@@ -383,13 +383,15 @@ tests.log: tests.log.rotate tests.$(PYTHON).log.rotate .FORCE | \
 	 $(MAKE) PYTHON=$(PYTHON) -C $$dir tests; done 2>&1 | tee $(CURDIR)/$@
 	cp $@ tests.$(PYTHON).log
 %.rotate:
-	for i in $$(seq 1 9 | tac); do \
-	 if [ -e $*.$$i ]; then \
-	  mv -f $*.$$i $*.$$((i + 1)); \
-	 fi; \
-	done
+	if [ -s $* ]; then \
+	 for i in $$(seq 1 9 | tac); do \
+	  if [ -e $*.$$i ]; then \
+	   mv -f $*.$$i $*.$$((i + 1)); \
+	  fi; \
+	 done; \
+	 cp -f $* $*.1; \
+	fi
 	rm -f $*.??  # get rid of all files 10+
-	[ -e "$*" ] && cp -f $* $*.1 || true
 log: | ../netlib ../mitmproxy ../pathod
 	-for dir in $|; do $(MAKE) LOGLIMIT=$(LOGLIMIT) -C $$dir $@; done
 	git $@ | head -n $(LOGLIMIT)
