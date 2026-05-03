@@ -327,7 +327,6 @@ $(INSTALLED)/apk/certutil: | $(INSTALLED)/apk
 $(INSTALLED)/apk/swc: $(INSTALLED)/swcserver | $(INSTALLED)/apk \
  $(HOME)/.local/bin
 	ln -sf $(CURDIR)/remoteswc $(HOME)/.local/bin/$(@F)
-	rsync -avuz es3.swcrc swcserver:
 	touch $@
 $(INSTALLED)/apt-get/swc: | $(INSTALLED)/apt-get $(INSTALLED)/cargo
 	cargo install swc_cli
@@ -361,7 +360,7 @@ $(INSTALLED)/swcserver: es3.swcrc | $(INSTALLED)
 	# if this is running on a docker image, assume host is swc-capable
 	if ping -c1 -W1 172.17.0.1; then \
 	 $(MAKE) $(HOME)/.ssh/config; \
- 	fi
+	fi
 	rsync -avuz es3.swcrc swcserver:
 	touch $@
 /opt/wheezy32/usr/bin/iceweasel: \
