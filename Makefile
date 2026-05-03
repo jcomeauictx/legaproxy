@@ -419,7 +419,7 @@ debug: clean reinstall make.log
 %.results:
 	egrep '^(Ran|FAILED) ' $*.log
 results: tests.results
-%.pem: %
+%.pem: % | $(INSTALLED)/openssl
 	openssl x509 -in $< -inform der -out $@ -outform pem
 %.text: %
 	openssl x509 -in $< -inform der -noout -text || \
@@ -439,7 +439,7 @@ $(INSTALLED)/pyopenssl: $(INSTALLED)/$(INSTALLER)/pyopenssl
 $(INSTALLED)/apk/pyopenssl: $(INSTALLED)/apk/$(PYTHON)/pyopenssl
 	touch $@
 $(INSTALLED)/apk/python2/pyopenssl: | $(INSTALLED)/apk/python2
-	pip install "$(@F)>=0.13"
+	pip install "pyopenssl>=0.13"
 	touch $@
 $(INSTALLED)/apk/python3/pyopenssl: | $(INSTALLED)/apk/python3
 	$(INSTALL) py3-openssl
@@ -491,8 +491,6 @@ $(INSTALLED)/apk/netlib: | $(INSTALLED)/apk/$(PYTHON)/netlib
 	touch $@
 $(INSTALLED)/apk/python2/netlib: ../netlib | $(INSTALLED)/apk/python2
 	$(MAKE) -C $< install
-$(INSTALLED)/pip3-%: | $(INSTALLED)
-	$(PYTHON3) -m pip install $*
 	touch $@
 $(INSTALLED)/firefox: $(INSTALLED)/font
 	# alpine firefox-esr doesn't have a font prerequisite, so it renders
@@ -510,6 +508,7 @@ $(INSTALLED)/apk/mitmproxy: $(INSTALLED)/apk/$(PYTHON)/mitmproxy
 $(INSTALLED)/apk/python2/mitmproxy: ../mitmproxy $(INSTALLED)/netlib \
  $(INSTALLED)/pathod | $(INSTALLED)/apk/python2
 	$(MAKE) -C $< install
+	touch $@
 $(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
  $(INSTALLED)/pip $(INSTALLED)/certutil $(INSTALLED)/musl-dev \
  $(INSTALLED)/py3-cryptography $(INSTALLED)/pyopenssl $(INSTALLED)/openssl-dev \
@@ -518,8 +517,6 @@ $(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
  $(INSTALLED)/apk/python3
 	$(MAKE) uninstall
 	$(PIP_INSTALL) mitmproxy==6.0.2
-	touch $@
-$(INSTALLED)/apk/python2/mitmproxy: reinstall
 	touch $@
 $(INSTALLED)/apt-get/mitmproxy: | $(INSTALLED)/apt-get
 	# on desktop, prefer pip-installed mitmdump over Debian package;
