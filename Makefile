@@ -150,18 +150,6 @@ $(HOME)/%:
 	# PUT THIS FIRST, above all other INSTALLED rules,
 	# or you will short-circuit installations.
 	mkdir --parents $@
-$(INSTALLED)/mitmdump: $(INSTALLED)/$(INSTALLER)/mitmdump \
- $(INSTALLED)/pyopenssl $(INSTALLED)/pyasn1 $(INSTALLED)/flask
-	touch $@
-$(INSTALLED)/apk/mitmdump: | $(INSTALLED)/apk
-	$(MAKE) reinstall
-	touch $@
-$(INSTALLED)/apt-get/mitmdump: | $(INSTALLED)/apt-get
-	# on desktop, prefer pip-installed mitmdump over Debian package;
-	# as of Trixie, it still attempts to import blinker._saferef,
-	# which hasn't existed for years.
-	$(PIP_INSTALL) $(MITM_PKG)
-	touch $@
 # not sure whether setuptools needs to be installed separately any more.
 # seems to me if it's needed it will be pullled in by whatever needs it.
 # FIXME: if this is made a dependency on anything, flesh out the recipe
@@ -498,6 +486,15 @@ $(INSTALLED)/apk/netlib: | $(INSTALLED)/apk/$(PYTHON)/netlib
 $(INSTALLED)/apk/python2/netlib: ../netlib | $(INSTALLED)/apk/python2
 	$(MAKE) -C $< install
 	touch $@
+$(INSTALLED)/firefox: $(INSTALLED)/font
+	# alpine firefox-esr doesn't have a font prerequisite, so it renders
+	# a page completely with boxes containing unicode hex
+	$(INSTALL) firefox-esr
+$(INSTALLED)/gcc: | $(INSTALLED)
+	$(INSTALL) gcc
+	touch $@
+$(INSTALLED)/mitmdump: $(INSTALLED)/mitmproxy
+	touch $@
 $(INSTALLED)/mitmproxy: $(INSTALLED)/$(INSTALLER)/mitmproxy
 	touch $@
 $(INSTALLED)/apk/mitmproxy: $(INSTALLED)/apk/$(PYTHON)/mitmproxy
@@ -507,15 +504,25 @@ $(INSTALLED)/apk/python2/mitmproxy: ../mitmproxy $(INSTALLED)/netlib \
 	$(MAKE) -C $< install
 	touch $@
 $(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
- $(INSTALLED)/py3-pip $(INSTALLED)/nss-tools $(INSTALLED)/musl-dev \
- $(INSTALLED)/py3-cryptography $(INSTALLED)/py3-openssl \
+ $(INSTALLED)/pip $(INSTALLED)/certutil $(INSTALLED)/musl-dev \
+ $(INSTALLED)/py3-cryptography $(INSTALLED)/pyopenssl $(INSTALLED)/openssl-dev \
  $(INSTALLED)/setuptools $(INSTALLED)/packaging \
- $(INSTALLED)/markupsafe | \
+ $(INSTALLED)/pyasn1 $(INSTALLED)/flask $(INSTALLED)/markupsafe | \
  $(INSTALLED)/apk/python3
+	$(MAKE) uninstall
 	$(PIP_INSTALL) mitmproxy==6.0.2
 	touch $@
 $(INSTALLED)/apt-get/mitmproxy: | $(INSTALLED)/apt-get
+	# on desktop, prefer pip-installed mitmdump over Debian package;
+	# as of Trixie, it still attempts to import blinker._saferef,
+	# which hasn't existed for years.
+	$(MAKE) uninstall
 	$(PIP_INSTALL) mitmproxy
+	touch $@
+$(INSTALLED)/font: $(INSTALLED)/$(INSTALLER)/font
+	touch $@
+$(INSTALLED)/apk/font:
+	$(INSTALL) unifont
 	touch $@
 $(INSTALLED)/py3-%: | $(INSTALLED)
 	$(INSTALL) $(@F)
