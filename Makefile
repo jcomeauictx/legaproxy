@@ -402,8 +402,10 @@ pull status diff commit: | ../netlib ../mitmproxy ../pathod
 	for dir in $|; do $(MAKE) -C $$dir $@; done
 tests.%.diff: | tests.log.%
 	diff -y <(grep -v '^DEBUG:' tests.log) <(grep -v '^DEBUG:' $|) | less
-rebuild reinstall: | $(wildcard ../netlib ../mitmproxy ../pathod)
-	if [ "$(INSTALLER)" = "apk" ]; then \
+uninstall: | ../netlib ../mitmproxy ../pathod
+	for dir in $|; do $(MAKE) -C $$dir $@; done
+reinstall: | ../netlib ../mitmproxy ../pathod
+	if [ "$(INSTALLER)/$(PYTHON)" = "apk/python2" ]; then \
 	 for dir in $|; do $(MAKE) -C $$dir $(patsubst re%,%,$@); done; \
 	else \
 	 echo not installing old mitmproxy on new system >&2; \
