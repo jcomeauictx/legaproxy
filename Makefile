@@ -431,6 +431,66 @@ results: tests.results
 	-sudo cp -i $< $@
 %/distribution: | %
 	-sudo mkdir $@
+$(INSTALLED)/openssl: $(INSTALLED)
+	$(INSTALL) openssl
+	touch $@
+$(INSTALLED)/pyopenssl: $(INSTALLED)/$(INSTALLER)/pyopenssl
+	touch $@
+$(INSTALLED)/apk/pyopenssl: $(INSTALLED)/apk/$(PYTHON)/pyopenssl
+	touch $@
+$(INSTALLED)/apk/python2/pyopenssl: | $(INSTALLED)/apk/python2
+	pip install "$(@F)>=0.13"
+	touch $@
+$(INSTALLED)/apk/python3/pyopenssl: | $(INSTALLED)/apk/python3
+	$(INSTALL) py3-openssl
+	touch $@
+$(INSTALLED)/apt-get/pyopenssl: | $(INSTALLED)/apt-get
+	$(INSTALL) python3-openssl
+	touch $@
+$(INSTALLED)/packaging: | $(INSTALLED)
+	$(PIP_INSTALL) packaging==21.3
+$(INSTALLED)/markupsafe: | $(INSTALLED)
+	$(PIP_INSTALL) markupsafe==2.0.1
+$(INSTALLED)/zstandard: | $(INSTALLED)
+	# dependency of mitmproxy==6.0.2, takes a long time to build
+	$(PIP_INSTALL) zstandard==0.14.1
+$(INSTALLED)/pyasn1: $(INSTALLED)/$(INSTALLER)/pyasn1
+	touch $@
+$(INSTALLED)/apk/pyasn1: $(INSTALLED)/apk/$(PYTHON)/pyasn1
+	touch $@
+$(INSTALLED)/apt-get/pyasn1: | $(INSTALLED)/apt-get
+	$(INSTALL) python3-pyasn1
+	touch $@
+$(INSTALLED)/apk/python2/pyasn1: | $(INSTALLED)/apk/python2
+	$(PYTHON) -m pip install 'pyasn1>0.1.2'
+	touch $@
+$(INSTALLED)/apk/python3/pyasn1: | $(INSTALLED)/apk/python3
+	$(INSTALL) py3-asn1
+	touch $@
+$(INSTALLED)/flask: $(INSTALLED)/$(INSTALLER)/flask
+$(INSTALLED)/apk/flask: | $(INSTALLED)/$(PYTHON)/apk
+$(INSTALLED)/apk/python2/flask:
+	$(PYTHON) -m pip install flask==0.5.2
+	touch $@
+$(INSTALLED)/apk/python3/flask:
+	$(INSTALL) flask
+	touch $@
+$(INSTALLED)/apt-get/flask: | $(INSTALLED)/apt-get
+	$(INSTALL) python3-flask
+	touch $@
+$(INSTALLED)/pathod: $(INSTALLED)/$(INSTALLER)/pathod
+	touch $@
+$(INSTALLED)/apk/pathod: | $(INSTALLED)/apk/$(PYTHON)/pathod
+	touch $@
+$(INSTALLED)/apk/python2/pathod: ../pathod | $(INSTALLED)/apk/python2
+	$(MAKE) -C $< install
+	touch $@
+$(INSTALLED)/netlib: $(INSTALLED)/$(INSTALLER)/netlib
+	touch $@
+$(INSTALLED)/apk/netlib: | $(INSTALLED)/apk/$(PYTHON)/netlib
+	touch $@
+$(INSTALLED)/apk/python2/netlib: ../netlib | $(INSTALLED)/apk/python2
+	$(MAKE) -C $< install
 $(INSTALLED)/pip3-%: | $(INSTALLED)
 	$(PYTHON3) -m pip install $*
 	touch $@
@@ -469,12 +529,6 @@ $(INSTALLED)/font: $(INSTALLED)/$(INSTALLER)/font
 	touch $@
 $(INSTALLED)/apk/font:
 	$(INSTALL) unifont
-	touch $@
-$(INSTALLED)/packaging: | $(INSTALLED)
-	$(PIP_INSTALL) $(@F)==21.3
-	touch $@
-$(INSTALLED)/markupsafe: | $(INSTALLED)
-	$(PIP_INSTALL) $(@F)==2.0.1
 	touch $@
 $(INSTALLED)/py3-%: | $(INSTALLED)
 	$(INSTALL) $(@F)
