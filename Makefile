@@ -498,15 +498,18 @@ $(INSTALLED)/firefox: $(INSTALLED)/font
 	# alpine firefox-esr doesn't have a font prerequisite, so it renders
 	# a page completely with boxes containing unicode hex
 	$(INSTALL) firefox-esr
+$(INSTALLED)/gcc: | $(INSTALLED)
+	$(INSTALL) gcc
+	touch $@
 $(INSTALLED)/mitmdump: $(INSTALLED)/mitmproxy
 	touch $@
 $(INSTALLED)/mitmproxy: $(INSTALLED)/$(INSTALLER)/mitmproxy
 	touch $@
 $(INSTALLED)/apk/mitmproxy: $(INSTALLED)/apk/$(PYTHON)/mitmproxy
 	touch $@
-$(INSTALLED)/gcc: | $(INSTALLED)
-	$(INSTALL) gcc
-	touch $@
+$(INSTALLED)/apk/python2/mitmproxy: ../mitmproxy $(INSTALLED)/netlib \
+ $(INSTALLED)/pathod | $(INSTALLED)/apk/python2
+	$(MAKE) -C $< install
 $(INSTALLED)/apk/python3/mitmproxy: $(INSTALLED)/gcc $(INSTALLED)/python3-dev \
  $(INSTALLED)/pip $(INSTALLED)/certutil $(INSTALLED)/musl-dev \
  $(INSTALLED)/py3-cryptography $(INSTALLED)/pyopenssl $(INSTALLED)/openssl-dev \
