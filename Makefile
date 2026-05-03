@@ -115,7 +115,7 @@ ARCHIVE := https://archive.debian.org/debian
 # for fetching sibling repos
 GITPREFIX := $(dir $(shell git remote get-url origin))
 MITM_OPTIONS := --anticache
-ifeq ($(INSTALLER),apk)
+ifeq ($(INSTALLER)/$(PYTHON),apk/python2)
 MITM_OPTIONS += -a -z -b $(PROXYHOST) -p $(PROXYPORT) -s
 MITM_SAVE := -w
 # slow startup if running under iSH
@@ -311,6 +311,8 @@ $(NSSDB)/cert9.db: | $(INSTALLED)/certutil
 # consider forcing reinstall of executables that may have been removed;
 # use `which` or equivalent in the recipe, or for a really blunt approach,
 # don't use `touch $@` and run the installer each time the tool is needed.
+# create subdir regardless of installer
+$(INSTALLED)/$(INSTALLER)/%: | $(INSTALLED)/$(INSTALLER)
 $(INSTALLED)/certutil: | $(INSTALLED)/$(INSTALLER)/certutil
 	touch $@
 $(INSTALLED)/apt-get/certutil: | $(INSTALLED)/apt-get
@@ -322,7 +324,8 @@ $(INSTALLED)/apk/certutil: | $(INSTALLED)/apk
 	 $(INSTALL) nss-tools && touch $@; \
 	fi
 # alpine can't compile swc, so we need to use a remote executable under it.
-$(INSTALLED)/apk/swc: $(INSTALLED)/swcserver | $(INSTALLED)/apk
+$(INSTALLED)/apk/swc: $(INSTALLED)/swcserver | $(INSTALLED)/apk \
+ $(HOME)/.local/bin
 	ln -sf $(CURDIR)/remoteswc $(HOME)/.local/bin/$(@F)
 	rsync -avuz es3.swcrc swcserver:
 	touch $@
@@ -350,16 +353,16 @@ $(INSTALLED)/libffi-dev \
 	touch $@
 $(INSTALLED):
 	mkdir -p $@
-$(INSTALLED)/debian-release-7.gpg: $(INSTALLED)
+$(INSTALLED)/debian-release-7.gpg: | $(INSTALLED)
 	# https://serverfault.com/a/984605/58945
 	wget https://ftp-master.debian.org/keys/release-7.asc -qO- | \
 	 gpg --import --no-default-keyring --keyring $@
-$(INSTALLED)/swcserver: $(INSTALLED)
-	if [ -z "$$(getent hosts $(@F))" ]; then \
-	 echo alpine/iSH cannot run a suitable version of swc >&2; \
-	 echo you must put an entry for $(@F) in /etc/hosts >&2; \
-	 false; \
-	fi
+$(INSTALLED)/swcserver: es3.swcrc | $(INSTALLED)
+	# if this is running on a docker image, assume host is swc-capable
+	if ping -c1 -W1 172.17.0.1; then \
+	 $(MAKE) $(HOME)/.ssh/config; \
+ 	fi
+	rsync -avuz es3.swcrc swcserver:
 	touch $@
 /opt/wheezy32/usr/bin/iceweasel: \
  | $(INSTALLED)/debian-release-7.gpg $(INSTALLED)/debootstrap
@@ -375,19 +378,21 @@ $(INSTALLED)/swcserver: $(INSTALLED)
 	cd $@ && git checkout $(BRANCH) || true  # not all have alpine-ish
 swcversion: $(INSTALLED)/swc
 	swc --version
-tests.log: tests.log.rotate tests.$(PY).log.rotate .FORCE | \
+tests.log: tests.log.rotate tests.$(PYTHON).log.rotate .FORCE | \
  ../netlib ../mitmproxy
 	-for dir in $|; do \
 	 $(MAKE) PYTHON=$(PYTHON) -C $$dir tests; done 2>&1 | tee $(CURDIR)/$@
-	cp $@ tests.$(PY).log
+	cp $@ tests.$(PYTHON).log
 %.rotate:
-	for i in $$(seq 1 9 | tac); do \
-	 if [ -e $*.$$i ]; then \
-	  mv -f $*.$$i $*.$$((i + 1)); \
-	 fi; \
-	done
+	if [ -s $* ]; then \
+	 for i in $$(seq 1 9 | tac); do \
+	  if [ -e $*.$$i ]; then \
+	   mv -f $*.$$i $*.$$((i + 1)); \
+	  fi; \
+	 done; \
+	 cp -f $* $*.1; \
+	fi
 	rm -f $*.??  # get rid of all files 10+
-	[ -e "$*" ] && cp -f $* $*.1 || true
 log: | ../netlib ../mitmproxy ../pathod
 	-for dir in $|; do $(MAKE) LOGLIMIT=$(LOGLIMIT) -C $$dir $@; done
 	git $@ | head -n $(LOGLIMIT)
@@ -435,7 +440,7 @@ $(INSTALLED)/pyopenssl: $(INSTALLED)/$(INSTALLER)/pyopenssl
 $(INSTALLED)/apk/pyopenssl: $(INSTALLED)/apk/$(PYTHON)/pyopenssl
 	touch $@
 $(INSTALLED)/apk/python2/pyopenssl: | $(INSTALLED)/apk/python2
-	pip install "$(@F)>=0.13"
+	pip install "pyopenssl>=0.13"
 	touch $@
 $(INSTALLED)/apk/python3/pyopenssl: | $(INSTALLED)/apk/python3
 	$(INSTALL) py3-openssl
@@ -444,7 +449,7 @@ $(INSTALLED)/apt-get/pyopenssl: | $(INSTALLED)/apt-get
 	$(INSTALL) python3-openssl
 	touch $@
 $(INSTALLED)/packaging: | $(INSTALLED)
-	$(PIP_INSTALL) $(@F)==21.3
+	$(PIP_INSTALL) packaging==21.3
 $(INSTALLED)/markupsafe: | $(INSTALLED)
 	$(PIP_INSTALL) markupsafe==2.0.1
 $(INSTALLED)/zstandard: | $(INSTALLED)
