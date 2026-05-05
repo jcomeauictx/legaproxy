@@ -13,6 +13,7 @@ import posixpath as wwwpath
 from time import strftime
 from hashlib import sha256
 from subprocess import Popen, PIPE
+from textwrap import wrap as chunk
 try:
     from mitmproxy.http import HTTPResponse  # mitmproxy v6
 except ImportError:  # newer mitmproxy
@@ -357,4 +358,26 @@ def sha256sum(bytestring):
     except TypeError:
         digest = sha256(bytestring.encode()).hexdigest()
     return digest
+
+def cache(contents, filepath=None):
+    '''
+    store contents at filepath, or make path from sha256sum of contents
+
+    do nothing if file already exists. return path in all cases.
+
+    >>> cache(b'')
+    'storage/cached/original/e3/b0/c4/42/98/fc/1c/14/9a/fb/f4/c8/99/6f/b9/24/27/ae/41/e4/64/9b/93/4c/a4/95/99/1b/78/52/b8/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+    '''
+    if filepath is None:
+        checksum = sha256sum(contents)
+        filepath = os.path.join(
+            CACHED_ORIGINAL,
+            *chunk(checksum, 2)[:-1],
+            checksum)
+    if not os.path.exists(filepath):
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        with open(filepath, 'wb') as outfile:
+            outfile.write(contents)
+    return filepath
+
 # vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
