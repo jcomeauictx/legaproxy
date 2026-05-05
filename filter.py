@@ -45,6 +45,9 @@ TIMESTAMP = strftime('%Y-%m-%dT%H%M%S')
 HOSTSUFFIX = os.getenv('HOSTSUFFIX') or ''
 FILES = os.path.join('storage', 'files')
 MODIFIED = os.path.join('storage', 'modified')
+CACHED = os.path.join('storage', 'cached')
+CACHED_ORIGINAL = os.path.join(CACHED, 'original')
+CACHED_MODIFIED = os.path.join(CACHED, 'modified')
 # iphone6 (iOS 12.5.7) user-agent string
 USERAGENT = ('Mozilla/5.0 (iPhone; CPU iPhone OS 12_5_7 like Mac OS X) '
              'AppleWebKit/605.1.15 (KHTML, like Gecko) '
