@@ -543,6 +543,9 @@ $(HOME)/.ssh/config: ssh.config
 	 { d; :a; N; /\n\t/ { s/\n\t.*/\n\t/; ba; }; d; }' $@
 	# now append the new contents
 	cat $< >> $@
+$(INSTALLED)/rustup:
+	$(INSTALL) rustup
+	touch $@
 %: %.template
 	envsubst < $< > $@
 .FORCE:
