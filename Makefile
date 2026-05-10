@@ -536,13 +536,15 @@ $(INSTALLED)/py3-%: | $(INSTALLED)
 $(INSTALLED)/%-dev: | $(INSTALLED)
 	$(INSTALL) $(@F)
 	touch $@
-$(HOME)/.ssh/config: ssh.config
+$(HOME)/.ssh/config: ssh.config Makefile
 	# replace config for swcserver when updated
 	# first delete any existing configuration for it
 	sed -i '/^Host swcserver$$/ \
 	 { d; :a; N; /\n\t/ { s/\n\t.*/\n\t/; ba; }; d; }' $@
 	# now append the new contents
 	cat $< >> $@
+	# chmod in case it didn't exist beforehand
+	chmod 0600 $@
 $(INSTALLED)/rustup:
 	$(INSTALL) rustup
 	touch $@
